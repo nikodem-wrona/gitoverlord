@@ -27,6 +27,12 @@ impl RepoFixture {
         fs::write(root.path().join("gitconfig"), "").unwrap();
         let fixture = Self { root, commits: 0 };
         fixture.git(&["init", "--initial-branch=main"]);
+        // The backend runs `git` without the test environment. The settings of
+        // the repository replace the settings of the machine.
+        fixture.git(&["config", "user.name", "Test Author"]);
+        fixture.git(&["config", "user.email", "author@example.com"]);
+        fixture.git(&["config", "commit.gpgsign", "false"]);
+        fixture.git(&["config", "core.hooksPath", ".git/hooks"]);
         fixture
     }
 

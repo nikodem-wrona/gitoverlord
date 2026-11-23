@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { ActionStatus } from "@/actions";
 import { GitReadout } from "@/features/system";
 import { useMotion } from "@/hud";
 import { isDemoBackend } from "@/ipc";
@@ -18,8 +19,9 @@ export function StatusBar() {
         {demo ? "Demo data" : "Live data"}
       </span>
       <span>Motion: {calm ? "calm" : "full"}</span>
+      <ActionStatus />
       <span className={styles.spacer} />
-      <span>Phase 2 · Read-only viewer</span>
+      <span>Phase 3 · Local workflow</span>
       <Clock />
     </footer>
   );

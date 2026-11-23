@@ -11,6 +11,7 @@
   --color-row-selected: rgb(47 212 255 / 16%);
   --color-line: #142230;
   --color-line-strong: #24394b;
+  --color-backdrop: rgb(2 4 7 / 72%);
 
   /* Color: text */
   --color-text: #c9d6df;

@@ -32,6 +32,15 @@ export function FeedbackSection() {
           >
             Fail
           </Button>
+          <Button
+            onClick={() =>
+              toast.ok("Branch deleted", "spike/radar was at 6c02f8e.", {
+                action: { label: "Undo", run: () => toast.ok("Undone") },
+              })
+            }
+          >
+            With undo
+          </Button>
         </div>
       </Panel>
       <Panel title="Empty state" flush>

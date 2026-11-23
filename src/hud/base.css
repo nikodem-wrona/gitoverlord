@@ -45,7 +45,8 @@ body::after {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
   letter-spacing: inherit;
   color: inherit;

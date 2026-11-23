@@ -38,6 +38,10 @@
           {
             "group": ["@/ipc/*"],
             "message": "Import IPC code through @/ipc."
+          },
+          {
+            "group": ["@/actions/*"],
+            "message": "Import the action system through @/actions."
           }
         ]
       }

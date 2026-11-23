@@ -10,6 +10,9 @@ const TONES: Record<ToastKind, Tone> = {
   fail: "fail",
 };
 
+/** A notification with a button stays longer, so the user has time to use it. */
+const ACTION_TIME_FACTOR = 2;
+
 interface ToastViewportProps {
   toasts: readonly ToastItem[];
   duration: number;
@@ -29,7 +32,7 @@ export function ToastViewport({
           <Toast
             key={toast.id}
             toast={toast}
-            duration={duration}
+            duration={toast.action ? duration * ACTION_TIME_FACTOR : duration}
             onDismiss={onDismiss}
           />
         ))}
@@ -45,12 +48,9 @@ interface ToastProps {
 }
 
 function Toast({ toast, duration, onDismiss }: ToastProps) {
-  useEffect(() => {
-    const timer = setTimeout(() => onDismiss(toast.id), duration);
-    return () => clearTimeout(timer);
-  }, [toast.id, duration, onDismiss]);
-
+  useAutoDismiss(toast, duration, onDismiss);
   const style = { "--toast-duration": `${duration}ms` } as CSSProperties;
+  const { action } = toast;
 
   return (
     <li className={styles.toast} data-tone={TONES[toast.kind]} style={style}>
@@ -58,6 +58,18 @@ function Toast({ toast, duration, onDismiss }: ToastProps) {
         <p className={styles.title}>{toast.title}</p>
         {toast.message && <p className={styles.message}>{toast.message}</p>}
       </div>
+      {action && (
+        <button
+          type="button"
+          className={styles.action}
+          onClick={() => {
+            onDismiss(toast.id);
+            action.run();
+          }}
+        >
+          {action.label}
+        </button>
+      )}
       <button
         type="button"
         className={styles.dismiss}
@@ -66,7 +78,21 @@ function Toast({ toast, duration, onDismiss }: ToastProps) {
       >
         ×
       </button>
-      <span className={styles.timer} aria-hidden="true" />
+      {!toast.sticky && <span className={styles.timer} aria-hidden="true" />}
     </li>
   );
+}
+
+/** Closes the notification after `duration`. A sticky notification stays. */
+function useAutoDismiss(
+  toast: ToastItem,
+  duration: number,
+  onDismiss: (id: number) => void,
+): void {
+  const { id, sticky } = toast;
+  useEffect(() => {
+    if (sticky) return undefined;
+    const timer = setTimeout(() => onDismiss(id), duration);
+    return () => clearTimeout(timer);
+  }, [id, sticky, duration, onDismiss]);
 }

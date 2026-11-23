@@ -39,6 +39,11 @@ pub(super) fn unstaged_diff<'repo>(
     Ok(repo.diff_index_to_workdir(None, Some(&mut options))?)
 }
 
+/// Returns `true` when the repository has no commits.
+pub(super) fn is_unborn(repo: &Repository) -> Result<bool, GitError> {
+    Ok(head_tree(repo)?.is_none())
+}
+
 /// Returns the tree of `HEAD`, or `None` when the repository has no commits.
 fn head_tree(repo: &Repository) -> Result<Option<Tree<'_>>, GitError> {
     match repo.head() {

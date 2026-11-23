@@ -30,6 +30,8 @@
 
 .row[data-kind="hunk"],
 .row[data-kind="note"] {
+  align-items: center;
+  gap: var(--space-3);
   padding: 0 var(--space-3);
   background: var(--color-accent-soft);
   color: var(--color-accent);
@@ -38,6 +40,10 @@
 .row[data-kind="note"] {
   background: transparent;
   color: var(--color-warn);
+}
+
+.header {
+  flex: none;
 }
 
 .number {

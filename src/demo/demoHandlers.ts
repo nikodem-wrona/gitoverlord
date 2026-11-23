@@ -1,52 +1,108 @@
 import type { CommitDetail, LogPage, MockCommandHandlers } from "@/ipc";
 
-import { SAMPLE_COMMITS, SAMPLE_HISTORY } from "./sampleCommits";
-import { sampleDiff } from "./sampleDiff";
+import * as branches from "./demoBranches";
+import * as changes from "./demoChanges";
 import {
-  SAMPLE_ACTIVITY,
-  SAMPLE_BRANCHES,
-  SAMPLE_RECENT,
-  SAMPLE_SUMMARY,
-  SAMPLE_WORKING_TREE,
-} from "./sampleRepository";
+  commitsOf,
+  createDemoRepository,
+  type DemoRepository,
+  reject,
+} from "./demoRepository";
+import * as stash from "./demoStash";
+import { sampleDiff } from "./sampleDiff";
+import { SAMPLE_ACTIVITY, SAMPLE_RECENT } from "./sampleRepository";
 
 /**
- * Makes a handler for each command. The handlers answer with the sample repository.
+ * Makes a handler for each command. The handlers answer with a new copy of the
+ * sample repository, and the write commands change that copy.
  *
  * The demo backend and the frontend tests use these handlers.
  */
 export function createDemoHandlers(): MockCommandHandlers {
+  const repo = createDemoRepository();
+  return {
+    ...readHandlers(repo),
+    stageFiles: ({ files }) => changes.stage(repo, files),
+    unstageFiles: ({ files }) => changes.unstage(repo, files),
+    // The sample diff has one hunk, so a hunk is the whole file.
+    stageHunk: ({ hunk }) => changes.stage(repo, [hunk.path]),
+    unstageHunk: ({ hunk }) => changes.unstage(repo, [hunk.path]),
+    discardChanges: ({ files }) => changes.discard(repo, files),
+    restoreDiscarded: ({ hash }) => changes.restoreDiscarded(repo, hash),
+    commitChanges: ({ message, amend }) =>
+      branches.commit(repo, message, amend),
+    createBranch: ({ name, start }) => branches.createBranch(repo, name, start),
+    restoreBranch: ({ name, hash }) => branches.restoreBranch(repo, name, hash),
+    switchBranch: ({ name }) => branches.switchBranch(repo, name),
+    renameBranch: ({ name, newName }) =>
+      branches.renameBranch(repo, name, newName),
+    deleteBranch: ({ name }) => branches.deleteBranch(repo, name),
+    stashChanges: ({ message }) => stash.stashChanges(repo, message),
+    applyStash: ({ hash }) => stash.applyStash(repo, hash),
+    popStash: ({ hash }) => stash.popStash(repo, hash),
+    dropStash: ({ hash }) => stash.dropStash(repo, hash),
+    restoreStash: ({ hash, message }) =>
+      stash.restoreStash(repo, hash, message),
+  };
+}
+
+type ReadHandlers = Pick<
+  MockCommandHandlers,
+  | "detectGit"
+  | "pickRepository"
+  | "openRepository"
+  | "recentRepositories"
+  | "repoSummary"
+  | "repoBranches"
+  | "repoActivity"
+  | "repoLog"
+  | "commitDetail"
+  | "repoStatus"
+  | "fileDiff"
+  | "repoStashes"
+>;
+
+/**
+ * The read handlers give copies. Like the real backend, each answer is a new
+ * value, so the queries see the changes of the write commands.
+ */
+function readHandlers(repo: DemoRepository): ReadHandlers {
   return {
     detectGit: () => ({ major: 2, minor: 54, patch: 0 }),
-    pickRepository: () => SAMPLE_SUMMARY.path,
-    openRepository: () => SAMPLE_SUMMARY,
+    pickRepository: () => repo.summary.path,
+    openRepository: () => structuredClone(repo.summary),
     recentRepositories: () => SAMPLE_RECENT,
-    repoSummary: () => SAMPLE_SUMMARY,
-    repoBranches: () => SAMPLE_BRANCHES,
+    repoSummary: () => structuredClone(repo.summary),
+    repoBranches: () => structuredClone(repo.branches),
     repoActivity: () => SAMPLE_ACTIVITY,
-    repoLog: ({ skip, limit }) => logPage(skip, limit),
-    commitDetail: ({ hash }) => commitDetail(hash),
-    repoStatus: () => SAMPLE_WORKING_TREE,
+    repoLog: ({ skip, limit }) => logPage(repo, skip, limit),
+    commitDetail: ({ hash }) => commitDetail(repo, hash),
+    repoStatus: () => structuredClone(repo.tree),
     fileDiff: () => sampleDiff(),
+    repoStashes: () => stash.stashEntries(repo),
   };
 }
 
-function logPage(skip: number, limit: number): LogPage {
+function logPage(repo: DemoRepository, skip: number, limit: number): LogPage {
+  const commits = commitsOf(repo);
   const end = skip + limit;
   return {
-    commits: SAMPLE_COMMITS.slice(skip, end),
-    next: end < SAMPLE_COMMITS.length ? end : null,
+    commits: commits.slice(skip, end),
+    next: end < commits.length ? end : null,
   };
 }
 
-function commitDetail(hash: string): CommitDetail | Promise<never> {
-  const entry = SAMPLE_HISTORY.find((sample) => sample.commit.hash === hash);
+function commitDetail(
+  repo: DemoRepository,
+  hash: string,
+): CommitDetail | Promise<never> {
+  const index = repo.history.findIndex(({ commit }) => commit.hash === hash);
+  const entry = repo.history[index];
   if (!entry) {
-    // The backend rejects with a plain value, not with an `Error` object.
-    return Promise.reject({ kind: "readFailed", message: `no commit ${hash}` });
+    return stash.stashDetail(repo, hash) ?? reject(`no commit ${hash}`);
   }
   return {
-    commit: entry.commit,
+    commit: commitsOf(repo)[index] ?? entry.commit,
     body: "This commit is part of the sample repository.",
     email: `${entry.commit.author}@example.com`,
     files: entry.files,

@@ -1,32 +1,47 @@
-//! The backend that reads repositories with libgit2.
+//! The backend. It reads repositories with libgit2 and changes them with the system `git`.
 
 mod activity;
 mod branches;
 mod delta;
 mod detail;
 mod diff;
+mod discard;
+mod hunk;
 mod log;
 mod refs;
+mod stash;
 mod status;
 mod summary;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use git2::Repository;
 
-use crate::model::{Branch, CommitDetail, DiffTarget, FileDiff, LogPage, RepoSummary, WorkingTree};
+use crate::cli::{branch, commit, stage, stash as stash_cli};
+use crate::model::{
+    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, RepoSummary, StashEntry,
+    WorkingTree,
+};
 use crate::{GitBackend, GitError};
 
 pub(crate) struct Git2Backend {
     repo: Repository,
+    /// The working tree. Each `git` process runs in this folder.
+    dir: PathBuf,
 }
 
 impl Git2Backend {
     pub(crate) fn open(path: &Path) -> Result<Self, GitError> {
-        Ok(Self {
-            repo: open_repository(path)?,
-        })
+        let repo = open_repository(path)?;
+        let dir = summary::workdir(&repo)?;
+        Ok(Self { repo, dir })
+    }
+
+    /// Moves one hunk to the index, or out of the index when `staged` is `true`.
+    fn move_hunk(&self, target: &HunkTarget, staged: bool) -> Result<(), GitError> {
+        let patch = hunk::patch(&self.repo, target, staged)?;
+        stage::apply_to_index(&self.dir, &patch, staged)
     }
 }
 
@@ -67,6 +82,79 @@ impl GitBackend for Git2Backend {
 
     fn activity(&self, days: u32) -> Result<Vec<u32>, GitError> {
         activity::read(&self.repo, days, unix_now())
+    }
+
+    fn stashes(&self) -> Result<Vec<StashEntry>, GitError> {
+        stash::read(&self.repo)
+    }
+
+    fn stage(&self, paths: &[String]) -> Result<(), GitError> {
+        stage::add(&self.dir, paths)
+    }
+
+    fn unstage(&self, paths: &[String]) -> Result<(), GitError> {
+        stage::reset(&self.dir, paths, status::is_unborn(&self.repo)?)
+    }
+
+    fn stage_hunk(&self, target: &HunkTarget) -> Result<(), GitError> {
+        self.move_hunk(target, false)
+    }
+
+    fn unstage_hunk(&self, target: &HunkTarget) -> Result<(), GitError> {
+        self.move_hunk(target, true)
+    }
+
+    fn discard(&self, paths: &[String]) -> Result<String, GitError> {
+        discard::discard(&self.repo, &self.dir, paths)
+    }
+
+    fn restore_discarded(&self, hash: &str) -> Result<(), GitError> {
+        discard::restore(&self.repo, &self.dir, hash)
+    }
+
+    fn commit(&self, message: &str, amend: bool) -> Result<String, GitError> {
+        commit::commit(&self.dir, message, amend)?;
+        Ok(self.repo.refname_to_id("HEAD")?.to_string())
+    }
+
+    fn create_branch(&self, name: &str, start: Option<&str>, switch: bool) -> Result<(), GitError> {
+        branch::create(&self.dir, name, start, switch)
+    }
+
+    fn switch_branch(&self, name: &str) -> Result<(), GitError> {
+        branch::switch(&self.dir, name)
+    }
+
+    fn rename_branch(&self, name: &str, new_name: &str) -> Result<(), GitError> {
+        branch::rename(&self.dir, name, new_name)
+    }
+
+    fn delete_branch(&self, name: &str) -> Result<String, GitError> {
+        let tip = branches::tip(&self.repo, name)?;
+        branch::delete(&self.dir, name)?;
+        Ok(tip)
+    }
+
+    fn stash(&self, message: &str) -> Result<String, GitError> {
+        let save = || stash_cli::save(&self.dir, message);
+        stash::saved(&self.repo, save, "There are no changes to stash.")
+    }
+
+    fn apply_stash(&self, hash: &str) -> Result<(), GitError> {
+        stash_cli::apply(&self.dir, stash::position(&self.repo, hash)?)
+    }
+
+    fn pop_stash(&self, hash: &str) -> Result<(), GitError> {
+        stash_cli::pop(&self.dir, stash::position(&self.repo, hash)?)
+    }
+
+    fn drop_stash(&self, hash: &str) -> Result<(), GitError> {
+        stash_cli::drop_entry(&self.dir, stash::position(&self.repo, hash)?)
+    }
+
+    fn restore_stash(&self, hash: &str, message: &str) -> Result<(), GitError> {
+        let id = stash::parse(hash)?;
+        stash_cli::store(&self.dir, &id.to_string(), message)
     }
 }
 

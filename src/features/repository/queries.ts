@@ -49,6 +49,14 @@ export function useWorkingTree(path: string) {
   });
 }
 
+/** Reads the stash entries. The newest entry is first. */
+export function useStashes(path: string) {
+  return useQuery({
+    queryKey: repoKeys.stashes(path),
+    queryFn: () => unwrap(commands.repoStashes(path)),
+  });
+}
+
 /**
  * Reads one commit with its files. The query waits while `hash` is `undefined`.
  *

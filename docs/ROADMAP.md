@@ -30,7 +30,7 @@ src/features/      one folder for each feature, with one public entry
 src/ipc/           generated bindings and IPC helpers
 src/gallery/       component gallery, for development only
 src/demo/          sample repository for the browser and for tests
-src/actions/       action factory and registry (Phase 3)
+src/actions/       action factory, command palette, and shortcuts
 assets/            source image of the logo
 scripts/           maintenance scripts
 ```
@@ -41,7 +41,7 @@ Use a factory only where it removes repeated code.
 
 - **Backend factory:** `open_repo(path)` returns a `GitBackend`. The user interface does not know which engine ran.
 - **Git command factory:** `git_command()` in `git-core` creates each `git` process with the same settings.
-- **Action factory:** one `defineAction({ id, label, shortcut, run })` gives the button, the command palette entry, the shortcut, the progress toast, and the result animation. Each git operation then feels the same.
+- **Action factory:** one `defineAction({ id, label, group, shortcut, run })` gives the button, the command palette entry, and the shortcut. One runner gives each action its question, its progress toast, its result toast with Undo, and the result animation in the status bar. Each git operation then feels the same.
 - **Fixture builder:** `RepoFixture::new().commit("a").branch("x")` creates real temporary repositories for tests.
 - **Query client factory:** `createQueryClient()` gives the application and each test an isolated cache.
 - **Column factory:** `textColumn(key, header)` makes a table column that shows one field as text.
@@ -100,12 +100,12 @@ Done when a large repository is smooth to browse.
 
 Done when a full day of local work needs no terminal.
 
-- [ ] Stage and unstage by file, then by hunk
-- [ ] Commit and amend
-- [ ] Discard with undo
-- [ ] Create, switch, rename, and delete branches
-- [ ] Stash
-- [ ] Action factory, command palette, keyboard shortcuts
+- [x] Stage and unstage by file, then by hunk
+- [x] Commit and amend
+- [x] Discard with undo
+- [x] Create, switch, rename, and delete branches
+- [x] Stash
+- [x] Action factory, command palette, keyboard shortcuts
 
 ### Phase 4: Sync
 
@@ -153,9 +153,10 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Feature isolation:** each folder in `src/features/` has one `index.ts`. Other code imports only from that file.
 - **Thin shell:** git logic stays in `git-core`. A Tauri command only calls `git-core` and returns the result.
 - **Blocking work:** each command that starts a `git` process uses `run_blocking`. The main thread stays free.
-- **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery.
+- **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery. The action has `confirm`, and its result has `undo`. A discard keeps a copy of the changes in the stash.
 - **Calm mode:** each animation must stop in calm mode. Calm mode applies when the user selects it or when the system asks for reduced motion.
 - **Read-only core:** `git2` does each read operation. A read operation must not write to the repository.
+- **Write operations:** the system `git` does each write operation, so hooks, signing, and the configuration of the user apply. Each write operation runs in an action.
 - **Sample data:** `pnpm dev` in a browser has no Rust core. The demo backend in `src/demo` gives a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend.
 - **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer and run in calm mode.
 - **Workflow:** one vertical slice for each pull request. Use conventional commit messages. CI must pass before a merge.
@@ -168,4 +169,6 @@ Tools enforce these rules. CI fails when a rule fails.
 - **macOS distribution:** code signing needs a paid Apple Developer account. This is only necessary in Phase 7.
 - **History depth:** a page of the history at a large offset reads each newer commit first. A page at commit 100 000 takes approximately 0.4 seconds. The first pages take a few milliseconds.
 - **History order:** the history uses the unsorted walk of libgit2, which gives the order of `git log`. Each sorted walk reads the full history before the first commit, so do not use one.
+- **Git version:** the write operations send paths with `--pathspec-from-file`. This option needs Git 2.26 or later.
+- **Stash with paths:** in Git 2.54, `git stash push --keep-index` loses the staged changes when the paths include an untracked file. A discard does not use `--keep-index`. It restores the staged versions from the stash entry.
 - **Linux file watches:** inotify needs one watch for each folder. A very large working tree can reach the limit of the system. The repository then opens without automatic refresh.

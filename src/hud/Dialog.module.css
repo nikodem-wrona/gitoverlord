@@ -1,0 +1,62 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-overlay);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh var(--space-4) var(--space-4);
+  background: var(--color-backdrop);
+}
+
+.dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(32rem, 100%);
+  max-height: 100%;
+  border: 1px solid var(--color-accent);
+  background: var(--color-panel-header);
+  box-shadow: var(--glow-accent);
+  animation: open var(--duration-base) var(--ease-out);
+}
+
+.title {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-shadow: var(--text-glow-accent);
+  text-transform: uppercase;
+}
+
+.body {
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--color-line);
+}
+
+@keyframes open {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}

@@ -1,3 +1,4 @@
+import { formatShortcut, isMac, PALETTE_SHORTCUT, useActions } from "@/actions";
 import { shortHash, useBranches, useRepoSummary } from "@/features/repository";
 import {
   Button,
@@ -21,6 +22,7 @@ interface TopBarProps {
 /** The brand, the repository readouts, the commands, and calm mode. */
 export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
   const toast = useToast();
+  const { openPalette } = useActions();
   const syncOffline = () =>
     toast.info("Sync is offline", "Fetch, pull, and push arrive in phase 4.");
 
@@ -40,6 +42,9 @@ export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
         )}
       </dl>
       <div className={styles.actions}>
+        <Button onClick={openPalette} title="Find a command">
+          Commands {formatShortcut(PALETTE_SHORTCUT, isMac())}
+        </Button>
         <Button onClick={onShowRepositories} disabled={repoPath === null}>
           Repositories
         </Button>

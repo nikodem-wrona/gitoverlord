@@ -17,7 +17,7 @@ export const MODULES: Record<ModuleId, ModuleInfo> = {
   history: { id: "history", label: "History", title: "Commit log" },
   branches: { id: "branches", label: "Branches", title: "Branch registry" },
   remotes: { id: "remotes", label: "Remotes", title: "Remote links", phase: 4 },
-  stash: { id: "stash", label: "Stash", title: "Stash vault", phase: 3 },
+  stash: { id: "stash", label: "Stash", title: "Stash vault" },
   pullRequests: {
     id: "pullRequests",
     label: "Pull requests",

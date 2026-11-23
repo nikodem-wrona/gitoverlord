@@ -1,6 +1,7 @@
 import type { GitError } from "./bindings";
 
-type CommandResult<T> =
+/** The result of a generated command. */
+export type CommandResult<T> =
   { status: "ok"; data: T } | { status: "error"; error: GitError };
 
 /** The error that `unwrap` throws when a command returns a failure. */

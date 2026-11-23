@@ -14,6 +14,7 @@ export {
   type GitError,
   type GitVersion,
   type Head,
+  type HunkTarget,
   type LineKind,
   type LogPage,
   type MockCommandHandlers,
@@ -21,7 +22,8 @@ export {
   type RecentRepo,
   type RepoChange,
   type RepoSummary,
+  type StashEntry,
   type WorkingTree,
 } from "./bindings";
 export { errorMessage } from "./errorMessage";
-export { CommandError, unwrap } from "./unwrap";
+export { CommandError, type CommandResult, unwrap } from "./unwrap";

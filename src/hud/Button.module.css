@@ -65,9 +65,27 @@
   transform: translateY(1px);
 }
 
+.button[data-compact] {
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+/* The border pulses while the command runs. */
+.button[data-busy] {
+  animation: busy 900ms ease-in-out infinite alternate;
+}
+
 .button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+@keyframes busy {
+  to {
+    border-color: var(--color-accent-strong);
+    box-shadow: var(--glow-accent);
+  }
 }
 
 @keyframes sweep {

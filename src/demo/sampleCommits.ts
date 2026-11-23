@@ -2,7 +2,7 @@ import type { Commit, FileDelta } from "@/ipc";
 
 type FileSpec = readonly [path: string, additions: number, deletions: number];
 
-interface SampleCommit {
+export interface SampleCommit {
   commit: Commit;
   files: FileDelta[];
 }

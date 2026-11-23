@@ -8,6 +8,7 @@ export {
   useCommitLog,
   useFileDiff,
   useRepoSummary,
+  useStashes,
   useWorkingTree,
 } from "./queries";
 export { QueryPanel, type QueryState, QueryView } from "./QueryPanel";
@@ -15,3 +16,4 @@ export { RepoDock } from "./RepoDock";
 export { RepoNavigator } from "./RepoNavigator";
 export { type RepoSession, useRepoSession } from "./useRepoSession";
 export { useRepoWatcher } from "./useRepoWatcher";
+export { FILES_CHANGED, type RepoWriter, useRepoWriter } from "./useRepoWriter";

@@ -1,8 +1,22 @@
 import { useState } from "react";
 
-import { formatTime, QueryPanel, useBranches } from "@/features/repository";
-import { type Column, EmptyState, Table, textColumn } from "@/hud";
+import { ActionButton } from "@/actions";
+import {
+  formatTime,
+  QueryPanel,
+  type RepoWriter,
+  useBranches,
+  useRepoWriter,
+} from "@/features/repository";
+import { type Column, EmptyState, Table, textColumn, ToolLayout } from "@/hud";
 import type { Branch } from "@/ipc";
+
+import {
+  deleteBranchAction,
+  newBranchAction,
+  renameBranchAction,
+  switchBranchAction,
+} from "./branchActions";
 
 const COLUMNS: readonly Column<Branch>[] = [
   {
@@ -35,8 +49,12 @@ interface BranchPanelProps {
 /** The local branches. The current branch is highlighted. */
 export function BranchPanel({ title, repoPath, delay }: BranchPanelProps) {
   const branches = useBranches(repoPath);
+  const repo = useRepoWriter(repoPath);
   const [picked, setPicked] = useState<string>();
-  const current = branches.data?.find((branch) => branch.current)?.name;
+  const list = branches.data ?? [];
+  const selected =
+    list.find((branch) => branch.name === picked) ??
+    list.find((branch) => branch.current);
 
   return (
     <QueryPanel
@@ -46,25 +64,56 @@ export function BranchPanel({ title, repoPath, delay }: BranchPanelProps) {
       flush
       delay={delay}
     >
-      {(data) =>
-        data.length === 0 ? (
-          <EmptyState
-            title="No branches"
-            message="A branch shows here after the first commit."
-          />
-        ) : (
-          <Table
-            label="Branches"
-            columns={COLUMNS}
-            minWidth="40rem"
-            rows={data}
-            getRowKey={(branch) => branch.name}
-            selectedKey={picked ?? current}
-            onSelect={setPicked}
-            getRowTone={(branch) => (branch.current ? "highlight" : undefined)}
-          />
-        )
-      }
+      {(data) => (
+        <ToolLayout
+          label="Branch commands"
+          tools={<BranchTools repo={repo} selected={selected} />}
+        >
+          {data.length === 0 ? (
+            <EmptyState
+              title="No branches"
+              message="A branch shows here after the first commit."
+            />
+          ) : (
+            <Table
+              label="Branches"
+              columns={COLUMNS}
+              minWidth="40rem"
+              rows={data}
+              getRowKey={(branch) => branch.name}
+              selectedKey={selected?.name}
+              onSelect={setPicked}
+              getRowTone={(branch) =>
+                branch.current ? "highlight" : undefined
+              }
+            />
+          )}
+        </ToolLayout>
+      )}
     </QueryPanel>
+  );
+}
+
+function BranchTools({
+  repo,
+  selected,
+}: {
+  repo: RepoWriter;
+  selected?: Branch;
+}) {
+  return (
+    <>
+      <ActionButton action={newBranchAction(repo)} variant="primary" />
+      <ActionButton action={switchBranchAction(repo, selected)} text="Switch" />
+      <ActionButton
+        action={renameBranchAction(repo, selected)}
+        text="Rename…"
+      />
+      <ActionButton
+        action={deleteBranchAction(repo, selected)}
+        variant="danger"
+        text="Delete…"
+      />
+    </>
   );
 }

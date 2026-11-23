@@ -23,6 +23,10 @@ pub enum GitError {
     /// The git library could not read the repository.
     #[error("the repository could not be read: {0}")]
     ReadFailed(String),
+    /// The operation is not possible in the current state of the repository.
+    /// The message tells the user what to do.
+    #[error("{0}")]
+    Rejected(String),
     /// A file of the application could not be read or written.
     #[error("file access failed: {0}")]
     Io(String),

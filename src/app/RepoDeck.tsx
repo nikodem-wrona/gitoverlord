@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import { CommitComposer } from "@/features/commit";
 import { DiffPanel } from "@/features/diff";
 import {
   CommitInspector,
@@ -16,6 +17,7 @@ import type { DiffTarget } from "@/ipc";
 
 import styles from "./AppShell.module.css";
 import type { ModuleId } from "./modules";
+import { useRepoActions } from "./useRepoActions";
 import { Workspace } from "./Workspace";
 
 interface RepoDeckProps {
@@ -32,6 +34,7 @@ interface Inspection {
 /** The three columns of an open repository. The diff viewer covers the timeline. */
 export function RepoDeck({ repoPath, moduleId }: RepoDeckProps) {
   useRepoWatcher(repoPath);
+  useRepoActions(repoPath);
   const headHash = useRepoSummary(repoPath).data?.head.hash ?? undefined;
   const history = useHistory(repoPath);
   const [pickedHash, setPickedHash] = useState<string>();
@@ -67,16 +70,43 @@ export function RepoDeck({ repoPath, moduleId }: RepoDeckProps) {
           onInspect={inspect}
         />
       </main>
-      <aside className={styles.right} aria-label="Inspector">
+      <Inspector
+        repoPath={repoPath}
+        moduleId={moduleId}
+        hash={selectedHash}
+        target={target}
+        onSelectFile={inspect}
+      />
+    </>
+  );
+}
+
+interface InspectorProps {
+  repoPath: string;
+  moduleId: ModuleId;
+  hash?: string;
+  /** The file that the diff viewer shows. */
+  target?: DiffTarget;
+  onSelectFile(target: DiffTarget): void;
+}
+
+/** The right column: the commit console on the Changes tab, else the commit inspector. */
+function Inspector(props: InspectorProps) {
+  const { repoPath, target } = props;
+  return (
+    <aside className={styles.right} aria-label="Inspector">
+      {props.moduleId === "changes" ? (
+        <CommitComposer repoPath={repoPath} delay={200} />
+      ) : (
         <CommitInspector
           repoPath={repoPath}
-          hash={selectedHash}
+          hash={props.hash}
           selectedPath={target?.kind === "commit" ? target.path : undefined}
-          onSelectFile={inspect}
+          onSelectFile={props.onSelectFile}
           delay={200}
         />
-      </aside>
-    </>
+      )}
+    </aside>
   );
 }
 

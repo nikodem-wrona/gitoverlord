@@ -2,11 +2,16 @@ use std::path::Path;
 
 use crate::GitError;
 use crate::libgit::Git2Backend;
-use crate::model::{Branch, CommitDetail, DiffTarget, FileDiff, LogPage, RepoSummary, WorkingTree};
+use crate::model::{
+    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, RepoSummary, StashEntry,
+    WorkingTree,
+};
 
-/// Read access to one repository.
+/// Access to one repository.
 ///
-/// The user interface does not know which git engine gives the data.
+/// The read operations do not change the repository. The write operations run
+/// the system `git`, so hooks, signing, and the configuration of the user apply.
+/// The user interface does not know which engine does the work.
 pub trait GitBackend {
     /// Reads the name, the path, `HEAD`, the remotes, and the tags.
     fn summary(&self) -> Result<RepoSummary, GitError>;
@@ -22,6 +27,40 @@ pub trait GitBackend {
     fn file_diff(&self, target: &DiffTarget) -> Result<FileDiff, GitError>;
     /// Counts the commits on each of the last `days` days. The oldest day is first.
     fn activity(&self, days: u32) -> Result<Vec<u32>, GitError>;
+    /// Reads the stash entries. The newest entry is first.
+    fn stashes(&self) -> Result<Vec<StashEntry>, GitError>;
+
+    /// Adds the changes of `paths` to the index.
+    fn stage(&self, paths: &[String]) -> Result<(), GitError>;
+    /// Removes the changes of `paths` from the index. The working tree keeps them.
+    fn unstage(&self, paths: &[String]) -> Result<(), GitError>;
+    /// Adds one hunk of the unstaged changes to the index.
+    fn stage_hunk(&self, hunk: &HunkTarget) -> Result<(), GitError>;
+    /// Removes one hunk of the staged changes from the index.
+    fn unstage_hunk(&self, hunk: &HunkTarget) -> Result<(), GitError>;
+    /// Removes the unstaged changes of `paths`. Returns the hash of the stash
+    /// entry that keeps a copy of the changes.
+    fn discard(&self, paths: &[String]) -> Result<String, GitError>;
+    /// Writes the changes of a discard back to the working tree, then drops its entry.
+    fn restore_discarded(&self, hash: &str) -> Result<(), GitError>;
+    /// Commits the staged changes and returns the new hash. `amend` replaces the last commit.
+    fn commit(&self, message: &str, amend: bool) -> Result<String, GitError>;
+    /// Creates a branch at `start`, or at `HEAD`. `switch` makes it the current branch.
+    fn create_branch(&self, name: &str, start: Option<&str>, switch: bool) -> Result<(), GitError>;
+    fn switch_branch(&self, name: &str) -> Result<(), GitError>;
+    fn rename_branch(&self, name: &str, new_name: &str) -> Result<(), GitError>;
+    /// Deletes a branch, also if it is not merged. Returns the hash of its last
+    /// commit, so the branch can be made again.
+    fn delete_branch(&self, name: &str) -> Result<String, GitError>;
+    /// Moves each change to a new stash entry, with the untracked files. Returns its hash.
+    fn stash(&self, message: &str) -> Result<String, GitError>;
+    /// Applies a stash entry. The entry stays in the list.
+    fn apply_stash(&self, hash: &str) -> Result<(), GitError>;
+    /// Applies a stash entry and removes it from the list.
+    fn pop_stash(&self, hash: &str) -> Result<(), GitError>;
+    fn drop_stash(&self, hash: &str) -> Result<(), GitError>;
+    /// Puts a dropped entry back in the stash list.
+    fn restore_stash(&self, hash: &str, message: &str) -> Result<(), GitError>;
 }
 
 /// Opens the repository that contains `path`.

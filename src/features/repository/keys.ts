@@ -10,6 +10,7 @@ export const repoKeys = {
   log: (path: string) => ["repo", path, "log"],
   commit: (path: string, hash: string) => ["repo", path, "commit", hash],
   status: (path: string) => ["repo", path, "status"],
+  stashes: (path: string) => ["repo", path, "stashes"],
   diffs: (path: string) => ["repo", path, "diff"],
   diff: (path: string, target: DiffTarget) => ["repo", path, "diff", target],
 } as const;

@@ -19,6 +19,15 @@ pub(super) fn read(repo: &Repository) -> Result<Vec<Branch>, GitError> {
     Ok(branches)
 }
 
+/// Returns the hash of the last commit of the local branch `name`.
+pub(super) fn tip(repo: &Repository, name: &str) -> Result<String, GitError> {
+    let branch = repo.find_branch(name, BranchType::Local)?;
+    let target = branch.get().target();
+    target
+        .map(|id| id.to_string())
+        .ok_or_else(|| GitError::Rejected(format!("The branch {name} has no commit.")))
+}
+
 /// Returns `None` for a branch without a readable name or without a commit.
 fn to_branch(repo: &Repository, branch: &git2::Branch<'_>) -> Result<Option<Branch>, GitError> {
     let (Ok(name), Some(tip)) = (branch.name_bytes(), branch.get().target()) else {

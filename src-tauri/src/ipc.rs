@@ -2,7 +2,7 @@
 
 use tauri_specta::{Builder, ErrorHandlingMode, collect_commands, collect_events};
 
-use crate::commands::{changes, history, repository, system};
+use crate::commands::{branches, changes, commit, history, repository, stash, system};
 use crate::events::RepoChanged;
 
 /// Registers each command and each event of the user interface.
@@ -20,12 +20,30 @@ pub fn builder() -> Builder<tauri::Wry> {
             repository::open_repository,
             repository::recent_repositories,
             repository::repo_summary,
-            repository::repo_branches,
             repository::repo_activity,
             history::repo_log,
             history::commit_detail,
             changes::repo_status,
             changes::file_diff,
+            changes::stage_files,
+            changes::unstage_files,
+            changes::stage_hunk,
+            changes::unstage_hunk,
+            changes::discard_changes,
+            changes::restore_discarded,
+            commit::commit_changes,
+            branches::repo_branches,
+            branches::create_branch,
+            branches::restore_branch,
+            branches::switch_branch,
+            branches::rename_branch,
+            branches::delete_branch,
+            stash::repo_stashes,
+            stash::stash_changes,
+            stash::apply_stash,
+            stash::pop_stash,
+            stash::drop_stash,
+            stash::restore_stash,
         ])
         .events(collect_events![RepoChanged])
         .mocks()

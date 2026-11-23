@@ -1,8 +1,10 @@
 import { useState } from "react";
 
+import { useRegisterActions } from "@/actions";
 import { RepoDock, useRepoSession } from "@/features/repository";
-import { Tabs } from "@/hud";
+import { Tabs, useMotion } from "@/hud";
 
+import { appActions } from "./appActions";
 import styles from "./AppShell.module.css";
 import {
   isModuleId,
@@ -22,6 +24,8 @@ import { TopBar } from "./TopBar";
 export function AppShell() {
   const session = useRepoSession();
   const [moduleId, setModuleId] = useState<ModuleId>("history");
+  const motion = useMotion();
+  useRegisterActions(appActions({ session, motion, showModule: setModuleId }));
 
   return (
     <div className={styles.shell}>

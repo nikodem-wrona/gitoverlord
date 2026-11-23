@@ -1,6 +1,7 @@
 import { BranchPanel } from "@/features/branches";
 import { ChangesPanel } from "@/features/changes";
 import { CommitLogPanel, type History } from "@/features/history";
+import { StashPanel } from "@/features/stash";
 import { EmptyState, Panel, TabPanel } from "@/hud";
 import type { DiffTarget } from "@/ipc";
 
@@ -62,6 +63,15 @@ function ModulePanel(props: WorkspaceProps) {
     case "branches":
       return (
         <BranchPanel title={title} repoPath={repoPath} delay={REVEAL_DELAY} />
+      );
+    case "stash":
+      return (
+        <StashPanel
+          title={title}
+          repoPath={repoPath}
+          onInspect={props.onSelectCommit}
+          delay={REVEAL_DELAY}
+        />
       );
     default:
       return (

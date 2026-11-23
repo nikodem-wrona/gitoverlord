@@ -13,6 +13,20 @@ function Trigger() {
   );
 }
 
+function ActionTrigger({ run }: { run(): void }) {
+  const toast = useToast();
+  const notify = () => {
+    toast.ok("Deleted", undefined, { action: { label: "Undo", run } });
+    const id = toast.info("Working", undefined, { sticky: true });
+    if (id < 0) throw new Error("A notification has a positive id.");
+  };
+  return (
+    <button type="button" onClick={notify}>
+      Notify
+    </button>
+  );
+}
+
 function renderToasts(duration?: number) {
   render(
     <ToastProvider duration={duration}>
@@ -57,6 +71,38 @@ describe("toasts", () => {
     for (let count = 0; count < 5; count += 1) fireEvent.click(trigger);
 
     expect(screen.getAllByText("Saved")).toHaveLength(4);
+  });
+
+  it("runs the button of a notification, then closes the notification", () => {
+    const run = vi.fn<() => void>();
+    render(
+      <ToastProvider>
+        <ActionTrigger run={run} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Notify" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    expect(run).toHaveBeenCalledOnce();
+    expect(screen.queryByText("Deleted")).not.toBeInTheDocument();
+  });
+
+  it("keeps a sticky notification after the duration", () => {
+    vi.useFakeTimers();
+    render(
+      <ToastProvider duration={1000}>
+        <ActionTrigger run={() => {}} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Notify" }));
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.getByText("Working")).toBeInTheDocument();
+    expect(screen.queryByText("Deleted")).not.toBeInTheDocument();
   });
 
   it("needs a provider", () => {

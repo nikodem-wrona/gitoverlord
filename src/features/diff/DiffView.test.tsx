@@ -27,6 +27,19 @@ function rowOf(text: string): HTMLElement {
 }
 
 describe("DiffView", () => {
+  it("puts the control of each hunk in its header row", () => {
+    const control = (index: number, header: string) => (
+      <button type="button">{`Stage ${index} ${header}`}</button>
+    );
+    render(<DiffView label="Diff" diff={DIFF} hunkControl={control} />);
+
+    const button = screen.getByRole("button", {
+      name: "Stage 0 @@ -1,2 +1,2 @@",
+    });
+
+    expect(button.closest("[data-row]")).toHaveAttribute("data-kind", "hunk");
+  });
+
   it("shows the hunk header and each line with its kind", () => {
     render(<DiffView label="Diff of file.txt" diff={DIFF} />);
 

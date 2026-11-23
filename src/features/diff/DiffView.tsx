@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 
 import { EmptyState, useRowWindow } from "@/hud";
 import type { FileDiff, LineKind } from "@/ipc";
@@ -16,6 +16,8 @@ interface DiffViewProps {
   /** The accessible name of the diff. */
   label: string;
   diff: FileDiff;
+  /** Makes the control at the end of a hunk header, for example a stage button. */
+  hunkControl?(index: number, header: string): ReactNode;
 }
 
 /**
@@ -23,7 +25,7 @@ interface DiffViewProps {
  *
  * Only the lines in view are rendered, so a long diff stays fast.
  */
-export function DiffView({ label, diff }: DiffViewProps) {
+export function DiffView({ label, diff, hunkControl }: DiffViewProps) {
   const rows = useMemo(() => diffRows(diff), [diff]);
   const { scrollRef, onScroll, window } = useRowWindow(rows.length);
 
@@ -55,7 +57,7 @@ export function DiffView({ label, diff }: DiffViewProps) {
       <div className={styles.rows}>
         <div style={{ height: window.before }} />
         {rows.slice(window.start, window.end).map((row) => (
-          <DiffRowView key={row.key} row={row} />
+          <DiffRowView key={row.key} row={row} hunkControl={hunkControl} />
         ))}
         <div style={{ height: window.after }} />
       </div>
@@ -63,11 +65,23 @@ export function DiffView({ label, diff }: DiffViewProps) {
   );
 }
 
-function DiffRowView({ row }: { row: DiffRow }) {
+interface DiffRowViewProps {
+  row: DiffRow;
+  hunkControl?(index: number, header: string): ReactNode;
+}
+
+function DiffRowView({ row, hunkControl }: DiffRowViewProps) {
   if (row.type !== "line") {
     return (
       <div data-row className={styles.row} data-kind={row.type}>
-        {row.text}
+        {row.type === "hunk" ? (
+          <>
+            <span className={styles.header}>{row.text}</span>
+            {hunkControl?.(row.index, row.text)}
+          </>
+        ) : (
+          row.text
+        )}
       </div>
     );
   }

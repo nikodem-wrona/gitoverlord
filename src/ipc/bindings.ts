@@ -17,8 +17,6 @@ export const commands = {
 	recentRepositories: (options?: InvokeOptions) => typedError<RecentRepo[], GitError>(__TAURI_INVOKE("recent_repositories", undefined, options)),
 	/**  Reads the name, the path, `HEAD`, the remotes, and the tags of a repository. */
 	repoSummary: (path: string, options?: InvokeOptions) => typedError<RepoSummary, GitError>(__TAURI_INVOKE("repo_summary", { path }, options)),
-	/**  Lists the local branches. The current branch is first. */
-	repoBranches: (path: string, options?: InvokeOptions) => typedError<Branch[], GitError>(__TAURI_INVOKE("repo_branches", { path }, options)),
 	/**  Counts the commits on each of the last `days` days. The oldest day is first. */
 	repoActivity: (path: string, days: number, options?: InvokeOptions) => typedError<number[], GitError>(__TAURI_INVOKE("repo_activity", { path, days }, options)),
 	/**  Reads `limit` commits after the first `skip` commits. The newest commit is first. */
@@ -29,6 +27,42 @@ export const commands = {
 	repoStatus: (path: string, options?: InvokeOptions) => typedError<WorkingTree, GitError>(__TAURI_INVOKE("repo_status", { path }, options)),
 	/**  Reads the changed lines of one file. */
 	fileDiff: (path: string, target: DiffTarget, options?: InvokeOptions) => typedError<FileDiff, GitError>(__TAURI_INVOKE("file_diff", { path, target }, options)),
+	/**  Adds the changes of `files` to the index. */
+	stageFiles: (path: string, files: string[], options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("stage_files", { path, files }, options)),
+	/**  Removes the changes of `files` from the index. The working tree keeps them. */
+	unstageFiles: (path: string, files: string[], options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("unstage_files", { path, files }, options)),
+	/**  Adds one hunk of the unstaged changes to the index. */
+	stageHunk: (path: string, hunk: HunkTarget, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("stage_hunk", { path, hunk }, options)),
+	/**  Removes one hunk of the staged changes from the index. */
+	unstageHunk: (path: string, hunk: HunkTarget, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("unstage_hunk", { path, hunk }, options)),
+	/**  Removes the unstaged changes of `files`. Returns the hash of the stash entry that keeps a copy. */
+	discardChanges: (path: string, files: string[], options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("discard_changes", { path, files }, options)),
+	/**  Writes the changes of a discard back to the working tree, then drops its stash entry. */
+	restoreDiscarded: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_discarded", { path, hash }, options)),
+	/**  Commits the staged changes and returns the new hash. `amend` replaces the last commit. */
+	commitChanges: (path: string, message: string, amend: boolean, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("commit_changes", { path, message, amend }, options)),
+	/**  Lists the local branches. The current branch is first. */
+	repoBranches: (path: string, options?: InvokeOptions) => typedError<Branch[], GitError>(__TAURI_INVOKE("repo_branches", { path }, options)),
+	/**  Creates a branch at `start`, or at `HEAD`, and switches to it. */
+	createBranch: (path: string, name: string, start: string | null, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("create_branch", { path, name, start }, options)),
+	/**  Makes a deleted branch again at its last commit. The current branch does not change. */
+	restoreBranch: (path: string, name: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_branch", { path, name, hash }, options)),
+	/**  Makes `name` the current branch. */
+	switchBranch: (path: string, name: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("switch_branch", { path, name }, options)),
+	renameBranch: (path: string, name: string, newName: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("rename_branch", { path, name, newName }, options)),
+	/**  Deletes a branch, also if it is not merged. Returns the hash of its last commit. */
+	deleteBranch: (path: string, name: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("delete_branch", { path, name }, options)),
+	/**  Lists the stash entries. The newest entry is first. */
+	repoStashes: (path: string, options?: InvokeOptions) => typedError<StashEntry[], GitError>(__TAURI_INVOKE("repo_stashes", { path }, options)),
+	/**  Moves each change to a new stash entry, with the untracked files. Returns its hash. */
+	stashChanges: (path: string, message: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("stash_changes", { path, message }, options)),
+	/**  Applies a stash entry. The entry stays in the list. */
+	applyStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("apply_stash", { path, hash }, options)),
+	/**  Applies a stash entry and removes it from the list. */
+	popStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("pop_stash", { path, hash }, options)),
+	dropStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("drop_stash", { path, hash }, options)),
+	/**  Puts a dropped entry back in the stash list. */
+	restoreStash: (path: string, hash: string, message: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_stash", { path, hash, message }, options)),
 };
 
 /** Events */
@@ -141,6 +175,11 @@ export type GitError =
 { kind: "notARepository"; message: string } | 
 /**  The git library could not read the repository. */
 { kind: "readFailed"; message: string } | 
+/**
+ *  The operation is not possible in the current state of the repository.
+ *  The message tells the user what to do.
+ */
+{ kind: "rejected"; message: string } | 
 /**  A file of the application could not be read or written. */
 { kind: "io"; message: string };
 
@@ -157,6 +196,18 @@ export type Head = {
 	branch: string | null,
 	/**  The commit at `HEAD`. `None` when the repository has no commits. */
 	hash: string | null,
+};
+
+/**  Selects one hunk in the diff of the index or of the working tree. */
+export type HunkTarget = {
+	path: string,
+	/**  The position of the hunk in the diff of the file. The first hunk is 0. */
+	index: number,
+	/**
+	 *  The header of the hunk, as `DiffHunk` gives it. A different header shows
+	 *  that the file changed after the user saw the diff.
+	 */
+	header: string,
 };
 
 export type LineKind = "context" | "added" | "removed";
@@ -199,6 +250,18 @@ export type RepoSummary = {
 	remotes: string[],
 	/**  The newest name is first. */
 	tags: string[],
+};
+
+/**  One entry of the stash. */
+export type StashEntry = {
+	/**  The position in the list, as in `stash@{0}`. The newest entry is 0. */
+	index: number,
+	/**  The hash of the stash commit. Each stash command takes this value. */
+	hash: string,
+	/**  The message, for example `On main: try a new layout`. */
+	message: string,
+	/**  The time when the entry was made, in Unix seconds. */
+	time: number,
 };
 
 /**
@@ -257,12 +320,30 @@ export type MockCommandHandlers = {
     openRepository: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
     recentRepositories: () => RecentRepo[] | Promise<RecentRepo[]>,
     repoSummary: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
-    repoBranches: (args: { path: string }) => Branch[] | Promise<Branch[]>,
     repoActivity: (args: { path: string; days: number }) => number[] | Promise<number[]>,
     repoLog: (args: { path: string; skip: number; limit: number }) => LogPage | Promise<LogPage>,
     commitDetail: (args: { path: string; hash: string }) => CommitDetail | Promise<CommitDetail>,
     repoStatus: (args: { path: string }) => WorkingTree | Promise<WorkingTree>,
     fileDiff: (args: { path: string; target: DiffTarget }) => FileDiff | Promise<FileDiff>,
+    stageFiles: (args: { path: string; files: string[] }) => null | Promise<null>,
+    unstageFiles: (args: { path: string; files: string[] }) => null | Promise<null>,
+    stageHunk: (args: { path: string; hunk: HunkTarget }) => null | Promise<null>,
+    unstageHunk: (args: { path: string; hunk: HunkTarget }) => null | Promise<null>,
+    discardChanges: (args: { path: string; files: string[] }) => string | Promise<string>,
+    restoreDiscarded: (args: { path: string; hash: string }) => null | Promise<null>,
+    commitChanges: (args: { path: string; message: string; amend: boolean }) => string | Promise<string>,
+    repoBranches: (args: { path: string }) => Branch[] | Promise<Branch[]>,
+    createBranch: (args: { path: string; name: string; start: string | null }) => null | Promise<null>,
+    restoreBranch: (args: { path: string; name: string; hash: string }) => null | Promise<null>,
+    switchBranch: (args: { path: string; name: string }) => null | Promise<null>,
+    renameBranch: (args: { path: string; name: string; newName: string }) => null | Promise<null>,
+    deleteBranch: (args: { path: string; name: string }) => string | Promise<string>,
+    repoStashes: (args: { path: string }) => StashEntry[] | Promise<StashEntry[]>,
+    stashChanges: (args: { path: string; message: string }) => string | Promise<string>,
+    applyStash: (args: { path: string; hash: string }) => null | Promise<null>,
+    popStash: (args: { path: string; hash: string }) => null | Promise<null>,
+    dropStash: (args: { path: string; hash: string }) => null | Promise<null>,
+    restoreStash: (args: { path: string; hash: string; message: string }) => null | Promise<null>,
 };
 
 /**
@@ -294,12 +375,30 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "open_repository": return mockCommandHandler(mockHandlers.openRepository, "open_repository", args);
             case "recent_repositories": return mockCommandHandler(mockHandlers.recentRepositories, "recent_repositories", args);
             case "repo_summary": return mockCommandHandler(mockHandlers.repoSummary, "repo_summary", args);
-            case "repo_branches": return mockCommandHandler(mockHandlers.repoBranches, "repo_branches", args);
             case "repo_activity": return mockCommandHandler(mockHandlers.repoActivity, "repo_activity", args);
             case "repo_log": return mockCommandHandler(mockHandlers.repoLog, "repo_log", args);
             case "commit_detail": return mockCommandHandler(mockHandlers.commitDetail, "commit_detail", args);
             case "repo_status": return mockCommandHandler(mockHandlers.repoStatus, "repo_status", args);
             case "file_diff": return mockCommandHandler(mockHandlers.fileDiff, "file_diff", args);
+            case "stage_files": return mockCommandHandler(mockHandlers.stageFiles, "stage_files", args);
+            case "unstage_files": return mockCommandHandler(mockHandlers.unstageFiles, "unstage_files", args);
+            case "stage_hunk": return mockCommandHandler(mockHandlers.stageHunk, "stage_hunk", args);
+            case "unstage_hunk": return mockCommandHandler(mockHandlers.unstageHunk, "unstage_hunk", args);
+            case "discard_changes": return mockCommandHandler(mockHandlers.discardChanges, "discard_changes", args);
+            case "restore_discarded": return mockCommandHandler(mockHandlers.restoreDiscarded, "restore_discarded", args);
+            case "commit_changes": return mockCommandHandler(mockHandlers.commitChanges, "commit_changes", args);
+            case "repo_branches": return mockCommandHandler(mockHandlers.repoBranches, "repo_branches", args);
+            case "create_branch": return mockCommandHandler(mockHandlers.createBranch, "create_branch", args);
+            case "restore_branch": return mockCommandHandler(mockHandlers.restoreBranch, "restore_branch", args);
+            case "switch_branch": return mockCommandHandler(mockHandlers.switchBranch, "switch_branch", args);
+            case "rename_branch": return mockCommandHandler(mockHandlers.renameBranch, "rename_branch", args);
+            case "delete_branch": return mockCommandHandler(mockHandlers.deleteBranch, "delete_branch", args);
+            case "repo_stashes": return mockCommandHandler(mockHandlers.repoStashes, "repo_stashes", args);
+            case "stash_changes": return mockCommandHandler(mockHandlers.stashChanges, "stash_changes", args);
+            case "apply_stash": return mockCommandHandler(mockHandlers.applyStash, "apply_stash", args);
+            case "pop_stash": return mockCommandHandler(mockHandlers.popStash, "pop_stash", args);
+            case "drop_stash": return mockCommandHandler(mockHandlers.dropStash, "drop_stash", args);
+            case "restore_stash": return mockCommandHandler(mockHandlers.restoreStash, "restore_stash", args);
             default: throw new Error(`No mock handler registered for command '${cmd}'`);
         }
     }, { shouldMockEvents: true });

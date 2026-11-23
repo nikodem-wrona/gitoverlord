@@ -1,11 +1,18 @@
 import { useEffect } from "react";
 
-import { QueryView, shortHash, useFileDiff } from "@/features/repository";
+import { ActionButton } from "@/actions";
+import {
+  QueryView,
+  shortHash,
+  useFileDiff,
+  useRepoWriter,
+} from "@/features/repository";
 import { Button, Panel, PathText } from "@/hud";
 import type { DiffTarget } from "@/ipc";
 
 import styles from "./DiffPanel.module.css";
 import { DiffView } from "./DiffView";
+import { hunkAction } from "./hunkAction";
 
 interface DiffPanelProps {
   repoPath: string;
@@ -23,7 +30,13 @@ export function DiffPanel({
   delay,
 }: DiffPanelProps) {
   const diff = useFileDiff(repoPath, target);
+  const repo = useRepoWriter(repoPath);
   useEscapeKey(onClose);
+  const hunkControl = (index: number, header: string) => {
+    const action = hunkAction(repo, target, index, header);
+    const text = target.kind === "staged" ? "Unstage hunk" : "Stage hunk";
+    return action && <ActionButton action={action} compact text={text} />;
+  };
 
   return (
     <Panel title="Diff scan" meta={sourceOf(target)} flush delay={delay}>
@@ -37,7 +50,11 @@ export function DiffPanel({
         <div className={styles.lines}>
           <QueryView query={diff}>
             {(data) => (
-              <DiffView label={`Diff of ${target.path}`} diff={data} />
+              <DiffView
+                label={`Diff of ${target.path}`}
+                diff={data}
+                hunkControl={hunkControl}
+              />
             )}
           </QueryView>
         </div>

@@ -1,6 +1,6 @@
 //! Commands that open a repository and read its references.
 
-use git_core::{Branch, GitError, RecentRepo, RepoSummary};
+use git_core::{GitError, RecentRepo, RepoSummary};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
 
@@ -38,13 +38,6 @@ pub async fn recent_repositories(app: AppHandle) -> Result<Vec<RecentRepo>, GitE
 #[specta::specta]
 pub async fn repo_summary(path: String) -> Result<RepoSummary, GitError> {
     with_repo(path, |repo| repo.summary()).await
-}
-
-/// Lists the local branches. The current branch is first.
-#[tauri::command]
-#[specta::specta]
-pub async fn repo_branches(path: String) -> Result<Vec<Branch>, GitError> {
-    with_repo(path, |repo| repo.branches()).await
 }
 
 /// Counts the commits on each of the last `days` days. The oldest day is first.

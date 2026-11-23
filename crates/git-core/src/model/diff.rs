@@ -13,6 +13,18 @@ pub enum DiffTarget {
     Unstaged { path: String },
 }
 
+/// Selects one hunk in the diff of the index or of the working tree.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HunkTarget {
+    pub path: String,
+    /// The position of the hunk in the diff of the file. The first hunk is 0.
+    pub index: u32,
+    /// The header of the hunk, as `DiffHunk` gives it. A different header shows
+    /// that the file changed after the user saw the diff.
+    pub header: String,
+}
+
 /// The changed lines of one file.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]

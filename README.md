@@ -6,15 +6,15 @@
 
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
-**Status:** Phase 2, read-only viewer. The application opens a repository and shows its history as a commit timeline and as a commit log. It also shows the changed files, the branches, the details of a commit, and the diff of a file. The panels refresh when the repository changes on the disk. The application does not change a repository.
+**Status:** Phase 3, local workflow. The application opens a repository and shows its history, its changes, its branches, and its stash. You can stage files and hunks, commit, amend, and discard changes. You can also create, switch, rename, and delete branches, and use the stash. The panels refresh when the repository changes on the disk.
 
-Phase 3 adds the commands to stage, to commit, and to change branches. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
+Phase 4 adds clone, fetch, pull, and push. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
 
 ## Prerequisites
 
 - [Rust](https://rustup.rs). rustup installs the version that `rust-toolchain.toml` gives.
 - Node.js 26 and pnpm 10.
-- Git 2 or later.
+- Git 2.26 or later.
 - The [Tauri system dependencies](https://tauri.app/start/prerequisites/) for your operating system.
 
 ## Setup
@@ -46,9 +46,49 @@ Select **Open a folder** on the start screen, then select a folder in a git repo
 
 Select a commit on the timeline or in the commit log to see its details. Select a file in the commit details or on the **Changes** tab to see its diff. Press Escape to close the diff.
 
+## Commit changes
+
+1. Select the **Changes** tab.
+2. Select **Stage** on the row of a file, or select **Stage all**.
+3. To stage part of a file, select the file. Then select **Stage hunk** in the diff.
+4. Type a summary in the commit console. The description is optional.
+5. Select **Commit**, or press ⌘↩.
+
+Select **Amend the last commit** to replace the last commit. If the fields are empty, they then show the message of the last commit.
+
+## Branches and stash
+
+Use the toolbar on the **Branches** tab to create, switch, rename, and delete branches. A new branch starts at `HEAD` and becomes the current branch.
+
+Use the toolbar on the **Stash** tab to stash all changes, or to apply, pop, or drop an entry. Select an entry to see its files in the inspector.
+
+## Undo a destructive action
+
+The application asks before it discards changes, deletes a branch, or drops a stash entry. After the action, the notification shows an **Undo** button.
+
+A discard keeps a copy of the changes in the stash. When the notification closes, the copy stays on the **Stash** tab. Drop the entry to delete the copy.
+
+## Command palette and shortcuts
+
+Press ⌘K to open the command palette. Type a part of the name of a command, then press Enter.
+
+On Windows and Linux, use Ctrl in place of ⌘.
+
+| Shortcut | Command                                           |
+| -------- | ------------------------------------------------- |
+| ⌘K       | Open the command palette                          |
+| ⌘1 to ⌘4 | Show the Changes, History, Branches, or Stash tab |
+| ⌘↩       | Commit the staged changes, on the Changes tab     |
+| ⇧⌘A      | Stage all changes                                 |
+| ⇧⌘U      | Unstage all changes                               |
+| ⇧⌘N      | Create a branch                                   |
+| ⇧⌘S      | Stash all changes                                 |
+| ⌘O       | Open a repository                                 |
+| Escape   | Close the diff or the dialog                      |
+
 ## Demo backend
 
-`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend.
+`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. The release bundle does not contain the demo backend.
 
 ## Component gallery
 
@@ -67,6 +107,7 @@ src/app/           application root, providers, and shell layout
 src/hud/           design system: tokens, primitives, and motion
 src/features/      one folder for each feature, with one public entry
 src/ipc/           generated bindings and IPC helpers
+src/actions/       action factory, command palette, and shortcuts
 src/gallery/       component gallery, for development only
 src/demo/          sample repository for the browser and for tests
 src/test/          helpers for frontend tests
@@ -77,12 +118,13 @@ docs/ROADMAP.md    stack, phases, practices, risks
 
 ## Add a command
 
-1. Add the logic and its tests to `crates/git-core`. A read operation is a method of the `GitBackend` trait.
+1. Add the logic and its tests to `crates/git-core`. Each read operation and each write operation is a method of the `GitBackend` trait.
 2. Add a `#[tauri::command]` function to a file in `src-tauri/src/commands/`.
 3. Add the function to the list in `src-tauri/src/ipc.rs`.
 4. Run `pnpm bindings`.
 5. Add a handler for the command to `src/demo/demoHandlers.ts`. The type check fails until the handler is there.
-6. Call the command from a feature through `@/ipc`.
+6. Call a read command from a query hook in `src/features/repository`.
+7. Run a write command in an action from `defineAction`. Use `useRepoWriter`, so that the panels refresh after the command.
 
 ## Rules for contributions
 
