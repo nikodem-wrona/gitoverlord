@@ -1,0 +1,6 @@
+# Use LF line ends on each operating system. Prettier and the bindings check need this.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.icns binary

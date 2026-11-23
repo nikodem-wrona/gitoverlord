@@ -1,0 +1,28 @@
+/* Design tokens. Components use these variables and no literal values. */
+:root {
+  color-scheme: dark;
+
+  --color-bg: #05080d;
+  --color-surface: #0a1018;
+  --color-line: #1b2a38;
+  --color-text: #c9d6df;
+  --color-text-dim: #7f93a3;
+  --color-accent: #2fd4ff;
+  --color-ok: #3ddc97;
+  --color-fail: #ff4d5e;
+
+  --font-mono:
+    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --text-sm: 0.75rem;
+  --text-md: 0.875rem;
+  --tracking-normal: 0.04em;
+  --tracking-wide: 0.12em;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+
+  --glow-accent: 0 0 12px rgb(47 212 255 / 35%);
+}

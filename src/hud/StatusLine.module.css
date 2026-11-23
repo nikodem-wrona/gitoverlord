@@ -1,0 +1,49 @@
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  text-transform: uppercase;
+}
+
+.line[data-state="pending"] {
+  --state-color: var(--color-text-dim);
+}
+
+.line[data-state="ok"] {
+  --state-color: var(--color-ok);
+}
+
+.line[data-state="fail"] {
+  --state-color: var(--color-fail);
+}
+
+.badge {
+  color: var(--state-color);
+  white-space: pre;
+}
+
+.label {
+  color: var(--color-text-dim);
+}
+
+.leader {
+  flex: 1;
+  min-width: var(--space-6);
+  border-bottom: 1px dotted var(--color-line);
+}
+
+.value {
+  color: var(--state-color);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .line[data-state="pending"] .badge {
+    animation: blink 1s steps(2, start) infinite;
+  }
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}

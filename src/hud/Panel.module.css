@@ -1,0 +1,21 @@
+.panel {
+  min-width: 28rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+.title {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-shadow: var(--glow-accent);
+  text-transform: uppercase;
+}
+
+.body {
+  padding: var(--space-4);
+}
