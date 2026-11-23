@@ -17,4 +17,25 @@ pub enum GitError {
     /// The output of `git` did not have the expected format.
     #[error("unexpected git output: {0}")]
     UnexpectedOutput(String),
+    /// The folder is not in a git repository that has a working tree.
+    #[error("not a git repository: {0}")]
+    NotARepository(String),
+    /// The git library could not read the repository.
+    #[error("the repository could not be read: {0}")]
+    ReadFailed(String),
+    /// A file of the application could not be read or written.
+    #[error("file access failed: {0}")]
+    Io(String),
+}
+
+impl From<git2::Error> for GitError {
+    fn from(error: git2::Error) -> Self {
+        Self::ReadFailed(error.message().to_owned())
+    }
+}
+
+impl From<std::io::Error> for GitError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error.to_string())
+    }
 }

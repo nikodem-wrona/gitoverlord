@@ -5,7 +5,13 @@
 
 mod blocking;
 mod commands;
+mod events;
 mod ipc;
+mod session;
+
+use tauri::Manager;
+
+use crate::session::Session;
 
 /// Starts the application.
 ///
@@ -13,8 +19,16 @@ mod ipc;
 ///
 /// Panics if the Tauri runtime does not start.
 pub fn run() {
+    let ipc = ipc::builder();
+
     tauri::Builder::default()
-        .invoke_handler(ipc::builder().invoke_handler())
+        .plugin(tauri_plugin_dialog::init())
+        .invoke_handler(ipc.invoke_handler())
+        .setup(move |app| {
+            ipc.mount_events(app);
+            app.manage(Session::new(app.path().app_config_dir()?));
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

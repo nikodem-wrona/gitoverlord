@@ -1,1 +1,1 @@
-export { ChangesTable } from "./ChangesTable";
+export { ChangesPanel } from "./ChangesPanel";

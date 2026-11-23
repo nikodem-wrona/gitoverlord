@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { type Commit, SAMPLE_REPOSITORY } from "@/features/repository";
+import { SAMPLE_COMMITS } from "@/demo";
 import {
   type Column,
   Meter,
@@ -12,15 +12,16 @@ import {
   Tree,
   type TreeNode,
 } from "@/hud";
+import type { Commit } from "@/ipc";
 
 import styles from "./Gallery.module.css";
 
-const ROWS = SAMPLE_REPOSITORY.commits.slice(0, 8);
+const ROWS = SAMPLE_COMMITS.slice(0, 8);
 
 const COLUMNS: readonly Column<Commit>[] = [
   textColumn<Commit>("hash", "Hash", { width: "5rem" }),
   textColumn<Commit>("subject", "Subject"),
-  textColumn<Commit>("time", "Time", { width: "6rem" }),
+  textColumn<Commit>("author", "Author", { width: "6rem" }),
 ];
 
 const NODES: readonly TreeNode[] = [

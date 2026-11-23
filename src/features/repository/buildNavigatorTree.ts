@@ -1,30 +1,36 @@
 import type { TreeNode } from "@/hud";
-
-import type { Repository } from "./types";
+import type { Branch, RepoSummary } from "@/ipc";
 
 /** Makes the navigator tree: the repository with its branches, remotes, and tags. */
-export function buildNavigatorTree(repository: Repository): TreeNode[] {
-  const branches = repository.branches.map((branch) => ({
-    id: `branch:${branch.name}`,
+export function buildNavigatorTree(
+  summary: RepoSummary,
+  branches: readonly Branch[],
+): TreeNode[] {
+  const branchNodes = branches.map((branch) => ({
+    id: branchNodeId(branch.name),
     label: branch.name,
     icon: "branch" as const,
     meta: branch.current ? "HEAD" : undefined,
   }));
-  const remotes = repository.remotes.map((name) => leaf("remote", name));
-  const tags = repository.tags.map((name) => leaf("tag", name));
+  const remotes = summary.remotes.map((name) => leaf("remote", name));
+  const tags = summary.tags.map((name) => leaf("tag", name));
 
   return [
     {
       id: "repository",
-      label: repository.name,
+      label: summary.name,
       icon: "repository",
       children: [
-        group("branches", "Branches", branches),
+        group("branches", "Branches", branchNodes),
         group("remotes", "Remotes", remotes),
         group("tags", "Tags", tags),
       ],
     },
   ];
+}
+
+export function branchNodeId(name: string): string {
+  return `branch:${name}`;
 }
 
 function leaf(icon: "remote" | "tag", name: string): TreeNode {

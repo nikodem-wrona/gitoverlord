@@ -1,0 +1,16 @@
+.path {
+  display: flex;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.folder {
+  flex: 0 1 auto;
+  overflow: hidden;
+  color: var(--color-text-dim);
+  text-overflow: ellipsis;
+}
+
+.name {
+  flex: none;
+}

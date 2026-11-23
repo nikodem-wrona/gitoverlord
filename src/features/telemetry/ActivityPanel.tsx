@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { useActivity } from "@/features/repository";
 import { Panel } from "@/hud";
 
 import styles from "./ActivityPanel.module.css";
@@ -9,15 +10,17 @@ const WIDTH = 240;
 const HEIGHT = 56;
 const BAR_DAYS = 14;
 const MIN_BAR = 4;
+/** The chart is flat until the counts arrive. */
+const NO_ACTIVITY: readonly number[] = Array.from({ length: 30 }, () => 0);
 
 interface ActivityPanelProps {
-  /** Commits on each day. The oldest day is first. */
-  activity: readonly number[];
+  repoPath: string;
   delay?: number;
 }
 
 /** A waveform of the commits per day, and bars for the last two weeks. */
-export function ActivityPanel({ activity, delay }: ActivityPanelProps) {
+export function ActivityPanel({ repoPath, delay }: ActivityPanelProps) {
+  const activity = useActivity(repoPath).data ?? NO_ACTIVITY;
   const total = activity.reduce((sum, value) => sum + value, 0);
   const line = sparklinePath(activity, WIDTH, HEIGHT);
 

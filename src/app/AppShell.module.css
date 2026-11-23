@@ -17,6 +17,13 @@
   min-width: 0;
 }
 
+/* The dock takes the place of the three columns. */
+.dock {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
 .left,
 .right {
   display: flex;

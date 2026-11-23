@@ -16,7 +16,7 @@ pub(crate) fn run_git(args: &[&str]) -> Result<String, GitError> {
 }
 
 /// Creates the base `git` command. Each `git` process starts here.
-fn git_command() -> Command {
+pub(crate) fn git_command() -> Command {
     let mut command = Command::new("git");
     hide_console_window(&mut command);
     command

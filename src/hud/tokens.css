@@ -6,6 +6,7 @@
   --color-bg: #04070b;
   --color-panel: rgb(7 13 20 / 90%);
   --color-panel-header: rgb(11 21 31 / 95%);
+  --color-row-stripe: rgb(255 255 255 / 1.5%);
   --color-row-hover: rgb(47 212 255 / 7%);
   --color-row-selected: rgb(47 212 255 / 16%);
   --color-line: #142230;
@@ -23,6 +24,7 @@
   --color-ok: #3ddc97;
   --color-warn: #ffb547;
   --color-fail: #ff4d5e;
+  --color-ok-soft: rgb(61 220 151 / 12%);
   --color-fail-soft: rgb(255 77 94 / 18%);
 
   /* Type */
@@ -49,6 +51,9 @@
   --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+
+  /* Rows of tables and lists. Each row has this height. */
+  --row-height: 1.25rem;
 
   /* Glow */
   --glow-accent: 0 0 12px rgb(47 212 255 / 35%);

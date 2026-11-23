@@ -1,1 +1,1 @@
-export { BranchTable } from "./BranchTable";
+export { BranchPanel } from "./BranchPanel";

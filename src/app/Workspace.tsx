@@ -1,80 +1,76 @@
-import { BranchTable } from "@/features/branches";
-import { ChangesTable } from "@/features/changes";
-import { CommitTable } from "@/features/history";
-import type { Repository } from "@/features/repository";
+import { BranchPanel } from "@/features/branches";
+import { ChangesPanel } from "@/features/changes";
+import { CommitLogPanel, type History } from "@/features/history";
 import { EmptyState, Panel, TabPanel } from "@/hud";
+import type { DiffTarget } from "@/ipc";
 
 import { MODULE_TABS_ID, MODULES, type ModuleId } from "./modules";
 import styles from "./Workspace.module.css";
 
+const REVEAL_DELAY = 60;
+
 interface WorkspaceProps {
   moduleId: ModuleId;
-  repository: Repository;
+  repoPath: string;
+  history: History;
   selectedHash?: string;
   onSelectCommit(hash: string): void;
+  /** The file that the diff viewer shows. */
+  target?: DiffTarget;
+  /** Opens a file in the diff viewer. */
+  onInspect(target: DiffTarget): void;
 }
 
-/** The panel under the star map. The module tabs choose its content. */
+/** The panel under the timeline. The module tabs choose its content. */
 export function Workspace(props: WorkspaceProps) {
-  const module = MODULES[props.moduleId];
-
   return (
     <TabPanel
       idPrefix={MODULE_TABS_ID}
-      activeId={module.id}
+      activeId={props.moduleId}
       className={styles.workspace}
     >
-      <Panel
-        key={module.id}
-        title={module.title}
-        meta={moduleMeta(props)}
-        flush
-        delay={60}
-      >
-        <ModuleContent {...props} />
-      </Panel>
+      <ModulePanel key={props.moduleId} {...props} />
     </TabPanel>
   );
 }
 
-function ModuleContent({
-  moduleId,
-  repository,
-  selectedHash,
-  onSelectCommit,
-}: WorkspaceProps) {
-  switch (moduleId) {
-    case "changes":
-      return <ChangesTable changes={repository.changes} />;
-    case "history":
-      return (
-        <CommitTable
-          commits={repository.commits}
-          selectedHash={selectedHash}
-          onSelect={onSelectCommit}
-        />
-      );
-    case "branches":
-      return <BranchTable branches={repository.branches} />;
-    default:
-      return (
-        <EmptyState
-          title="Module offline"
-          message={`This module arrives in phase ${MODULES[moduleId].phase}.`}
-        />
-      );
-  }
-}
+function ModulePanel(props: WorkspaceProps) {
+  const { moduleId, repoPath } = props;
+  const { title, phase } = MODULES[moduleId];
 
-function moduleMeta({ moduleId, repository }: WorkspaceProps): string {
   switch (moduleId) {
     case "changes":
-      return `${repository.changes.length} files`;
+      return (
+        <ChangesPanel
+          title={title}
+          repoPath={repoPath}
+          selected={props.target}
+          onSelect={props.onInspect}
+          delay={REVEAL_DELAY}
+        />
+      );
     case "history":
-      return `${repository.commits.length} commits`;
+      return (
+        <CommitLogPanel
+          title={title}
+          history={props.history}
+          selectedHash={props.selectedHash}
+          onSelect={props.onSelectCommit}
+          delay={REVEAL_DELAY}
+        />
+      );
     case "branches":
-      return `${repository.branches.length} branches`;
+      return (
+        <BranchPanel title={title} repoPath={repoPath} delay={REVEAL_DELAY} />
+      );
     default:
-      return "Offline";
+      return (
+        <Panel title={title} meta="Offline" flush delay={REVEAL_DELAY}>
+          <EmptyState
+            title="Module offline"
+            message={`This module arrives in phase ${phase}.`}
+          />
+        </Panel>
+      );
   }
 }

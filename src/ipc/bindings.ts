@@ -2,15 +2,129 @@
 
 import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 import type { InvokeOptions } from "@tauri-apps/api/core";
+import * as __TAURI_EVENT from "@tauri-apps/api/event";
 import { mockIPC as __TAURI_MOCK_IPC } from "@tauri-apps/api/mocks";
 
 /** Commands */
 export const commands = {
 	/**  Reports the version of the system `git`. */
 	detectGit: (options?: InvokeOptions) => typedError<GitVersion, GitError>(__TAURI_INVOKE("detect_git", undefined, options)),
+	/**  Asks the user for a folder. Returns `None` if the user cancels. */
+	pickRepository: (options?: InvokeOptions) => typedError<string | null, GitError>(__TAURI_INVOKE("pick_repository", undefined, options)),
+	/**  Opens the repository that contains `path`, and starts to watch it. */
+	openRepository: (path: string, options?: InvokeOptions) => typedError<RepoSummary, GitError>(__TAURI_INVOKE("open_repository", { path }, options)),
+	/**  Lists the repositories that the user opened. The newest is first. */
+	recentRepositories: (options?: InvokeOptions) => typedError<RecentRepo[], GitError>(__TAURI_INVOKE("recent_repositories", undefined, options)),
+	/**  Reads the name, the path, `HEAD`, the remotes, and the tags of a repository. */
+	repoSummary: (path: string, options?: InvokeOptions) => typedError<RepoSummary, GitError>(__TAURI_INVOKE("repo_summary", { path }, options)),
+	/**  Lists the local branches. The current branch is first. */
+	repoBranches: (path: string, options?: InvokeOptions) => typedError<Branch[], GitError>(__TAURI_INVOKE("repo_branches", { path }, options)),
+	/**  Counts the commits on each of the last `days` days. The oldest day is first. */
+	repoActivity: (path: string, days: number, options?: InvokeOptions) => typedError<number[], GitError>(__TAURI_INVOKE("repo_activity", { path, days }, options)),
+	/**  Reads `limit` commits after the first `skip` commits. The newest commit is first. */
+	repoLog: (path: string, skip: number, limit: number, options?: InvokeOptions) => typedError<LogPage, GitError>(__TAURI_INVOKE("repo_log", { path, skip, limit }, options)),
+	/**  Reads one commit with its message and its changed files. */
+	commitDetail: (path: string, hash: string, options?: InvokeOptions) => typedError<CommitDetail, GitError>(__TAURI_INVOKE("commit_detail", { path, hash }, options)),
+	/**  Reads the staged and the unstaged changes. */
+	repoStatus: (path: string, options?: InvokeOptions) => typedError<WorkingTree, GitError>(__TAURI_INVOKE("repo_status", { path }, options)),
+	/**  Reads the changed lines of one file. */
+	fileDiff: (path: string, target: DiffTarget, options?: InvokeOptions) => typedError<FileDiff, GitError>(__TAURI_INVOKE("file_diff", { path, target }, options)),
+};
+
+/** Events */
+export const events = {
+	repoChanged: makeEvent<RepoChanged, RepoChanged>("repo-changed"),
 };
 
 /* Types */
+/**  A local branch. */
+export type Branch = {
+	name: string,
+	/**  `true` for the branch that `HEAD` points to. */
+	current: boolean,
+	/**  The remote branch that this branch follows, for example `origin/main`. */
+	upstream: string | null,
+	/**  The number of commits that the upstream does not have. */
+	ahead: number,
+	/**  The number of upstream commits that this branch does not have. */
+	behind: number,
+	/**  The hash of the newest commit. */
+	tip: string,
+	/**  The time of the newest commit, in Unix seconds. */
+	updated: number,
+};
+
+/**  How a file changed. */
+export type ChangeKind = "added" | "modified" | "deleted" | "renamed" | "typeChanged" | "untracked" | "conflicted";
+
+/**  One commit in the history. */
+export type Commit = {
+	hash: string,
+	/**  The first line of the message. */
+	subject: string,
+	author: string,
+	/**  The commit time, in Unix seconds. */
+	time: number,
+	parents: string[],
+	/**  The branches and tags that point to this commit, for example `main` or `tag: v1.0`. */
+	refs: string[],
+};
+
+/**  A commit with its full message and its changed files. */
+export type CommitDetail = {
+	commit: Commit,
+	/**  The message after the subject line. */
+	body: string,
+	email: string,
+	/**  The changes against the first parent. */
+	files: FileDelta[],
+};
+
+/**  One block of changed lines with its context. */
+export type DiffHunk = {
+	/**  The hunk header, for example `@@ -1,4 +1,6 @@`. */
+	header: string,
+	lines: DiffLine[],
+};
+
+export type DiffLine = {
+	kind: LineKind,
+	/**  The line number in the old version. `None` for an added line. */
+	oldLine: number | null,
+	/**  The line number in the new version. `None` for a removed line. */
+	newLine: number | null,
+	/**  The text without the line ending. */
+	text: string,
+};
+
+/**  Selects the two versions of one file to compare. */
+export type DiffTarget = 
+/**  A commit against its first parent. */
+{ kind: "commit"; hash: string; path: string } | 
+/**  The index against `HEAD`. */
+{ kind: "staged"; path: string } | 
+/**  The working tree against the index. */
+{ kind: "unstaged"; path: string };
+
+/**  One changed file with its line counts. */
+export type FileDelta = {
+	path: string,
+	/**  The path before a rename. */
+	oldPath: string | null,
+	kind: ChangeKind,
+	additions: number,
+	deletions: number,
+};
+
+/**  The changed lines of one file. */
+export type FileDiff = {
+	/**  `true` for a file that has no text lines to show. */
+	binary: boolean,
+	/**  `true` when the diff has more lines than the limit. */
+	truncated: boolean,
+	hunks: DiffHunk[],
+};
+
 /**
  *  A failure of a git operation.
  * 
@@ -22,13 +136,81 @@ export type GitError =
 /**  The `git` process did not start, or it exited with a failure status. */
 { kind: "commandFailed"; message: string } | 
 /**  The output of `git` did not have the expected format. */
-{ kind: "unexpectedOutput"; message: string };
+{ kind: "unexpectedOutput"; message: string } | 
+/**  The folder is not in a git repository that has a working tree. */
+{ kind: "notARepository"; message: string } | 
+/**  The git library could not read the repository. */
+{ kind: "readFailed"; message: string } | 
+/**  A file of the application could not be read or written. */
+{ kind: "io"; message: string };
 
 /**  The version of a `git` executable. */
 export type GitVersion = {
 	major: number,
 	minor: number,
 	patch: number,
+};
+
+/**  The commit and the branch that `HEAD` points to. */
+export type Head = {
+	/**  The current branch. `None` when `HEAD` is detached. */
+	branch: string | null,
+	/**  The commit at `HEAD`. `None` when the repository has no commits. */
+	hash: string | null,
+};
+
+export type LineKind = "context" | "added" | "removed";
+
+/**  One page of the history. The newest commit is first. */
+export type LogPage = {
+	commits: Commit[],
+	/**  The `skip` value of the next page. `None` on the last page. */
+	next: number | null,
+};
+
+/**  A repository that the user opened before. */
+export type RecentRepo = {
+	name: string,
+	path: string,
+};
+
+/**  The parts of a repository that changed on the disk. */
+export type RepoChange = {
+	/**  `HEAD`, a branch, or a tag moved. The history and the branch list are old. */
+	refs: boolean,
+	/**  The working tree or the index changed. The status is old. */
+	files: boolean,
+};
+
+/**  The open repository changed on the disk. The user interface reads it again. */
+export type RepoChanged = {
+	/**  The path of the repository, as `RepoSummary` gives it. */
+	path: string,
+	change: RepoChange,
+};
+
+/**  The identity of a repository and its named references. */
+export type RepoSummary = {
+	/**  The name of the working tree folder. */
+	name: string,
+	/**  The path of the working tree. Each other command takes this value. */
+	path: string,
+	head: Head,
+	remotes: string[],
+	/**  The newest name is first. */
+	tags: string[],
+};
+
+/**
+ *  The changes that are not committed.
+ * 
+ *  A file that is staged and then changed again is in both lists.
+ */
+export type WorkingTree = {
+	/**  The index against `HEAD`. */
+	staged: FileDelta[],
+	/**  The working tree against the index. Conflicts are in this list. */
+	unstaged: FileDelta[],
 };
 
 /* Tauri Specta runtime */
@@ -41,11 +223,46 @@ async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; dat
     }
 }
 
+type EventEmit<T> = [T] extends [null] ? () => Promise<void> : (payload: T) => Promise<void>;
+
+type EventEmitTo<T> = [T] extends [null] ? (target: __TAURI_EVENT.EventTarget | string) => Promise<void> : (target: __TAURI_EVENT.EventTarget | string, payload: T) => Promise<void>;
+
+function makeEvent<TListen, TEmit = TListen>(name: string, serialize?: (payload: TEmit) => unknown, deserialize?: (payload: any) => TListen) {
+    const mapEvent = (cb: __TAURI_EVENT.EventCallback<TListen>) => (event: __TAURI_EVENT.Event<any>) => cb({ ...event, payload: deserialize ? deserialize(event.payload) : event.payload });
+    const mapPayload = (payload: TEmit) => serialize ? serialize(payload) : payload;
+
+    const base = {
+        listen: (cb: __TAURI_EVENT.EventCallback<TListen>) => __TAURI_EVENT.listen(name, mapEvent(cb)),
+        once: (cb: __TAURI_EVENT.EventCallback<TListen>) => __TAURI_EVENT.once(name, mapEvent(cb)),
+        emit: ((payload: TEmit) => __TAURI_EVENT.emit(name, mapPayload(payload)) as unknown) as EventEmit<TEmit>,
+        emitTo: ((to: __TAURI_EVENT.EventTarget | string, payload: TEmit) => __TAURI_EVENT.emitTo(to, name, mapPayload(payload)) as unknown) as EventEmitTo<TEmit>
+    };
+
+    const fn = (target: import("@tauri-apps/api/webview").Webview | import("@tauri-apps/api/window").Window) => ({
+        listen: (cb: __TAURI_EVENT.EventCallback<TListen>) => target.listen(name, mapEvent(cb)),
+        once: (cb: __TAURI_EVENT.EventCallback<TListen>) => target.once(name, mapEvent(cb)),
+        emit: ((payload: TEmit) => target.emit(name, mapPayload(payload)) as unknown) as EventEmit<TEmit>,
+        emitTo: ((to: __TAURI_EVENT.EventTarget | string, payload: TEmit) => target.emitTo(to, name, mapPayload(payload)) as unknown) as EventEmitTo<TEmit>
+    });
+
+    return Object.assign(fn, base);
+}
+
 /* Tauri Specta mocks */
 
 /** A handler for each generated command, keyed by its `commands` accessor. */
 export type MockCommandHandlers = {
     detectGit: () => GitVersion | Promise<GitVersion>,
+    pickRepository: () => string | null | Promise<string | null>,
+    openRepository: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
+    recentRepositories: () => RecentRepo[] | Promise<RecentRepo[]>,
+    repoSummary: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
+    repoBranches: (args: { path: string }) => Branch[] | Promise<Branch[]>,
+    repoActivity: (args: { path: string; days: number }) => number[] | Promise<number[]>,
+    repoLog: (args: { path: string; skip: number; limit: number }) => LogPage | Promise<LogPage>,
+    commitDetail: (args: { path: string; hash: string }) => CommitDetail | Promise<CommitDetail>,
+    repoStatus: (args: { path: string }) => WorkingTree | Promise<WorkingTree>,
+    fileDiff: (args: { path: string; target: DiffTarget }) => FileDiff | Promise<FileDiff>,
 };
 
 /**
@@ -73,6 +290,16 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
     return __TAURI_MOCK_IPC((cmd, args) => {
         switch (cmd) {
             case "detect_git": return mockCommandHandler(mockHandlers.detectGit, "detect_git", args);
+            case "pick_repository": return mockCommandHandler(mockHandlers.pickRepository, "pick_repository", args);
+            case "open_repository": return mockCommandHandler(mockHandlers.openRepository, "open_repository", args);
+            case "recent_repositories": return mockCommandHandler(mockHandlers.recentRepositories, "recent_repositories", args);
+            case "repo_summary": return mockCommandHandler(mockHandlers.repoSummary, "repo_summary", args);
+            case "repo_branches": return mockCommandHandler(mockHandlers.repoBranches, "repo_branches", args);
+            case "repo_activity": return mockCommandHandler(mockHandlers.repoActivity, "repo_activity", args);
+            case "repo_log": return mockCommandHandler(mockHandlers.repoLog, "repo_log", args);
+            case "commit_detail": return mockCommandHandler(mockHandlers.commitDetail, "commit_detail", args);
+            case "repo_status": return mockCommandHandler(mockHandlers.repoStatus, "repo_status", args);
+            case "file_diff": return mockCommandHandler(mockHandlers.fileDiff, "file_diff", args);
             default: throw new Error(`No mock handler registered for command '${cmd}'`);
         }
     }, { shouldMockEvents: true });

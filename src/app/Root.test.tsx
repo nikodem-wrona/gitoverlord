@@ -1,15 +1,15 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { mockCommands } from "@/ipc";
 import { mockReducedMotion } from "@/test/matchMedia";
+import { mockRepository } from "@/test/mockRepository";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 import { Root } from "./Root";
 
 describe("Root", () => {
   beforeEach(() => {
-    mockCommands({ detectGit: () => ({ major: 2, minor: 54, patch: 0 }) });
+    mockRepository();
   });
 
   it("starts with the boot sequence when motion is on", () => {

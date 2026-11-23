@@ -1,35 +1,34 @@
 import { describe, expect, it } from "vitest";
 
+import type { Branch, RepoSummary } from "@/ipc";
+
 import { buildNavigatorTree } from "./buildNavigatorTree";
-import type { Branch, Repository } from "./types";
 
 function branch(name: string, current = false): Branch {
   return {
     name,
+    current,
     upstream: `origin/${name}`,
     ahead: 0,
     behind: 0,
-    updated: "",
-    current,
+    tip: "abc1234",
+    updated: 0,
   };
 }
 
-const REPOSITORY: Repository = {
+const SUMMARY: RepoSummary = {
   name: "demo",
   path: "~/demo",
-  head: "main",
-  ahead: 0,
-  behind: 0,
-  commits: [],
-  changes: [],
-  branches: [branch("main", true), branch("dev")],
+  head: { branch: "main", hash: "abc1234" },
   remotes: ["origin"],
   tags: [],
-  activity: [],
 };
 
 describe("buildNavigatorTree", () => {
-  const [root] = buildNavigatorTree(REPOSITORY);
+  const [root] = buildNavigatorTree(SUMMARY, [
+    branch("main", true),
+    branch("dev"),
+  ]);
   const groups = root?.children ?? [];
 
   it("puts the repository at the root", () => {

@@ -20,10 +20,12 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 git-core.workspace = true
+serde.workspace = true
 specta.workspace = true
 tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
 # tauri-specta is a release candidate. Keep this pin in step with specta.
-tauri-specta = { version = "=2.0.0-rc.29", features = ["typescript"] }
+tauri-specta = { version = "=2.0.0-rc.29", features = ["derive", "typescript"] }
 
 [dev-dependencies]
 specta-typescript = "0.0.15"

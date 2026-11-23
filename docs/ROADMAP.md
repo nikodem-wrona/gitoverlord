@@ -14,7 +14,7 @@ Phases 0 to 4 are the minimum product. Each phase ends with a version that you c
 | Frontend        | React 19, TypeScript, Vite                                                                                            | Large contributor pool and library ecosystem                                                  |
 | Data flow       | TanStack Query for repository data. A small store for interface state. A Rust file watcher sends invalidation events. | The interface stays current without polling                                                   |
 | Style           | CSS variables as design tokens, with CSS Modules for each component                                                   | No style framework to learn. Tokens keep the look consistent.                                 |
-| Motion          | CSS animations and small React hooks. SVG for the star map. Canvas only if SVG becomes too slow.                      | No motion library to load. Calm mode stops all motion in one place.                           |
+| Motion          | CSS animations and small React hooks. SVG for the timeline. Canvas only if SVG becomes too slow.                      | No motion library to load. Calm mode stops all motion in one place.                           |
 | Fonts           | Rajdhani for titles and JetBrains Mono for data, from Fontsource, in the application bundle                           | The application works offline. The strict content security policy stays.                      |
 | Lint and format | oxlint and Prettier for TypeScript. Clippy and rustfmt for Rust.                                                      | Fast checks that CI can enforce                                                               |
 | Secrets         | The keychain of the operating system                                                                                  | Tokens are never written to disk as plain text                                                |
@@ -29,6 +29,7 @@ src/hud/           design system: tokens, primitives, motion
 src/features/      one folder for each feature, with one public entry
 src/ipc/           generated bindings and IPC helpers
 src/gallery/       component gallery, for development only
+src/demo/          sample repository for the browser and for tests
 src/actions/       action factory and registry (Phase 3)
 assets/            source image of the logo
 scripts/           maintenance scripts
@@ -45,17 +46,18 @@ Use a factory only where it removes repeated code.
 - **Query client factory:** `createQueryClient()` gives the application and each test an isolated cache.
 - **Column factory:** `textColumn(key, header)` makes a table column that shows one field as text.
 - **Toast factory:** `createToastApi(push)` makes one function for each kind of notification: `info`, `ok`, and `fail`.
+- **Demo handler factory:** `createDemoHandlers()` makes one handler for each command. The demo backend and the frontend tests use the handlers.
 
 ## Reference design mapped to git
 
-| Reference element      | In gitoverlord                                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Module tab strip       | CHANGES, HISTORY, BRANCHES, REMOTES, STASH, PULL REQUESTS                                                           |
-| Left tree              | Repositories, then branches, remotes, and tags                                                                      |
-| Map with flight routes | The commit graph as a star map. Branches are routes. Commits are nodes. A push is a pulse that moves to the remote. |
-| Flight details panel   | Inspector for the selected commit or file, with the diff                                                            |
-| Schedule tables        | Changed files and commit log, with a status column (STAGED, MODIFIED, CONFLICT in red)                              |
-| Waveform and bars      | Activity sparkline and ahead/behind gauges                                                                          |
+| Reference element      | In gitoverlord                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Module tab strip       | CHANGES, HISTORY, BRANCHES, REMOTES, STASH, PULL REQUESTS                                                              |
+| Left tree              | Repositories, then branches, remotes, and tags                                                                         |
+| Map with flight routes | The commit graph as a timeline. Each branch is a lane. Commits are points. A push is a pulse that moves to the remote. |
+| Flight details panel   | Inspector for the selected commit or file, with the diff                                                               |
+| Schedule tables        | Changed files and commit log, with a status column (STAGED, MODIFIED, CONFLICT in red)                                 |
+| Waveform and bars      | Activity sparkline and ahead/behind gauges                                                                             |
 
 ## Phases
 
@@ -88,11 +90,11 @@ Done when the application shell looks like the reference design with sample data
 
 Done when a large repository is smooth to browse.
 
-- [ ] `GitBackend` trait and backend factory
-- [ ] Open a repository and keep a list of recent repositories
-- [ ] Status, paginated log, branches, diff
-- [ ] Virtualized history table and commit inspector
-- [ ] File watcher that refreshes the interface
+- [x] `GitBackend` trait and backend factory
+- [x] Open a repository and keep a list of recent repositories
+- [x] Status, paginated log, branches, diff
+- [x] Virtualized history table and commit inspector
+- [x] File watcher that refreshes the interface
 
 ### Phase 3: Local workflow
 
@@ -153,7 +155,8 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Blocking work:** each command that starts a `git` process uses `run_blocking`. The main thread stays free.
 - **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery.
 - **Calm mode:** each animation must stop in calm mode. Calm mode applies when the user selects it or when the system asks for reduced motion.
-- **Sample data:** until Phase 2, the shell shows the sample repository in `src/features/repository`. The status bar shows "Demo data".
+- **Read-only core:** `git2` does each read operation. A read operation must not write to the repository.
+- **Sample data:** `pnpm dev` in a browser has no Rust core. The demo backend in `src/demo` gives a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend.
 - **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer and run in calm mode.
 - **Workflow:** one vertical slice for each pull request. Use conventional commit messages. CI must pass before a merge.
 
@@ -163,3 +166,6 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Linux webview:** WebKitGTK is the slowest of the three webviews for heavy effects. Animations have a budget from Phase 1.
 - **`tauri-specta` version:** the crate is a release candidate and its versions are pinned. An upgrade can change the generated bindings.
 - **macOS distribution:** code signing needs a paid Apple Developer account. This is only necessary in Phase 7.
+- **History depth:** a page of the history at a large offset reads each newer commit first. A page at commit 100 000 takes approximately 0.4 seconds. The first pages take a few milliseconds.
+- **History order:** the history uses the unsorted walk of libgit2, which gives the order of `git log`. Each sorted walk reads the full history before the first commit, so do not use one.
+- **Linux file watches:** inotify needs one watch for each folder. A very large working tree can reach the limit of the system. The repository then opens without automatic refresh.

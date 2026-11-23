@@ -41,13 +41,13 @@ function describeGitError(error: GitError): GitStatus {
         value: "Not found",
         hint: "Install Git, then restart gitoverlord.",
       };
-    case "commandFailed":
-      return { state: "fail", value: "Failed", hint: error.message };
     case "unexpectedOutput":
       return {
         state: "fail",
         value: "Unknown version",
         hint: `Git printed: ${error.message}`,
       };
+    default:
+      return { state: "fail", value: "Failed", hint: error.message };
   }
 }
