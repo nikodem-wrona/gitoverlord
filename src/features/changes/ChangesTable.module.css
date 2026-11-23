@@ -1,0 +1,6 @@
+.status {
+  color: var(--tone);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}

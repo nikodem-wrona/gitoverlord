@@ -1,0 +1,11 @@
+/* The logo image is a mask, so the accent color and the glow apply to it. */
+.mark {
+  display: inline-block;
+  flex: none;
+  width: var(--logo-size);
+  height: var(--logo-size);
+  background: var(--color-accent);
+  filter: drop-shadow(0 0 6px rgb(47 212 255 / 60%));
+  mask: url("../assets/logo-mark.png") center / contain no-repeat;
+  -webkit-mask: url("../assets/logo-mark.png") center / contain no-repeat;
+}

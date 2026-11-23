@@ -1,0 +1,99 @@
+.viewport {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-8);
+  z-index: var(--layer-toast);
+  width: min(22rem, calc(100vw - 2 * var(--space-4)));
+  pointer-events: none;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  overflow: hidden;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: 1px solid var(--tone);
+  border-left-width: 3px;
+  background: var(--color-panel-header);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tone) 30%, transparent);
+  pointer-events: auto;
+  animation: enter var(--duration-base) var(--ease-out);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.message {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+.dismiss {
+  padding: 0 var(--space-1);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-dim);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  color: var(--tone);
+}
+
+/* A bar that shows the time until the notification closes. */
+.timer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--tone);
+  transform-origin: left;
+  animation: drain var(--toast-duration) linear forwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+    clip-path: inset(0 0 0 100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0);
+  }
+}
+
+@keyframes drain {
+  to {
+    transform: scaleX(0);
+  }
+}

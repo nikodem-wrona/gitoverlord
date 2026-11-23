@@ -1,6 +1,0 @@
-.screen {
-  display: grid;
-  place-items: center;
-  min-height: 100%;
-  padding: var(--space-6);
-}

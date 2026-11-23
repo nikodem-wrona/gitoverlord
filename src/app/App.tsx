@@ -1,20 +1,16 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { SystemStatus } from "@/features/system";
-
-import styles from "./App.module.css";
+import { AppProviders } from "./AppProviders";
 import { createQueryClient } from "./queryClient";
+import { Root } from "./Root";
 
-/** The application root. It supplies the providers and the first screen. */
+/** The application root. */
 export function App() {
   const [queryClient] = useState(createQueryClient);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <main className={styles.screen}>
-        <SystemStatus />
-      </main>
-    </QueryClientProvider>
+    <AppProviders queryClient={queryClient}>
+      <Root />
+    </AppProviders>
   );
 }

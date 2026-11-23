@@ -1,0 +1,52 @@
+.shell {
+  display: grid;
+  grid-template-areas:
+    "top top top"
+    "modules modules modules"
+    "left center right"
+    "status status status";
+  grid-template-columns: 15.5rem minmax(0, 1fr) 19rem;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  height: 100%;
+  padding: var(--space-2);
+}
+
+.modules {
+  grid-area: modules;
+  min-width: 0;
+}
+
+.left,
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.left {
+  grid-area: left;
+}
+
+/* The navigator takes the free height. */
+.left > :first-child {
+  flex: 1;
+}
+
+.right {
+  grid-area: right;
+}
+
+.right > * {
+  flex: 1;
+}
+
+.center {
+  display: grid;
+  grid-area: center;
+  grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 0;
+}
