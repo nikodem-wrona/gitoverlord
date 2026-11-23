@@ -1,0 +1,29 @@
+[package]
+name = "gitoverlord"
+description = "An open-source desktop Git client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+# The `_lib` suffix keeps the library name different from the binary name.
+# Windows needs this: https://github.com/rust-lang/cargo/issues/8519
+name = "gitoverlord_lib"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+git-core.workspace = true
+specta.workspace = true
+tauri = { version = "2", features = [] }
+# tauri-specta is a release candidate. Keep this pin in step with specta.
+tauri-specta = { version = "=2.0.0-rc.29", features = ["typescript"] }
+
+[dev-dependencies]
+specta-typescript = "0.0.15"
