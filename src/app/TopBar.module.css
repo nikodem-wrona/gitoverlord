@@ -1,0 +1,46 @@
+.bar {
+  display: flex;
+  grid-area: top;
+  align-items: center;
+  gap: var(--space-6);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.name {
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-shadow: var(--text-glow-accent);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.readouts {
+  display: flex;
+  flex: 1;
+  gap: var(--space-6);
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.actions > :last-child {
+  margin-left: var(--space-3);
+}

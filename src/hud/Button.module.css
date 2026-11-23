@@ -1,0 +1,77 @@
+.button {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--button-line);
+  background: transparent;
+  color: var(--button-text);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast),
+    border-color var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.button[data-variant="ghost"] {
+  --button-line: var(--color-line-strong);
+  --button-text: var(--color-text);
+  --button-hover: var(--color-accent);
+}
+
+.button[data-variant="primary"] {
+  --button-line: var(--color-accent);
+  --button-text: var(--color-accent);
+  --button-hover: var(--color-accent-strong);
+}
+
+.button[data-variant="danger"] {
+  --button-line: var(--color-fail);
+  --button-text: var(--color-fail);
+  --button-hover: var(--color-fail);
+}
+
+/* The light that sweeps over the button. */
+.button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgb(255 255 255 / 18%) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--button-hover);
+  color: var(--button-hover);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--button-hover) 40%, transparent);
+}
+
+.button:hover:not(:disabled)::after {
+  animation: sweep 600ms var(--ease-out);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@keyframes sweep {
+  to {
+    transform: translateX(120%);
+  }
+}

@@ -1,0 +1,7 @@
+/* The global styles. Each entry point imports this file once. */
+@import "@fontsource/rajdhani/latin-500.css";
+@import "@fontsource/rajdhani/latin-600.css";
+@import "@fontsource/rajdhani/latin-700.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+@import "./tokens.css";
+@import "./base.css";

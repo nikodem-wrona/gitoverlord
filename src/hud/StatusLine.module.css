@@ -22,6 +22,10 @@
   white-space: pre;
 }
 
+.line[data-state="pending"] .badge {
+  animation: blink 1s steps(2, start) infinite;
+}
+
 .label {
   color: var(--color-text-dim);
 }
@@ -29,17 +33,11 @@
 .leader {
   flex: 1;
   min-width: var(--space-6);
-  border-bottom: 1px dotted var(--color-line);
+  border-bottom: 1px dotted var(--color-line-strong);
 }
 
 .value {
   color: var(--state-color);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .line[data-state="pending"] .badge {
-    animation: blink 1s steps(2, start) infinite;
-  }
 }
 
 @keyframes blink {

@@ -1,21 +1,98 @@
 .panel {
-  min-width: 28rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   border: 1px solid var(--color-line);
-  background: var(--color-surface);
+  background: var(--color-panel);
+  animation: reveal var(--duration-slow) var(--ease-out) both;
+  animation-delay: var(--reveal-delay, 0ms);
 }
 
-.title {
-  margin: 0;
-  padding: var(--space-2) var(--space-4);
+/* Corner brackets. */
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 0 solid var(--color-accent);
+  pointer-events: none;
+}
+
+.panel::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.panel::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-1) var(--space-3);
   border-bottom: 1px solid var(--color-line);
+  background: var(--color-panel-header);
+}
+
+/* The title keeps its full width. The meta text gives way. */
+.title {
+  flex: none;
+  margin: 0;
   color: var(--color-accent);
-  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
-  text-shadow: var(--glow-accent);
+  text-shadow: var(--text-glow-accent);
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.meta {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .body {
-  padding: var(--space-4);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-3);
+}
+
+.body[data-flush] {
+  padding: 0;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(-4px -4px 100% -4px);
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(-4px);
+  }
 }

@@ -14,7 +14,8 @@ Phases 0 to 4 are the minimum product. Each phase ends with a version that you c
 | Frontend        | React 19, TypeScript, Vite                                                                                            | Large contributor pool and library ecosystem                                                  |
 | Data flow       | TanStack Query for repository data. A small store for interface state. A Rust file watcher sends invalidation events. | The interface stays current without polling                                                   |
 | Style           | CSS variables as design tokens, with CSS Modules for each component                                                   | No style framework to learn. Tokens keep the look consistent.                                 |
-| Motion          | CSS for low-cost effects. A motion library for transitions. Canvas for the commit graph.                              | Heavy effects stay out of the DOM                                                             |
+| Motion          | CSS animations and small React hooks. SVG for the star map. Canvas only if SVG becomes too slow.                      | No motion library to load. Calm mode stops all motion in one place.                           |
+| Fonts           | Rajdhani for titles and JetBrains Mono for data, from Fontsource, in the application bundle                           | The application works offline. The strict content security policy stays.                      |
 | Lint and format | oxlint and Prettier for TypeScript. Clippy and rustfmt for Rust.                                                      | Fast checks that CI can enforce                                                               |
 | Secrets         | The keychain of the operating system                                                                                  | Tokens are never written to disk as plain text                                                |
 
@@ -27,7 +28,10 @@ src/app/           application root and providers
 src/hud/           design system: tokens, primitives, motion
 src/features/      one folder for each feature, with one public entry
 src/ipc/           generated bindings and IPC helpers
+src/gallery/       component gallery, for development only
 src/actions/       action factory and registry (Phase 3)
+assets/            source image of the logo
+scripts/           maintenance scripts
 ```
 
 ## Factories
@@ -39,6 +43,8 @@ Use a factory only where it removes repeated code.
 - **Action factory:** one `defineAction({ id, label, shortcut, run })` gives the button, the command palette entry, the shortcut, the progress toast, and the result animation. Each git operation then feels the same.
 - **Fixture builder:** `RepoFixture::new().commit("a").branch("x")` creates real temporary repositories for tests.
 - **Query client factory:** `createQueryClient()` gives the application and each test an isolated cache.
+- **Column factory:** `textColumn(key, header)` makes a table column that shows one field as text.
+- **Toast factory:** `createToastApi(push)` makes one function for each kind of notification: `info`, `ok`, and `fail`.
 
 ## Reference design mapped to git
 
@@ -64,19 +70,19 @@ Done when the application opens and CI is green on macOS, Windows, and Linux.
 - [x] Typed IPC with generated bindings
 - [x] One round-trip command: find the version of the system `git`
 - [x] Lint, format, and test tools for Rust and TypeScript
-- [ ] CI on macOS, Windows, and Linux. The workflow is in `.github/workflows/ci.yml`. It has not run yet.
+- [x] CI on macOS, Windows, and Linux
 
 ### Phase 1: HUD kit
 
 Done when the application shell looks like the reference design with sample data.
 
-- [ ] Complete design tokens: color, type, spacing, glow, grid
-- [ ] Primitives: Panel, Table, Tree, Tabs, Button, Toast
-- [ ] Motion primitives: panel reveal, text decode, pulse, boot sequence
-- [ ] Application shell with the layout of the reference design
-- [ ] Component gallery
-- [ ] Reduced-motion support and a calm mode
-- [ ] Application icon to replace the Tauri placeholder
+- [x] Complete design tokens: color, type, spacing, glow, grid
+- [x] Primitives: Panel, Table, Tree, Tabs, Button, Toast
+- [x] Motion primitives: panel reveal, text decode, pulse, boot sequence
+- [x] Application shell with the layout of the reference design
+- [x] Component gallery
+- [x] Reduced-motion support and a calm mode
+- [x] Application icon to replace the Tauri placeholder
 
 ### Phase 2: Read-only viewer
 
@@ -146,7 +152,9 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Thin shell:** git logic stays in `git-core`. A Tauri command only calls `git-core` and returns the result.
 - **Blocking work:** each command that starts a `git` process uses `run_blocking`. The main thread stays free.
 - **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery.
-- **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer.
+- **Calm mode:** each animation must stop in calm mode. Calm mode applies when the user selects it or when the system asks for reduced motion.
+- **Sample data:** until Phase 2, the shell shows the sample repository in `src/features/repository`. The status bar shows "Demo data".
+- **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer and run in calm mode.
 - **Workflow:** one vertical slice for each pull request. Use conventional commit messages. CI must pass before a merge.
 
 ## Risks

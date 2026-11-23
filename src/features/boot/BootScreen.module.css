@@ -1,0 +1,83 @@
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-overlay);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    rgb(47 212 255 / 10%),
+    var(--color-bg) 65%
+  );
+  animation: power-on 500ms var(--ease-out) both;
+}
+
+.title {
+  margin: var(--space-2) 0 0;
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-shadow: var(--text-glow-accent);
+  text-transform: uppercase;
+}
+
+.subtitle {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.steps {
+  display: grid;
+  gap: var(--space-1);
+  width: min(26rem, 90vw);
+  min-height: 7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.step {
+  animation: type-in 240ms var(--ease-out) both;
+}
+
+.hint {
+  margin: var(--space-6) 0 0;
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* The screen opens like an old display: a thin line that grows to full height. */
+@keyframes power-on {
+  from {
+    opacity: 0;
+    clip-path: inset(49.5% 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+
+@keyframes type-in {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
