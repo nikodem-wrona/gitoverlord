@@ -27,6 +27,10 @@ pub enum GitError {
     /// The message tells the user what to do.
     #[error("{0}")]
     Rejected(String),
+    /// The remote did not accept the credentials, or `git` had none to give.
+    /// `git` does not ask for a password, so a credential helper or the SSH agent must give it.
+    #[error("authentication failed: {0}")]
+    AuthFailed(String),
     /// A file of the application could not be read or written.
     #[error("file access failed: {0}")]
     Io(String),

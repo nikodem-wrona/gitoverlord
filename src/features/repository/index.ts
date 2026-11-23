@@ -7,6 +7,7 @@ export {
   useCommitDetail,
   useCommitLog,
   useFileDiff,
+  useRemotes,
   useRepoSummary,
   useStashes,
   useWorkingTree,

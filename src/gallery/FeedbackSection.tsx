@@ -12,7 +12,7 @@ export function FeedbackSection() {
         <div className={styles.row}>
           <Button
             onClick={() =>
-              toast.info("Uplink stable", "Sync arrives in phase 4.")
+              toast.info("Uplink stable", "The remotes are current.")
             }
           >
             Info

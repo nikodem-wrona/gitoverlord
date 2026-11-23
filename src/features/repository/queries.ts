@@ -34,6 +34,14 @@ export function useBranches(path: string) {
   });
 }
 
+/** Reads the remotes with their remote branches. */
+export function useRemotes(path: string) {
+  return useQuery({
+    queryKey: repoKeys.remotes(path),
+    queryFn: () => unwrap(commands.repoRemotes(path)),
+  });
+}
+
 /** The number of commits on each of the last 30 days. The oldest day is first. */
 export function useActivity(path: string) {
   return useQuery({

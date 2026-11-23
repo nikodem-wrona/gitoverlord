@@ -1,13 +1,7 @@
 import { formatShortcut, isMac, PALETTE_SHORTCUT, useActions } from "@/actions";
 import { shortHash, useBranches, useRepoSummary } from "@/features/repository";
-import {
-  Button,
-  CalmToggle,
-  DecodeText,
-  LogoMark,
-  Readout,
-  useToast,
-} from "@/hud";
+import { SyncButtons } from "@/features/sync";
+import { Button, CalmToggle, DecodeText, LogoMark, Readout } from "@/hud";
 import type { Head } from "@/ipc";
 
 import styles from "./TopBar.module.css";
@@ -19,12 +13,9 @@ interface TopBarProps {
   onShowRepositories(): void;
 }
 
-/** The brand, the repository readouts, the commands, and calm mode. */
+/** The brand, the repository readouts, the commands, the sync buttons, and calm mode. */
 export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
-  const toast = useToast();
   const { openPalette } = useActions();
-  const syncOffline = () =>
-    toast.info("Sync is offline", "Fetch, pull, and push arrive in phase 4.");
 
   return (
     <header className={styles.bar}>
@@ -48,11 +39,7 @@ export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
         <Button onClick={onShowRepositories} disabled={repoPath === null}>
           Repositories
         </Button>
-        <Button onClick={syncOffline}>Fetch</Button>
-        <Button onClick={syncOffline}>Pull</Button>
-        <Button variant="primary" onClick={syncOffline}>
-          Push
-        </Button>
+        {repoPath !== null && <SyncButtons repoPath={repoPath} />}
         <CalmToggle />
       </div>
     </header>

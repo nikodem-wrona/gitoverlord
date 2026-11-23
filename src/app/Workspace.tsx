@@ -2,6 +2,7 @@ import { BranchPanel } from "@/features/branches";
 import { ChangesPanel } from "@/features/changes";
 import { CommitLogPanel, type History } from "@/features/history";
 import { StashPanel } from "@/features/stash";
+import { RemotePanel } from "@/features/sync";
 import { EmptyState, Panel, TabPanel } from "@/hud";
 import type { DiffTarget } from "@/ipc";
 
@@ -64,6 +65,10 @@ function ModulePanel(props: WorkspaceProps) {
       return (
         <BranchPanel title={title} repoPath={repoPath} delay={REVEAL_DELAY} />
       );
+    case "remotes":
+      return (
+        <RemotePanel title={title} repoPath={repoPath} delay={REVEAL_DELAY} />
+      );
     case "stash":
       return (
         <StashPanel
@@ -74,13 +79,18 @@ function ModulePanel(props: WorkspaceProps) {
         />
       );
     default:
-      return (
-        <Panel title={title} meta="Offline" flush delay={REVEAL_DELAY}>
-          <EmptyState
-            title="Module offline"
-            message={`This module arrives in phase ${phase}.`}
-          />
-        </Panel>
-      );
+      return <OfflinePanel title={title} phase={phase} />;
   }
+}
+
+/** A module that a later phase of the roadmap makes. */
+function OfflinePanel({ title, phase }: { title: string; phase?: number }) {
+  return (
+    <Panel title={title} meta="Offline" flush delay={REVEAL_DELAY}>
+      <EmptyState
+        title="Module offline"
+        message={`This module arrives in phase ${phase}.`}
+      />
+    </Panel>
+  );
 }

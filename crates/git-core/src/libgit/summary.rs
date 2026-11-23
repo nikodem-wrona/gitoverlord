@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use git2::{ErrorCode, Repository};
 
-use super::lossy;
+use super::{lossy, remotes};
 use crate::GitError;
 use crate::model::{Head, RepoSummary};
 
@@ -19,6 +19,7 @@ pub(super) fn read(repo: &Repository) -> Result<RepoSummary, GitError> {
         head: read_head(repo)?,
         remotes: names(&repo.remotes()?),
         tags,
+        fetched: remotes::last_fetch(repo),
     })
 }
 

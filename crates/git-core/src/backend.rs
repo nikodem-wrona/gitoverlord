@@ -3,8 +3,8 @@ use std::path::Path;
 use crate::GitError;
 use crate::libgit::Git2Backend;
 use crate::model::{
-    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, RepoSummary, StashEntry,
-    WorkingTree,
+    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, Progress, Remote, RepoSummary,
+    StashEntry, WorkingTree,
 };
 
 /// Access to one repository.
@@ -29,6 +29,8 @@ pub trait GitBackend {
     fn activity(&self, days: u32) -> Result<Vec<u32>, GitError>;
     /// Reads the stash entries. The newest entry is first.
     fn stashes(&self) -> Result<Vec<StashEntry>, GitError>;
+    /// Reads the remotes with their remote branches.
+    fn remotes(&self) -> Result<Vec<Remote>, GitError>;
 
     /// Adds the changes of `paths` to the index.
     fn stage(&self, paths: &[String]) -> Result<(), GitError>;
@@ -61,6 +63,19 @@ pub trait GitBackend {
     fn drop_stash(&self, hash: &str) -> Result<(), GitError>;
     /// Puts a dropped entry back in the stash list.
     fn restore_stash(&self, hash: &str, message: &str) -> Result<(), GitError>;
+
+    // The network operations send each progress line of `git` to `progress`.
+
+    fn add_remote(&self, name: &str, url: &str) -> Result<(), GitError>;
+    /// Fetches each remote. A remote branch that the remote deleted is removed.
+    fn fetch(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError>;
+    /// Fast-forwards the current branch to its upstream. It does not merge or rebase.
+    fn pull(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError>;
+    /// Sends the commits of the current branch to its upstream.
+    fn push(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError>;
+    /// Pushes the current branch to `origin`, or to the first remote, and makes
+    /// that branch its upstream. Returns the name of the upstream.
+    fn publish(&self, progress: &mut dyn FnMut(Progress)) -> Result<String, GitError>;
 }
 
 /// Opens the repository that contains `path`.

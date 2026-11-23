@@ -1,5 +1,6 @@
 import { type Action, defineAction } from "@/actions";
 import type { RepoSession } from "@/features/repository";
+import { cloneAction } from "@/features/sync";
 import type { Motion } from "@/hud";
 
 import { MODULE_LIST, type ModuleId } from "./modules";
@@ -46,6 +47,7 @@ function repositoryActions(session: RepoSession): Action[] {
       shortcut: "Mod+O",
       run: () => session.pick(),
     }),
+    cloneAction(session.open),
     defineAction({
       id: "repository.list",
       label: "Show the recent repositories",

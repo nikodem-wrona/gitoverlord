@@ -18,6 +18,16 @@ describe("errorMessage", () => {
     );
   });
 
+  it("tells the user how to give git the credentials", () => {
+    const error = new CommandError({
+      kind: "authFailed",
+      message: "Permission denied (publickey).",
+    });
+
+    expect(errorMessage(error)).toMatch(/credential helper.*SSH agent/);
+    expect(errorMessage(error)).toMatch(/Permission denied \(publickey\)/);
+  });
+
   it("tells the user to restart when the backend is silent", () => {
     expect(errorMessage(new TypeError("no IPC"))).toMatch(/restart/i);
   });

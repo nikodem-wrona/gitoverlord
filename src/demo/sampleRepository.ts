@@ -3,6 +3,7 @@ import type {
   ChangeKind,
   FileDelta,
   RecentRepo,
+  Remote,
   RepoSummary,
   WorkingTree,
 } from "@/ipc";
@@ -15,6 +16,8 @@ export const SAMPLE_SUMMARY: RepoSummary = {
   head: { branch: "feat/hud-kit", hash: "b7e41c9" },
   remotes: ["origin", "upstream"],
   tags: ["v0.1.0", "v0.0.1"],
+  // One minute ago, so that the background fetch waits.
+  fetched: Math.floor(Date.now() / 1000) - 60,
 };
 
 export const SAMPLE_RECENT: RecentRepo[] = [
@@ -65,6 +68,19 @@ export const SAMPLE_BRANCHES: Branch[] = [
   branch("spike/radar", 2, 4),
   branch("main", 0, 0),
   branch("fix/windows-ci", 0, 3),
+];
+
+export const SAMPLE_REMOTES: Remote[] = [
+  {
+    name: "origin",
+    url: "https://github.com/gitoverlord/gitoverlord.git",
+    branches: SAMPLE_BRANCHES.map(({ name }) => `origin/${name}`).sort(),
+  },
+  {
+    name: "upstream",
+    url: "git@github.com:overlord-labs/gitoverlord.git",
+    branches: ["upstream/main"],
+  },
 ];
 
 /** The number of commits on each of the last 30 days. The oldest day is first. */

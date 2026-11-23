@@ -9,6 +9,7 @@ import {
   reject,
 } from "./demoRepository";
 import * as stash from "./demoStash";
+import * as sync from "./demoSync";
 import { sampleDiff } from "./sampleDiff";
 import { SAMPLE_ACTIVITY, SAMPLE_RECENT } from "./sampleRepository";
 
@@ -43,13 +44,19 @@ export function createDemoHandlers(): MockCommandHandlers {
     dropStash: ({ hash }) => stash.dropStash(repo, hash),
     restoreStash: ({ hash, message }) =>
       stash.restoreStash(repo, hash, message),
+    addRemote: ({ name, url }) => sync.addRemote(repo, name, url),
+    fetchRemotes: () => sync.fetchRemotes(repo),
+    pullBranch: () => sync.pull(repo),
+    pushBranch: () => sync.push(repo),
+    publishBranch: () => sync.publish(repo),
+    cloneRepository: ({ url, parent }) => sync.cloneRepository(url, parent),
   };
 }
 
 type ReadHandlers = Pick<
   MockCommandHandlers,
   | "detectGit"
-  | "pickRepository"
+  | "pickFolder"
   | "openRepository"
   | "recentRepositories"
   | "repoSummary"
@@ -60,6 +67,7 @@ type ReadHandlers = Pick<
   | "repoStatus"
   | "fileDiff"
   | "repoStashes"
+  | "repoRemotes"
 >;
 
 /**
@@ -69,7 +77,7 @@ type ReadHandlers = Pick<
 function readHandlers(repo: DemoRepository): ReadHandlers {
   return {
     detectGit: () => ({ major: 2, minor: 54, patch: 0 }),
-    pickRepository: () => repo.summary.path,
+    pickFolder: () => repo.summary.path,
     openRepository: () => structuredClone(repo.summary),
     recentRepositories: () => SAMPLE_RECENT,
     repoSummary: () => structuredClone(repo.summary),
@@ -80,6 +88,7 @@ function readHandlers(repo: DemoRepository): ReadHandlers {
     repoStatus: () => structuredClone(repo.tree),
     fileDiff: () => sampleDiff(),
     repoStashes: () => stash.stashEntries(repo),
+    repoRemotes: () => structuredClone(repo.remotes),
   };
 }
 

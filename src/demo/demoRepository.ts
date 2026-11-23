@@ -2,6 +2,7 @@ import type {
   Branch,
   Commit,
   GitError,
+  Remote,
   RepoSummary,
   StashEntry,
   WorkingTree,
@@ -10,6 +11,7 @@ import type {
 import { SAMPLE_HISTORY, type SampleCommit } from "./sampleCommits";
 import {
   SAMPLE_BRANCHES,
+  SAMPLE_REMOTES,
   SAMPLE_SUMMARY,
   SAMPLE_WORKING_TREE,
 } from "./sampleRepository";
@@ -24,6 +26,7 @@ export interface DemoRepository {
   summary: RepoSummary;
   tree: WorkingTree;
   branches: Branch[];
+  remotes: Remote[];
   /** The newest commit is first. */
   history: SampleCommit[];
   /** The newest entry is first. */
@@ -42,6 +45,7 @@ export function createDemoRepository(): DemoRepository {
     summary: SAMPLE_SUMMARY,
     tree: SAMPLE_WORKING_TREE,
     branches: SAMPLE_BRANCHES,
+    remotes: SAMPLE_REMOTES,
     history: [...SAMPLE_HISTORY],
     stashes: [],
     dropped: [],

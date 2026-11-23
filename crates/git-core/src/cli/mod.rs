@@ -5,6 +5,9 @@
 
 pub(crate) mod branch;
 pub(crate) mod commit;
+mod network;
+mod progress;
+pub(crate) mod remote;
 pub(crate) mod stage;
 pub(crate) mod stash;
 

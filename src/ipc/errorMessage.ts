@@ -1,6 +1,10 @@
 import type { GitError } from "./bindings";
 import { CommandError } from "./unwrap";
 
+/** gitoverlord does not ask for passwords. The system gives the credentials to git. */
+const SIGN_IN_HINT =
+  "For HTTPS, set up a git credential helper. For SSH, add your key to the SSH agent and connect one time in a terminal to accept the host key.";
+
 /** Converts the failure of a command into a sentence for the user. */
 export function errorMessage(error: unknown): string {
   if (error instanceof CommandError) return describe(error.detail);
@@ -13,6 +17,8 @@ function describe(error: GitError): string {
       return "Git is not installed.";
     case "notARepository":
       return `This folder is not a git repository: ${error.message}`;
+    case "authFailed":
+      return `The remote refused the sign-in. ${SIGN_IN_HINT} Git said: ${error.message}`;
     default:
       return error.message;
   }

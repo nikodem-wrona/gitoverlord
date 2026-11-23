@@ -9,19 +9,21 @@ mod discard;
 mod hunk;
 mod log;
 mod refs;
+mod remotes;
 mod stash;
 mod status;
 mod summary;
+mod sync;
 
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use git2::Repository;
 
-use crate::cli::{branch, commit, stage, stash as stash_cli};
+use crate::cli::{branch, commit, remote, stage, stash as stash_cli};
 use crate::model::{
-    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, RepoSummary, StashEntry,
-    WorkingTree,
+    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, Progress, Remote, RepoSummary,
+    StashEntry, WorkingTree,
 };
 use crate::{GitBackend, GitError};
 
@@ -86,6 +88,10 @@ impl GitBackend for Git2Backend {
 
     fn stashes(&self) -> Result<Vec<StashEntry>, GitError> {
         stash::read(&self.repo)
+    }
+
+    fn remotes(&self) -> Result<Vec<Remote>, GitError> {
+        remotes::read(&self.repo)
     }
 
     fn stage(&self, paths: &[String]) -> Result<(), GitError> {
@@ -155,6 +161,26 @@ impl GitBackend for Git2Backend {
     fn restore_stash(&self, hash: &str, message: &str) -> Result<(), GitError> {
         let id = stash::parse(hash)?;
         stash_cli::store(&self.dir, &id.to_string(), message)
+    }
+
+    fn add_remote(&self, name: &str, url: &str) -> Result<(), GitError> {
+        remote::add(&self.dir, name, url)
+    }
+
+    fn fetch(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
+        sync::fetch(&self.repo, &self.dir, progress)
+    }
+
+    fn pull(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
+        sync::pull(&self.repo, &self.dir, progress)
+    }
+
+    fn push(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
+        sync::push(&self.repo, &self.dir, progress)
+    }
+
+    fn publish(&self, progress: &mut dyn FnMut(Progress)) -> Result<String, GitError> {
+        sync::publish(&self.repo, &self.dir, progress)
     }
 }
 

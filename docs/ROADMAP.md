@@ -111,11 +111,11 @@ Done when a full day of local work needs no terminal.
 
 Done when clone, commit, and push work from start to end. This is the first public alpha.
 
-- [ ] Clone, fetch, pull, and push with progress events
-- [ ] Ahead and behind counts
-- [ ] Publish a branch
-- [ ] Background fetch
-- [ ] Authentication through the credential helper and SSH agent of the system
+- [x] Clone, fetch, pull, and push with progress events
+- [x] Ahead and behind counts
+- [x] Publish a branch
+- [x] Background fetch
+- [x] Authentication through the credential helper and SSH agent of the system
 
 ### Phase 5: GitHub
 
@@ -156,7 +156,8 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery. The action has `confirm`, and its result has `undo`. A discard keeps a copy of the changes in the stash.
 - **Calm mode:** each animation must stop in calm mode. Calm mode applies when the user selects it or when the system asks for reduced motion.
 - **Read-only core:** `git2` does each read operation. A read operation must not write to the repository.
-- **Write operations:** the system `git` does each write operation, so hooks, signing, and the configuration of the user apply. Each write operation runs in an action.
+- **Write operations:** the system `git` does each write operation, so hooks, signing, and the configuration of the user apply. Each write operation runs in an action. The background fetch is the only exception.
+- **Network operations:** one network operation runs at a time. `git` gets the credentials from the credential helper and the SSH agent of the system. It must fail, not wait for a password.
 - **Sample data:** `pnpm dev` in a browser has no Rust core. The demo backend in `src/demo` gives a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend.
 - **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer and run in calm mode.
 - **Workflow:** one vertical slice for each pull request. Use conventional commit messages. CI must pass before a merge.
@@ -171,4 +172,6 @@ Tools enforce these rules. CI fails when a rule fails.
 - **History order:** the history uses the unsorted walk of libgit2, which gives the order of `git log`. Each sorted walk reads the full history before the first commit, so do not use one.
 - **Git version:** the write operations send paths with `--pathspec-from-file`. This option needs Git 2.26 or later.
 - **Stash with paths:** in Git 2.54, `git stash push --keep-index` loses the staged changes when the paths include an untracked file. A discard does not use `--keep-index`. It restores the staged versions from the stash entry.
+- **Pull:** a pull only fast-forwards until Phase 6 adds merge and rebase. When the branch and its upstream both have new commits, the user must merge or rebase in a terminal.
+- **SSH host keys:** `ssh` runs in batch mode, so it cannot ask to accept a new host key. The user connects one time in a terminal first.
 - **Linux file watches:** inotify needs one watch for each folder. A very large working tree can reach the limit of the system. The repository then opens without automatic refresh.

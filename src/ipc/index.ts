@@ -19,10 +19,14 @@ export {
   type LogPage,
   type MockCommandHandlers,
   mockCommands,
+  type Progress,
   type RecentRepo,
+  type Remote,
   type RepoChange,
   type RepoSummary,
   type StashEntry,
+  type SyncOperation,
+  type SyncProgress,
   type WorkingTree,
 } from "./bindings";
 export { errorMessage } from "./errorMessage";

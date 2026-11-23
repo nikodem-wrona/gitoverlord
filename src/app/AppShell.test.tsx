@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { SAMPLE_SUMMARY, SAMPLE_WORKING_TREE } from "@/demo";
@@ -125,13 +125,17 @@ describe("AppShell with a repository", () => {
     ).toBeInTheDocument();
   });
 
-  it("tells the user that sync is offline", async () => {
+  it("pushes the current branch from the top bar", async () => {
     mockRepository();
     await renderOpenShell();
 
-    fireEvent.click(screen.getByRole("button", { name: "Push" }));
+    const push = screen.getByRole("button", { name: "Push to the upstream" });
+    await waitFor(() => expect(push).toHaveTextContent("Push ↑3"));
+    fireEvent.click(push);
 
-    expect(screen.getByText("Sync is offline")).toBeInTheDocument();
+    // The demo push takes a few steps, then the counts read again.
+    await waitFor(() => expect(push).toHaveTextContent("Push ↑0"));
+    expect(screen.getAllByText("Push complete")).not.toHaveLength(0);
   });
 
   it("goes back to the list of repositories", async () => {
@@ -172,7 +176,7 @@ describe("AppShell without a repository", () => {
   it("stays on the dock when the user cancels the folder dialog", async () => {
     mockRepository({
       recentRepositories: () => [],
-      pickRepository: () => null,
+      pickFolder: () => null,
       openRepository: rejectWith({ kind: "io", message: "not expected" }),
     });
     renderWithProviders(<AppShell />);

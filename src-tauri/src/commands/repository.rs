@@ -7,12 +7,12 @@ use tauri_plugin_dialog::DialogExt;
 use crate::blocking::{run_blocking, with_repo};
 use crate::session::{self, Session};
 
-/// Asks the user for a folder. Returns `None` if the user cancels.
+/// Asks the user for a folder. `title` is the title of the dialog. Returns `None` if the user cancels.
 #[tauri::command]
 #[specta::specta]
-pub async fn pick_repository(app: AppHandle) -> Result<Option<String>, GitError> {
+pub async fn pick_folder(app: AppHandle, title: String) -> Result<Option<String>, GitError> {
     let pick = move || {
-        let dialog = app.dialog().file().set_title("Open a repository");
+        let dialog = app.dialog().file().set_title(title);
         let folder = dialog.blocking_pick_folder()?.into_path().ok()?;
         Some(folder.to_string_lossy().into_owned())
     };

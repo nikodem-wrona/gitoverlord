@@ -12,7 +12,8 @@ import {
   useRepoSummary,
   useRepoWatcher,
 } from "@/features/repository";
-import { ActivityPanel, SyncPanel } from "@/features/telemetry";
+import { SyncPanel } from "@/features/sync";
+import { ActivityPanel } from "@/features/telemetry";
 import type { DiffTarget } from "@/ipc";
 
 import styles from "./AppShell.module.css";

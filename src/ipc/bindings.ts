@@ -9,8 +9,8 @@ import { mockIPC as __TAURI_MOCK_IPC } from "@tauri-apps/api/mocks";
 export const commands = {
 	/**  Reports the version of the system `git`. */
 	detectGit: (options?: InvokeOptions) => typedError<GitVersion, GitError>(__TAURI_INVOKE("detect_git", undefined, options)),
-	/**  Asks the user for a folder. Returns `None` if the user cancels. */
-	pickRepository: (options?: InvokeOptions) => typedError<string | null, GitError>(__TAURI_INVOKE("pick_repository", undefined, options)),
+	/**  Asks the user for a folder. `title` is the title of the dialog. Returns `None` if the user cancels. */
+	pickFolder: (title: string, options?: InvokeOptions) => typedError<string | null, GitError>(__TAURI_INVOKE("pick_folder", { title }, options)),
 	/**  Opens the repository that contains `path`, and starts to watch it. */
 	openRepository: (path: string, options?: InvokeOptions) => typedError<RepoSummary, GitError>(__TAURI_INVOKE("open_repository", { path }, options)),
 	/**  Lists the repositories that the user opened. The newest is first. */
@@ -63,11 +63,25 @@ export const commands = {
 	dropStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("drop_stash", { path, hash }, options)),
 	/**  Puts a dropped entry back in the stash list. */
 	restoreStash: (path: string, hash: string, message: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_stash", { path, hash, message }, options)),
+	/**  Lists the remotes with their remote branches. */
+	repoRemotes: (path: string, options?: InvokeOptions) => typedError<Remote[], GitError>(__TAURI_INVOKE("repo_remotes", { path }, options)),
+	addRemote: (path: string, name: string, url: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("add_remote", { path, name, url }, options)),
+	/**  Fetches each remote. */
+	fetchRemotes: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("fetch_remotes", { path }, options)),
+	/**  Fast-forwards the current branch to its upstream. */
+	pullBranch: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("pull_branch", { path }, options)),
+	/**  Sends the commits of the current branch to its upstream. */
+	pushBranch: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("push_branch", { path }, options)),
+	/**  Pushes the current branch and makes the remote branch its upstream. Returns the upstream. */
+	publishBranch: (path: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("publish_branch", { path }, options)),
+	/**  Clones `url` into a new folder in `parent`. Returns the path of the new working tree. */
+	cloneRepository: (url: string, parent: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("clone_repository", { url, parent }, options)),
 };
 
 /** Events */
 export const events = {
 	repoChanged: makeEvent<RepoChanged, RepoChanged>("repo-changed"),
+	syncProgress: makeEvent<SyncProgress, SyncProgress>("sync-progress"),
 };
 
 /* Types */
@@ -180,6 +194,11 @@ export type GitError =
  *  The message tells the user what to do.
  */
 { kind: "rejected"; message: string } | 
+/**
+ *  The remote did not accept the credentials, or `git` had none to give.
+ *  `git` does not ask for a password, so a credential helper or the SSH agent must give it.
+ */
+{ kind: "authFailed"; message: string } | 
 /**  A file of the application could not be read or written. */
 { kind: "io"; message: string };
 
@@ -219,10 +238,30 @@ export type LogPage = {
 	next: number | null,
 };
 
+/**  One step of a network operation, from the progress output of `git`. */
+export type Progress = {
+	/**  What `git` does now, for example `Receiving objects`. */
+	phase: string,
+	/**  The part of the phase that is done, from 0 to 100. `None` when `git` gives no total. */
+	percent: number | null,
+};
+
 /**  A repository that the user opened before. */
 export type RecentRepo = {
 	name: string,
 	path: string,
+};
+
+/**  A remote repository. */
+export type Remote = {
+	name: string,
+	/**
+	 *  The fetch URL. An HTTP URL has no user name and no password here.
+	 *  `None` when the remote has no URL.
+	 */
+	url: string | null,
+	/**  The remote branches from the last fetch, for example `origin/main`. */
+	branches: string[],
 };
 
 /**  The parts of a repository that changed on the disk. */
@@ -250,6 +289,8 @@ export type RepoSummary = {
 	remotes: string[],
 	/**  The newest name is first. */
 	tags: string[],
+	/**  The time of the last fetch, in Unix seconds. `None` before the first fetch. */
+	fetched: number | null,
 };
 
 /**  One entry of the stash. */
@@ -262,6 +303,20 @@ export type StashEntry = {
 	message: string,
 	/**  The time when the entry was made, in Unix seconds. */
 	time: number,
+};
+
+/**  The network operation that a `SyncProgress` event belongs to. */
+export type SyncOperation = "fetch" | "pull" | 
+/**  A push, also the push that publishes a branch. */
+"push" | "clone";
+
+/**  A network operation made progress, or it ended. */
+export type SyncProgress = {
+	/**  The path of the repository. For a clone, the path of the new working tree. */
+	path: string,
+	operation: SyncOperation,
+	/**  The current step. `None` when the operation ended. */
+	step: Progress | null,
 };
 
 /**
@@ -316,7 +371,7 @@ function makeEvent<TListen, TEmit = TListen>(name: string, serialize?: (payload:
 /** A handler for each generated command, keyed by its `commands` accessor. */
 export type MockCommandHandlers = {
     detectGit: () => GitVersion | Promise<GitVersion>,
-    pickRepository: () => string | null | Promise<string | null>,
+    pickFolder: (args: { title: string }) => string | null | Promise<string | null>,
     openRepository: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
     recentRepositories: () => RecentRepo[] | Promise<RecentRepo[]>,
     repoSummary: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
@@ -344,6 +399,13 @@ export type MockCommandHandlers = {
     popStash: (args: { path: string; hash: string }) => null | Promise<null>,
     dropStash: (args: { path: string; hash: string }) => null | Promise<null>,
     restoreStash: (args: { path: string; hash: string; message: string }) => null | Promise<null>,
+    repoRemotes: (args: { path: string }) => Remote[] | Promise<Remote[]>,
+    addRemote: (args: { path: string; name: string; url: string }) => null | Promise<null>,
+    fetchRemotes: (args: { path: string }) => null | Promise<null>,
+    pullBranch: (args: { path: string }) => null | Promise<null>,
+    pushBranch: (args: { path: string }) => null | Promise<null>,
+    publishBranch: (args: { path: string }) => string | Promise<string>,
+    cloneRepository: (args: { url: string; parent: string }) => string | Promise<string>,
 };
 
 /**
@@ -371,7 +433,7 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
     return __TAURI_MOCK_IPC((cmd, args) => {
         switch (cmd) {
             case "detect_git": return mockCommandHandler(mockHandlers.detectGit, "detect_git", args);
-            case "pick_repository": return mockCommandHandler(mockHandlers.pickRepository, "pick_repository", args);
+            case "pick_folder": return mockCommandHandler(mockHandlers.pickFolder, "pick_folder", args);
             case "open_repository": return mockCommandHandler(mockHandlers.openRepository, "open_repository", args);
             case "recent_repositories": return mockCommandHandler(mockHandlers.recentRepositories, "recent_repositories", args);
             case "repo_summary": return mockCommandHandler(mockHandlers.repoSummary, "repo_summary", args);
@@ -399,6 +461,13 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "pop_stash": return mockCommandHandler(mockHandlers.popStash, "pop_stash", args);
             case "drop_stash": return mockCommandHandler(mockHandlers.dropStash, "drop_stash", args);
             case "restore_stash": return mockCommandHandler(mockHandlers.restoreStash, "restore_stash", args);
+            case "repo_remotes": return mockCommandHandler(mockHandlers.repoRemotes, "repo_remotes", args);
+            case "add_remote": return mockCommandHandler(mockHandlers.addRemote, "add_remote", args);
+            case "fetch_remotes": return mockCommandHandler(mockHandlers.fetchRemotes, "fetch_remotes", args);
+            case "pull_branch": return mockCommandHandler(mockHandlers.pullBranch, "pull_branch", args);
+            case "push_branch": return mockCommandHandler(mockHandlers.pushBranch, "push_branch", args);
+            case "publish_branch": return mockCommandHandler(mockHandlers.publishBranch, "publish_branch", args);
+            case "clone_repository": return mockCommandHandler(mockHandlers.cloneRepository, "clone_repository", args);
             default: throw new Error(`No mock handler registered for command '${cmd}'`);
         }
     }, { shouldMockEvents: true });

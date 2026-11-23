@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import {
   Button,
   type Column,
@@ -18,8 +20,14 @@ const COLUMNS: readonly Column<RecentRepo>[] = [
   textColumn<RecentRepo>("path", "Path"),
 ];
 
+interface RepoDockProps {
+  session: RepoSession;
+  /** More commands under the Open button, for example the clone command. */
+  children?: ReactNode;
+}
+
 /** The start screen: open a folder, or select a repository that was open before. */
-export function RepoDock({ session }: { session: RepoSession }) {
+export function RepoDock({ session, children }: RepoDockProps) {
   const recent = useRecentRepositories().data ?? [];
 
   return (
@@ -33,8 +41,8 @@ export function RepoDock({ session }: { session: RepoSession }) {
           <LogoMark size="3.5rem" />
           <h2 className={styles.title}>Select a repository</h2>
           <p className={styles.hint}>
-            Open a folder that contains a git repository. gitoverlord reads it
-            and does not change it.
+            Open a folder that contains a git repository, or clone a repository
+            from a URL.
           </p>
           <Button
             variant="primary"
@@ -43,6 +51,7 @@ export function RepoDock({ session }: { session: RepoSession }) {
           >
             Open a folder
           </Button>
+          {children}
         </div>
         <div className={styles.recent}>
           {recent.length > 0 ? (

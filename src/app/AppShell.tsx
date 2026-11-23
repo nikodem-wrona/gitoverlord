@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useRegisterActions } from "@/actions";
 import { RepoDock, useRepoSession } from "@/features/repository";
+import { CloneControl } from "@/features/sync";
 import { Tabs, useMotion } from "@/hud";
 
 import { appActions } from "./appActions";
@@ -41,7 +42,9 @@ export function AppShell() {
       </div>
       {session.path === null ? (
         <main className={styles.dock}>
-          <RepoDock session={session} />
+          <RepoDock session={session}>
+            <CloneControl onCloned={session.open} />
+          </RepoDock>
         </main>
       ) : (
         // A new repository starts with a new selection.

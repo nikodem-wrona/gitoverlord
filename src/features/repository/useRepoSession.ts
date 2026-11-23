@@ -38,7 +38,7 @@ export function useRepoSession(): RepoSession {
     onError: fail,
   });
   const picker = useMutation({
-    mutationFn: () => unwrap(commands.pickRepository()),
+    mutationFn: () => unwrap(commands.pickFolder("Open a repository")),
     onSuccess: (folder) => {
       if (folder !== null) opener.mutate(folder);
     },

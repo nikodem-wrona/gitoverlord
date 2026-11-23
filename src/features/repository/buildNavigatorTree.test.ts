@@ -22,6 +22,7 @@ const SUMMARY: RepoSummary = {
   head: { branch: "main", hash: "abc1234" },
   remotes: ["origin"],
   tags: [],
+  fetched: null,
 };
 
 describe("buildNavigatorTree", () => {

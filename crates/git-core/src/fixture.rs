@@ -40,6 +40,20 @@ impl RepoFixture {
         self.root.path().join("repo")
     }
 
+    /// The bare repository that `with_origin` makes.
+    pub(crate) fn origin(&self) -> PathBuf {
+        self.root.path().join("origin.git")
+    }
+
+    /// Makes an empty bare repository and adds it as the remote `origin`.
+    pub(crate) fn with_origin(self) -> Self {
+        let origin = self.origin();
+        let origin = origin.to_str().unwrap();
+        self.git(&["init", "--quiet", "--bare", "--initial-branch=main", origin]);
+        self.git(&["remote", "add", "origin", origin]);
+        self
+    }
+
     pub(crate) fn backend(&self) -> Box<dyn GitBackend> {
         open_repo(&self.path()).unwrap()
     }

@@ -23,6 +23,9 @@ pub struct RepoSummary {
     pub remotes: Vec<String>,
     /// The newest name is first.
     pub tags: Vec<String>,
+    /// The time of the last fetch, in Unix seconds. `None` before the first fetch.
+    #[specta(type = Option<i32>)]
+    pub fetched: Option<i64>,
 }
 
 /// A local branch.

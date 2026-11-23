@@ -6,6 +6,7 @@ export const ACTION_GROUPS = [
   "Commit",
   "Branches",
   "Stash",
+  "Sync",
   "Repository",
   "View",
 ] as const;
