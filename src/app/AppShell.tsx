@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useRegisterActions } from "@/actions";
+import { CloneFromGitHubButton, GitHubProvider } from "@/features/github";
 import { RepoDock, useRepoSession } from "@/features/repository";
 import { CloneControl } from "@/features/sync";
 import { Tabs, useMotion } from "@/hud";
@@ -29,32 +30,35 @@ export function AppShell() {
   useRegisterActions(appActions({ session, motion, showModule: setModuleId }));
 
   return (
-    <div className={styles.shell}>
-      <TopBar repoPath={session.path} onShowRepositories={session.close} />
-      <div className={styles.modules}>
-        <Tabs
-          label="Modules"
-          idPrefix={MODULE_TABS_ID}
-          tabs={MODULE_LIST}
-          activeId={moduleId}
-          onChange={(id) => isModuleId(id) && setModuleId(id)}
-        />
+    <GitHubProvider onCloned={session.open}>
+      <div className={styles.shell}>
+        <TopBar repoPath={session.path} onShowRepositories={session.close} />
+        <div className={styles.modules}>
+          <Tabs
+            label="Modules"
+            idPrefix={MODULE_TABS_ID}
+            tabs={MODULE_LIST}
+            activeId={moduleId}
+            onChange={(id) => isModuleId(id) && setModuleId(id)}
+          />
+        </div>
+        {session.path === null ? (
+          <main className={styles.dock}>
+            <RepoDock session={session}>
+              <CloneControl onCloned={session.open} />
+              <CloneFromGitHubButton />
+            </RepoDock>
+          </main>
+        ) : (
+          // A new repository starts with a new selection.
+          <RepoDeck
+            key={session.path}
+            repoPath={session.path}
+            moduleId={moduleId}
+          />
+        )}
+        <StatusBar />
       </div>
-      {session.path === null ? (
-        <main className={styles.dock}>
-          <RepoDock session={session}>
-            <CloneControl onCloned={session.open} />
-          </RepoDock>
-        </main>
-      ) : (
-        // A new repository starts with a new selection.
-        <RepoDeck
-          key={session.path}
-          repoPath={session.path}
-          moduleId={moduleId}
-        />
-      )}
-      <StatusBar />
-    </div>
+    </GitHubProvider>
   );
 }

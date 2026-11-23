@@ -1,9 +1,12 @@
+import type { ComponentType } from "react";
+
 import { BranchPanel } from "@/features/branches";
 import { ChangesPanel } from "@/features/changes";
+import { PullRequestPanel } from "@/features/github";
 import { CommitLogPanel, type History } from "@/features/history";
 import { StashPanel } from "@/features/stash";
 import { RemotePanel } from "@/features/sync";
-import { EmptyState, Panel, TabPanel } from "@/hud";
+import { TabPanel } from "@/hud";
 import type { DiffTarget } from "@/ipc";
 
 import { MODULE_TABS_ID, MODULES, type ModuleId } from "./modules";
@@ -36,9 +39,30 @@ export function Workspace(props: WorkspaceProps) {
   );
 }
 
+/** The panels that take only a title and a repository. */
+const PLAIN_PANELS = {
+  branches: BranchPanel,
+  remotes: RemotePanel,
+  pullRequests: PullRequestPanel,
+} satisfies Partial<Record<ModuleId, ComponentType<PlainPanelProps>>>;
+
+interface PlainPanelProps {
+  title: string;
+  repoPath: string;
+  delay?: number;
+}
+
+function isPlain(id: ModuleId): id is keyof typeof PLAIN_PANELS {
+  return Object.hasOwn(PLAIN_PANELS, id);
+}
+
 function ModulePanel(props: WorkspaceProps) {
   const { moduleId, repoPath } = props;
-  const { title, phase } = MODULES[moduleId];
+  const { title } = MODULES[moduleId];
+  if (isPlain(moduleId)) {
+    const Plain = PLAIN_PANELS[moduleId];
+    return <Plain title={title} repoPath={repoPath} delay={REVEAL_DELAY} />;
+  }
 
   switch (moduleId) {
     case "changes":
@@ -61,14 +85,6 @@ function ModulePanel(props: WorkspaceProps) {
           delay={REVEAL_DELAY}
         />
       );
-    case "branches":
-      return (
-        <BranchPanel title={title} repoPath={repoPath} delay={REVEAL_DELAY} />
-      );
-    case "remotes":
-      return (
-        <RemotePanel title={title} repoPath={repoPath} delay={REVEAL_DELAY} />
-      );
     case "stash":
       return (
         <StashPanel
@@ -78,19 +94,5 @@ function ModulePanel(props: WorkspaceProps) {
           delay={REVEAL_DELAY}
         />
       );
-    default:
-      return <OfflinePanel title={title} phase={phase} />;
   }
-}
-
-/** A module that a later phase of the roadmap makes. */
-function OfflinePanel({ title, phase }: { title: string; phase?: number }) {
-  return (
-    <Panel title={title} meta="Offline" flush delay={REVEAL_DELAY}>
-      <EmptyState
-        title="Module offline"
-        message={`This module arrives in phase ${phase}.`}
-      />
-    </Panel>
-  );
 }

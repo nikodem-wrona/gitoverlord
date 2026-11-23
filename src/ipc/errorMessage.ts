@@ -7,11 +7,12 @@ const SIGN_IN_HINT =
 
 /** Converts the failure of a command into a sentence for the user. */
 export function errorMessage(error: unknown): string {
-  if (error instanceof CommandError) return describe(error.detail);
+  if (error instanceof CommandError) return gitErrorText(error.detail);
   return "The backend did not answer. Restart gitoverlord.";
 }
 
-function describe(error: GitError): string {
+/** Converts a `GitError` into a sentence for the user. */
+export function gitErrorText(error: GitError): string {
   switch (error.kind) {
     case "gitNotFound":
       return "Git is not installed.";
@@ -19,6 +20,8 @@ function describe(error: GitError): string {
       return `This folder is not a git repository: ${error.message}`;
     case "authFailed":
       return `The remote refused the sign-in. ${SIGN_IN_HINT} Git said: ${error.message}`;
+    case "signInExpired":
+      return "The GitHub sign-in is not valid any more. Sign in again.";
     default:
       return error.message;
   }

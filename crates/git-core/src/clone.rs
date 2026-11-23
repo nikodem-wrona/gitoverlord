@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use crate::GitError;
 use crate::cli::remote;
-use crate::model::Progress;
+use crate::model::{HostToken, Progress};
 
 /// Returns the folder for a clone of `url` in `parent`. The name comes from the URL, as in `git clone`.
 ///
@@ -18,6 +18,7 @@ pub fn clone_target(url: &str, parent: &Path) -> Result<PathBuf, GitError> {
 }
 
 /// Clones `url` into the new folder `target`. Each progress line goes to `progress`.
+/// `token`, when it is there, signs in to the HTTPS remotes of its host.
 ///
 /// # Errors
 ///
@@ -26,9 +27,10 @@ pub fn clone_target(url: &str, parent: &Path) -> Result<PathBuf, GitError> {
 pub fn clone_repo(
     url: &str,
     target: &Path,
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
-    remote::clone(url.trim(), target, progress)
+    remote::clone(url.trim(), target, token, progress)
 }
 
 /// Takes the last part of the URL without `.git`, for example `repo` from `git@host:owner/repo.git`.
@@ -77,7 +79,7 @@ mod tests {
         let url = source.origin().to_string_lossy().into_owned();
 
         let target = clone_target(&url, parent.path()).unwrap();
-        clone_repo(&url, &target, &mut |_| {}).unwrap();
+        clone_repo(&url, &target, None, &mut |_| {}).unwrap();
 
         assert_eq!(target, parent.path().join("origin"));
         assert!(target.join("a.txt").is_file());

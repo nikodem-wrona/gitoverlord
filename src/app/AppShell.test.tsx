@@ -114,15 +114,13 @@ describe("AppShell with a repository", () => {
     expect(await screen.findByText("Working tree clean")).toBeInTheDocument();
   });
 
-  it("tells the user when a module is not ready", async () => {
+  it("asks for a GitHub sign-in on the pull requests tab", async () => {
     mockRepository();
     await renderOpenShell();
 
     await openTab("Pull requests");
 
-    expect(
-      screen.getByText("This module arrives in phase 5."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Not signed in")).toBeInTheDocument();
   });
 
   it("pushes the current branch from the top bar", async () => {

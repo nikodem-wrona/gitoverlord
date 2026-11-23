@@ -2,6 +2,7 @@ import type { CommitDetail, LogPage, MockCommandHandlers } from "@/ipc";
 
 import * as branches from "./demoBranches";
 import * as changes from "./demoChanges";
+import * as hub from "./demoGitHub";
 import {
   commitsOf,
   createDemoRepository,
@@ -23,6 +24,7 @@ export function createDemoHandlers(): MockCommandHandlers {
   const repo = createDemoRepository();
   return {
     ...readHandlers(repo),
+    ...gitHubHandlers(repo),
     stageFiles: ({ files }) => changes.stage(repo, files),
     unstageFiles: ({ files }) => changes.unstage(repo, files),
     // The sample diff has one hunk, so a hunk is the whole file.
@@ -50,6 +52,37 @@ export function createDemoHandlers(): MockCommandHandlers {
     pushBranch: () => sync.push(repo),
     publishBranch: () => sync.publish(repo),
     cloneRepository: ({ url, parent }) => sync.cloneRepository(url, parent),
+  };
+}
+
+type GitHubHandlers = Pick<
+  MockCommandHandlers,
+  | "githubAccount"
+  | "githubStartSignIn"
+  | "githubPollSignIn"
+  | "githubSignOut"
+  | "githubRepositories"
+  | "githubPullRequests"
+  | "githubCreatePullRequest"
+  | "openGithubPage"
+>;
+
+/** The demo account starts signed out, so that the demo shows the sign-in. */
+function gitHubHandlers(repo: DemoRepository): GitHubHandlers {
+  const state = hub.createDemoGitHub();
+  return {
+    githubAccount: () => structuredClone(state.account),
+    githubStartSignIn: () => hub.DEMO_DEVICE_CODE,
+    githubPollSignIn: () => hub.pollSignIn(state),
+    githubSignOut: () => {
+      state.account = null;
+      return null;
+    },
+    githubRepositories: () => structuredClone(hub.DEMO_HUB_REPOSITORIES),
+    githubPullRequests: () => hub.pullList(state),
+    githubCreatePullRequest: ({ title, base }) =>
+      hub.createPull(state, repo, title, base),
+    openGithubPage: ({ url }) => hub.openPage(url),
   };
 }
 

@@ -1,4 +1,4 @@
-import { type Action, defineAction } from "@/actions";
+import { type Action, defineAction, type Outcome } from "@/actions";
 import type { RepoWriter } from "@/features/repository";
 import { commands, unwrap } from "@/ipc";
 
@@ -42,14 +42,34 @@ export function cloneAction(open: (path: string) => void): Action {
       placeholder: URL_PLACEHOLDER,
       submit: "Clone",
     },
-    run: async (url) => {
-      const parent = await unwrap(
-        commands.pickFolder("Select the folder for the clone"),
-      );
-      if (parent === null) return;
-      const path = await unwrap(commands.cloneRepository(url, parent));
-      open(path);
-      return { title: "Repository cloned", message: path };
-    },
+    run: (url) => cloneInto(url, open),
   });
+}
+
+/** Clones `url` without a question, for example from the list of GitHub repositories. */
+export function cloneUrlAction(
+  url: string,
+  name: string,
+  open: (path: string) => void,
+): Action {
+  return defineAction({
+    id: `repository.clone:${url}`,
+    label: `Clone ${name}`,
+    group: "Repository",
+    run: () => cloneInto(url, open),
+  });
+}
+
+/** Asks for a folder, clones `url` into it, and opens the clone. */
+async function cloneInto(
+  url: string,
+  open: (path: string) => void,
+): Promise<Outcome | void> {
+  const parent = await unwrap(
+    commands.pickFolder("Select the folder for the clone"),
+  );
+  if (parent === null) return;
+  const path = await unwrap(commands.cloneRepository(url, parent));
+  open(path);
+  return { title: "Repository cloned", message: path };
 }

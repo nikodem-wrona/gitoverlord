@@ -1,5 +1,6 @@
 import { formatShortcut, isMac, PALETTE_SHORTCUT, useActions } from "@/actions";
-import { shortHash, useBranches, useRepoSummary } from "@/features/repository";
+import { AccountButton } from "@/features/github";
+import { shortHash, useRepoSummary } from "@/features/repository";
 import { SyncButtons } from "@/features/sync";
 import { Button, CalmToggle, DecodeText, LogoMark, Readout } from "@/hud";
 import type { Head } from "@/ipc";
@@ -39,6 +40,7 @@ export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
         <Button onClick={onShowRepositories} disabled={repoPath === null}>
           Repositories
         </Button>
+        <AccountButton />
         {repoPath !== null && <SyncButtons repoPath={repoPath} />}
         <CalmToggle />
       </div>
@@ -46,13 +48,9 @@ export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
   );
 }
 
+/** The pull and push buttons show the counts of the commits, so there is no sync readout. */
 function RepoReadouts({ repoPath }: { repoPath: string }) {
   const summary = useRepoSummary(repoPath).data;
-  const branches = useBranches(repoPath).data ?? [];
-  const current = branches.find((branch) => branch.current);
-  const sync = current?.upstream
-    ? `↑${current.ahead}  ↓${current.behind}`
-    : "No upstream";
 
   return (
     <>
@@ -61,7 +59,6 @@ function RepoReadouts({ repoPath }: { repoPath: string }) {
         label="Branch"
         value={summary ? headLabel(summary.head) : "Scanning"}
       />
-      <Readout label="Sync" value={sync} />
     </>
   );
 }

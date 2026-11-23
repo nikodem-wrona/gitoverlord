@@ -24,10 +24,9 @@ export function appActions({
   ];
 }
 
-/** One action for each module that works. `Mod+1` shows the first module. */
+/** One action for each module. `Mod+1` shows the first module. */
 function moduleActions(showModule: (id: ModuleId) => void): Action[] {
-  const ready = MODULE_LIST.filter((module) => module.phase === undefined);
-  return ready.map((module, index) =>
+  return MODULE_LIST.map((module, index) =>
     defineAction({
       id: `view.${module.id}`,
       label: `Show ${module.label}`,

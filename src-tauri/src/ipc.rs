@@ -2,7 +2,9 @@
 
 use tauri_specta::{Builder, Commands, ErrorHandlingMode, collect_commands, collect_events};
 
-use crate::commands::{branches, changes, commit, history, repository, stash, sync, system};
+use crate::commands::{
+    branches, changes, commit, github, history, repository, stash, sync, system,
+};
 use crate::events::{RepoChanged, SyncProgress};
 
 /// Registers each command and each event of the user interface.
@@ -19,6 +21,8 @@ pub fn builder() -> Builder<tauri::Wry> {
         .mocks()
 }
 
+/// The list of the commands. It is data without logic, so it has no line limit.
+#[expect(clippy::too_many_lines, reason = "one line for each command")]
 fn commands() -> Commands<tauri::Wry> {
     collect_commands![
         system::detect_git,
@@ -57,6 +61,14 @@ fn commands() -> Commands<tauri::Wry> {
         sync::push_branch,
         sync::publish_branch,
         sync::clone_repository,
+        github::github_account,
+        github::github_start_sign_in,
+        github::github_poll_sign_in,
+        github::github_sign_out,
+        github::github_repositories,
+        github::github_pull_requests,
+        github::github_create_pull_request,
+        github::open_github_page,
     ]
 }
 

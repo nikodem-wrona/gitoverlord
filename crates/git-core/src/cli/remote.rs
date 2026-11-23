@@ -5,18 +5,27 @@ use std::path::Path;
 use super::network::run_network;
 use super::run_git_in;
 use crate::GitError;
-use crate::model::Progress;
+use crate::model::{HostToken, Progress};
 
 /// Fetches each remote. A remote branch that the remote deleted is removed.
-pub(crate) fn fetch(dir: &Path, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
-    run_network(dir, &["fetch", "--all", "--prune", "--progress"], progress)
+pub(crate) fn fetch(
+    dir: &Path,
+    token: Option<&HostToken>,
+    progress: &mut dyn FnMut(Progress),
+) -> Result<(), GitError> {
+    let args = ["fetch", "--all", "--prune", "--progress"];
+    run_network(dir, &args, token, progress)
 }
 
 /// Fetches the upstream of the current branch and fast-forwards the branch.
 ///
 /// The pull does not merge and does not rebase, also if the configuration of the user says so.
-pub(crate) fn pull(dir: &Path, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
-    run_network(dir, &["pull", "--ff-only", "--progress"], progress)
+pub(crate) fn pull(
+    dir: &Path,
+    token: Option<&HostToken>,
+    progress: &mut dyn FnMut(Progress),
+) -> Result<(), GitError> {
+    run_network(dir, &["pull", "--ff-only", "--progress"], token, progress)
 }
 
 /// Pushes `refspec`, for example `refs/heads/main:refs/heads/main`, to `remote`.
@@ -27,6 +36,7 @@ pub(crate) fn push(
     remote: &str,
     refspec: &str,
     track: bool,
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
     let mut args = vec!["push", "--progress"];
@@ -34,7 +44,7 @@ pub(crate) fn push(
         args.push("--set-upstream");
     }
     args.extend(["--", remote, refspec]);
-    run_network(dir, &args, progress)
+    run_network(dir, &args, token, progress)
 }
 
 pub(crate) fn add(dir: &Path, name: &str, url: &str) -> Result<(), GitError> {
@@ -45,13 +55,11 @@ pub(crate) fn add(dir: &Path, name: &str, url: &str) -> Result<(), GitError> {
 pub(crate) fn clone(
     url: &str,
     target: &Path,
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
     let parent = target.parent().unwrap_or(target);
     let target = target.to_string_lossy();
-    run_network(
-        parent,
-        &["clone", "--progress", "--", url, &target],
-        progress,
-    )
+    let args = ["clone", "--progress", "--", url, &target];
+    run_network(parent, &args, token, progress)
 }

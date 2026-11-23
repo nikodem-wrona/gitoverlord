@@ -1,9 +1,10 @@
-//! The state of the application: the recent repositories and the file watcher.
+//! The state of the application: the recent repositories, the file watcher, and
+//! the GitHub token.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, PoisonError};
 
-use git_core::{GitError, RecentRepo, RecentStore, RepoSummary, RepoWatcher, open_repo};
+use git_core::{GitError, HostToken, RecentRepo, RecentStore, RepoSummary, RepoWatcher, open_repo};
 use tauri::{AppHandle, Manager};
 use tauri_specta::Event;
 
@@ -15,6 +16,8 @@ pub struct Session {
     recents: RecentStore,
     /// The watcher of the open repository. A new watcher replaces the old one.
     watcher: Mutex<Option<RepoWatcher>>,
+    /// The GitHub token. The outer `None` means that the keychain was not read yet.
+    github: Mutex<Option<Option<String>>>,
 }
 
 impl Session {
@@ -22,11 +25,36 @@ impl Session {
         Self {
             recents: RecentStore::new(config_folder.join(RECENT_FILE)),
             watcher: Mutex::new(None),
+            github: Mutex::new(None),
         }
     }
 
     pub fn recent(&self) -> Vec<RecentRepo> {
         self.recents.list()
+    }
+
+    /// The GitHub token, or `None` when the user did not sign in.
+    ///
+    /// The first call reads the keychain. A keychain that is not available gives `None`.
+    pub fn github_token(&self) -> Option<String> {
+        let mut cache = self.github.lock().unwrap_or_else(PoisonError::into_inner);
+        let token = cache.get_or_insert_with(|| github::load_token().ok().flatten());
+        token.clone()
+    }
+
+    /// Saves the token in the keychain, or removes it there when `token` is `None`.
+    pub fn set_github_token(&self, token: Option<String>) -> Result<(), GitError> {
+        match &token {
+            Some(token) => github::save_token(token)?,
+            None => github::delete_token()?,
+        }
+        *self.github.lock().unwrap_or_else(PoisonError::into_inner) = Some(token);
+        Ok(())
+    }
+
+    /// The token that `git` gives to the HTTPS remotes on GitHub.
+    pub fn host_token(&self) -> Option<HostToken> {
+        self.github_token().map(github::host_token)
     }
 }
 

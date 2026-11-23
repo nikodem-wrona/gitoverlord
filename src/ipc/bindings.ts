@@ -76,6 +76,31 @@ export const commands = {
 	publishBranch: (path: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("publish_branch", { path }, options)),
 	/**  Clones `url` into a new folder in `parent`. Returns the path of the new working tree. */
 	cloneRepository: (url: string, parent: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("clone_repository", { url, parent }, options)),
+	/**
+	 *  The account of the saved token. `None` when the user did not sign in, or when
+	 *  GitHub refuses the token. A refused token is removed.
+	 */
+	githubAccount: (options?: InvokeOptions) => typedError<Account | null, GitError>(__TAURI_INVOKE("github_account", undefined, options)),
+	/**  Starts a sign-in. The user types the code of the answer on GitHub. */
+	githubStartSignIn: (options?: InvokeOptions) => typedError<DeviceCode, GitError>(__TAURI_INVOKE("github_start_sign_in", undefined, options)),
+	/**
+	 *  Asks GitHub one time if the user typed the code. When the sign-in is done,
+	 *  the token goes to the keychain.
+	 */
+	githubPollSignIn: (deviceCode: string, options?: InvokeOptions) => typedError<SignInStep, GitError>(__TAURI_INVOKE("github_poll_sign_in", { deviceCode }, options)),
+	/**  Removes the token from the keychain. */
+	githubSignOut: (options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("github_sign_out", undefined, options)),
+	/**  Lists the repositories that the user pushed to most recently. */
+	githubRepositories: (options?: InvokeOptions) => typedError<HubRepository[], GitError>(__TAURI_INVOKE("github_repositories", undefined, options)),
+	/**
+	 *  Reads the open pull requests of the GitHub remote of the repository at
+	 *  `path`. `None` when the repository has no remote on GitHub.
+	 */
+	githubPullRequests: (path: string, options?: InvokeOptions) => typedError<PullList | null, GitError>(__TAURI_INVOKE("github_pull_requests", { path }, options)),
+	/**  Opens a pull request from the upstream of the current branch into `base`. */
+	githubCreatePullRequest: (path: string, title: string, base: string, options?: InvokeOptions) => typedError<CreatedPull, GitError>(__TAURI_INVOKE("github_create_pull_request", { path, title, base }, options)),
+	/**  Opens a GitHub page in the browser of the user. Other addresses are refused. */
+	openGithubPage: (url: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("open_github_page", { url }, options)),
 };
 
 /** Events */
@@ -85,6 +110,13 @@ export const events = {
 };
 
 /* Types */
+/**  The GitHub account of the user. */
+export type Account = {
+	login: string,
+	/**  The display name. `None` when the user did not set one. */
+	name: string | null,
+};
+
 /**  A local branch. */
 export type Branch = {
 	name: string,
@@ -104,6 +136,11 @@ export type Branch = {
 
 /**  How a file changed. */
 export type ChangeKind = "added" | "modified" | "deleted" | "renamed" | "typeChanged" | "untracked" | "conflicted";
+
+/**  The combined state of the checks and the statuses of the newest commit. */
+export type Checks = "passing" | "failing" | "pending" | 
+/**  The commit has no checks. */
+"none";
 
 /**  One commit in the history. */
 export type Commit = {
@@ -126,6 +163,27 @@ export type CommitDetail = {
 	email: string,
 	/**  The changes against the first parent. */
 	files: FileDelta[],
+};
+
+/**  A pull request that the application opened. */
+export type CreatedPull = {
+	number: number,
+	/**  The page of the pull request on GitHub. */
+	url: string,
+};
+
+/**  The codes of a sign-in that started. */
+export type DeviceCode = {
+	/**  The code that the user types on GitHub, for example `WDJB-MJHT`. */
+	userCode: string,
+	/**  The page where the user types the code. */
+	verificationUri: string,
+	/**  Identifies this sign-in when the application polls. */
+	deviceCode: string,
+	/**  The seconds between two polls. */
+	interval: number,
+	/**  The seconds until the codes expire. */
+	expiresIn: number,
 };
 
 /**  One block of changed lines with its context. */
@@ -199,6 +257,10 @@ export type GitError =
  *  `git` does not ask for a password, so a credential helper or the SSH agent must give it.
  */
 { kind: "authFailed"; message: string } | 
+/**  GitHub refused the saved token. The user must sign in again. */
+{ kind: "signInExpired" } | 
+/**  A request to a web service, for example GitHub, did not get an answer. */
+{ kind: "service"; message: string } | 
 /**  A file of the application could not be read or written. */
 { kind: "io"; message: string };
 
@@ -215,6 +277,16 @@ export type Head = {
 	branch: string | null,
 	/**  The commit at `HEAD`. `None` when the repository has no commits. */
 	hash: string | null,
+};
+
+/**  A repository that the user can clone. */
+export type HubRepository = {
+	/**  For example `owner/name`. */
+	fullName: string,
+	/**  The HTTPS URL for a clone. */
+	cloneUrl: string,
+	private: boolean,
+	description: string | null,
 };
 
 /**  Selects one hunk in the diff of the index or of the working tree. */
@@ -244,6 +316,30 @@ export type Progress = {
 	phase: string,
 	/**  The part of the phase that is done, from 0 to 100. `None` when `git` gives no total. */
 	percent: number | null,
+};
+
+/**  The open pull requests of one repository. The most recently changed is first. */
+export type PullList = {
+	repository: RepoId,
+	/**  The branch that a new pull request goes into, for example `main`. */
+	defaultBranch: string,
+	pulls: PullRequest[],
+};
+
+export type PullRequest = {
+	number: number,
+	title: string,
+	/**  The page of the pull request on GitHub. */
+	url: string,
+	author: string,
+	/**  The branch with the changes. */
+	head: string,
+	/**  The branch that the changes go into. */
+	base: string,
+	draft: boolean,
+	/**  The time of the last change, in the ISO 8601 format. */
+	updatedAt: string,
+	checks: Checks,
 };
 
 /**  A repository that the user opened before. */
@@ -279,6 +375,12 @@ export type RepoChanged = {
 	change: RepoChange,
 };
 
+/**  The owner and the name of a repository on GitHub. */
+export type RepoId = {
+	owner: string,
+	name: string,
+};
+
 /**  The identity of a repository and its named references. */
 export type RepoSummary = {
 	/**  The name of the working tree folder. */
@@ -292,6 +394,11 @@ export type RepoSummary = {
 	/**  The time of the last fetch, in Unix seconds. `None` before the first fetch. */
 	fetched: number | null,
 };
+
+/**  The state of a sign-in for the user interface. The token stays in the backend. */
+export type SignInStep = { kind: "pending" } | 
+/**  Poll more slowly: add 5 seconds to the interval. */
+{ kind: "slowDown" } | { kind: "expired" } | { kind: "denied" } | { kind: "done"; account: Account };
 
 /**  One entry of the stash. */
 export type StashEntry = {
@@ -406,6 +513,14 @@ export type MockCommandHandlers = {
     pushBranch: (args: { path: string }) => null | Promise<null>,
     publishBranch: (args: { path: string }) => string | Promise<string>,
     cloneRepository: (args: { url: string; parent: string }) => string | Promise<string>,
+    githubAccount: () => Account | null | Promise<Account | null>,
+    githubStartSignIn: () => DeviceCode | Promise<DeviceCode>,
+    githubPollSignIn: (args: { deviceCode: string }) => SignInStep | Promise<SignInStep>,
+    githubSignOut: () => null | Promise<null>,
+    githubRepositories: () => HubRepository[] | Promise<HubRepository[]>,
+    githubPullRequests: (args: { path: string }) => PullList | null | Promise<PullList | null>,
+    githubCreatePullRequest: (args: { path: string; title: string; base: string }) => CreatedPull | Promise<CreatedPull>,
+    openGithubPage: (args: { url: string }) => null | Promise<null>,
 };
 
 /**
@@ -468,6 +583,14 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "push_branch": return mockCommandHandler(mockHandlers.pushBranch, "push_branch", args);
             case "publish_branch": return mockCommandHandler(mockHandlers.publishBranch, "publish_branch", args);
             case "clone_repository": return mockCommandHandler(mockHandlers.cloneRepository, "clone_repository", args);
+            case "github_account": return mockCommandHandler(mockHandlers.githubAccount, "github_account", args);
+            case "github_start_sign_in": return mockCommandHandler(mockHandlers.githubStartSignIn, "github_start_sign_in", args);
+            case "github_poll_sign_in": return mockCommandHandler(mockHandlers.githubPollSignIn, "github_poll_sign_in", args);
+            case "github_sign_out": return mockCommandHandler(mockHandlers.githubSignOut, "github_sign_out", args);
+            case "github_repositories": return mockCommandHandler(mockHandlers.githubRepositories, "github_repositories", args);
+            case "github_pull_requests": return mockCommandHandler(mockHandlers.githubPullRequests, "github_pull_requests", args);
+            case "github_create_pull_request": return mockCommandHandler(mockHandlers.githubCreatePullRequest, "github_create_pull_request", args);
+            case "open_github_page": return mockCommandHandler(mockHandlers.openGithubPage, "open_github_page", args);
             default: throw new Error(`No mock handler registered for command '${cmd}'`);
         }
     }, { shouldMockEvents: true });

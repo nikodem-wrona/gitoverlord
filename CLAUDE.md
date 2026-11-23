@@ -8,6 +8,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 
 - `pnpm install`: install the frontend dependencies.
 - `pnpm tauri dev`: start the application.
+- `GITOVERLORD_GITHUB_CLIENT_ID=<id> pnpm tauri dev`: start the application with the GitHub sign-in. The ID is the client ID of a GitHub OAuth app with the device flow.
 - `pnpm dev`: start only the frontend at `http://localhost:1420`. There is no Rust core in this mode. The demo backend in `src/demo` answers each command with a sample repository, and the status bar shows "Demo data". The component gallery is at `http://localhost:1420/gallery.html`.
 - `pnpm check`: run each check for TypeScript and Rust. Run it before you report that work is complete.
 - `pnpm check:ui`: run the Prettier check, oxlint, `tsc -b`, and Vitest.
@@ -28,7 +29,12 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `cli/`: starts each `git` process through `git_command()`. `stage.rs`, `commit.rs`, `branch.rs`, `stash.rs`, and `remote.rs` hold the write operations. `run_git_on_paths` sends a list of paths on the standard input.
   - `cli/network.rs`: `run_network` runs fetch, pull, push, and clone. It sets `GIT_TERMINAL_PROMPT=0` and, if the user selected no SSH program, `ssh -o BatchMode=yes`. Then `git` fails and does not wait for a password. `progress.rs` reads the progress lines of `git`.
   - `fixture.rs`: `RepoFixture`, which builds real repositories for tests. The configuration of each repository replaces the user, the signing, and the hooks path of the machine.
-- `src-tauri/`: a thin shell. `src/ipc.rs` registers the commands and the events. Each file in `src/commands/` holds one command group. A command calls `git-core` through `run_blocking` or `with_repo` and returns `Result<T, GitError>`. `session.rs` holds the recent repositories and the watcher of the open repository. `events.rs` holds the `RepoChanged` and `SyncProgress` events. `commands/sync.rs` runs one network operation at a time and sends a `SyncProgress` event for each step and one at the end.
+- `crates/github/`: GitHub access without Tauri. Each failure is a `GitError`.
+  - `client.rs`: `GitHub`, the HTTP client. A 401 answer gives `GitError::SignInExpired`. Tests send the requests to `test_server.rs`.
+  - `device.rs`: the sign-in with the OAuth device flow. `account.rs`, `pulls.rs`: the account, the repositories, and the pull requests. One GraphQL query reads the pull requests with their checks.
+  - `keychain.rs`: the token in the keychain, with `keyring`. `repo_links.rs`: finds the GitHub remote of a repository and makes the `HostToken` for `git`.
+  - `client_id()` reads `GITOVERLORD_GITHUB_CLIENT_ID` at run time, else at build time.
+- `src-tauri/`: a thin shell. `src/ipc.rs` registers the commands and the events. Each file in `src/commands/` holds one command group. A command calls `git-core` through `run_blocking` or `with_repo` and returns `Result<T, GitError>`. `session.rs` holds the recent repositories and the watcher of the open repository. `events.rs` holds the `RepoChanged` and `SyncProgress` events. `commands/sync.rs` runs one network operation at a time and sends a `SyncProgress` event for each step and one at the end. `commands/github.rs` holds the GitHub commands. `Session` keeps the GitHub token, and the sync commands give it to `git` as a `HostToken`.
 - `src/ipc/`: `tauri-specta` generates `bindings.ts`. Do not edit it. `unwrap` changes a command result into data or a thrown `CommandError`. `errorMessage` changes a failure into a sentence for the user.
 - `src/actions/`: the action factory. `defineAction` makes an `Action`. `ActionButton`, the command palette, and the shortcuts run each action through one runner in `ActionProvider`.
   - The runner asks the `confirm` or `prompt` question of the action. Then it shows the progress, the result notification, and the Undo button of an `Outcome`.
@@ -44,6 +50,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `history`: the commit timeline, the commit log, and the commit inspector. `assignLanes` and `layoutTimeline` are pure functions. The timeline draws in pixels without a view box, so its text keeps one size.
   - `changes`, `branches`, `stash`: the tables with their toolbars. Each one has a file that makes its actions, for example `branchActions.ts`.
   - `commit`: the commit console. `telemetry`: the activity panel.
+  - `github`: `GitHubProvider` holds the sign-in dialog and the clone dialog, and puts the GitHub actions in the palette. `AccountButton` is in the top bar. `PullRequestPanel` is the Pull requests tab. `queries.ts` has its own `githubKeys`, so a change on the disk does not ask GitHub again.
   - `sync`: `SyncButtons` in the top bar, `SyncPanel` with the counts and the progress, `RemotePanel` on the Remotes tab, and `CloneControl` on the start screen. `useSyncProgress` reads the `SyncProgress` events. `useBackgroundFetch` fetches when the last fetch is older than five minutes.
   - `diff`: the diff viewer, with the stage and unstage buttons of each hunk.
   - `system`: the git status readout and the alert when git fails. `boot`: the start-up sequence.
@@ -69,6 +76,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - When you add a command, add its handler to `src/demo/demoHandlers.ts`. A read handler must return a copy of the demo state. Else TanStack Query does not see the change.
 - Run each write command in an action from `defineAction`, through `useRepoWriter(path).write`. Then the panels refresh and the user sees the result. The background fetch is the only exception. It shows no notification.
 - Run each network command through `run_network` with `--progress`. A network command must not ask for input.
+- The GitHub token stays in the backend. Do not send it to the user interface, and do not put it on a command line.
 - A destructive action must have `confirm`, and its `Outcome` must have `undo`. A discard keeps a copy of the changes in the stash.
 - A shortcut uses `Mod`, which is Command on macOS and Control on other systems. In tests, `Mod` is Control.
 - Give each mock function a type, for example `vi.fn<MockCommandHandlers["stageFiles"]>()`. oxlint rejects a mock function without a type.

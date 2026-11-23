@@ -3,8 +3,8 @@ use std::path::Path;
 use crate::GitError;
 use crate::libgit::Git2Backend;
 use crate::model::{
-    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, Progress, Remote, RepoSummary,
-    StashEntry, WorkingTree,
+    Branch, CommitDetail, DiffTarget, FileDiff, HostToken, HunkTarget, LogPage, Progress, Remote,
+    RepoSummary, StashEntry, WorkingTree,
 };
 
 /// Access to one repository.
@@ -86,4 +86,18 @@ pub trait GitBackend {
 /// has a working tree.
 pub fn open_repo(path: &Path) -> Result<Box<dyn GitBackend>, GitError> {
     Ok(Box::new(Git2Backend::open(path)?))
+}
+
+/// Opens the repository that contains `path`. The network operations give
+/// `token` to the HTTPS remotes of its host.
+///
+/// # Errors
+///
+/// Returns `GitError::NotARepository` if `path` is not in a repository that
+/// has a working tree.
+pub fn open_repo_with_token(
+    path: &Path,
+    token: Option<HostToken>,
+) -> Result<Box<dyn GitBackend>, GitError> {
+    Ok(Box::new(Git2Backend::open(path)?.with_token(token)))
 }

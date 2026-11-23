@@ -22,8 +22,8 @@ use git2::Repository;
 
 use crate::cli::{branch, commit, remote, stage, stash as stash_cli};
 use crate::model::{
-    Branch, CommitDetail, DiffTarget, FileDiff, HunkTarget, LogPage, Progress, Remote, RepoSummary,
-    StashEntry, WorkingTree,
+    Branch, CommitDetail, DiffTarget, FileDiff, HostToken, HunkTarget, LogPage, Progress, Remote,
+    RepoSummary, StashEntry, WorkingTree,
 };
 use crate::{GitBackend, GitError};
 
@@ -31,13 +31,24 @@ pub(crate) struct Git2Backend {
     repo: Repository,
     /// The working tree. Each `git` process runs in this folder.
     dir: PathBuf,
+    /// Signs in to the HTTPS remotes of one host in the network operations.
+    token: Option<HostToken>,
 }
 
 impl Git2Backend {
     pub(crate) fn open(path: &Path) -> Result<Self, GitError> {
         let repo = open_repository(path)?;
         let dir = summary::workdir(&repo)?;
-        Ok(Self { repo, dir })
+        Ok(Self {
+            repo,
+            dir,
+            token: None,
+        })
+    }
+
+    pub(crate) fn with_token(mut self, token: Option<HostToken>) -> Self {
+        self.token = token;
+        self
     }
 
     /// Moves one hunk to the index, or out of the index when `staged` is `true`.
@@ -168,19 +179,19 @@ impl GitBackend for Git2Backend {
     }
 
     fn fetch(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
-        sync::fetch(&self.repo, &self.dir, progress)
+        sync::fetch(&self.repo, &self.dir, self.token.as_ref(), progress)
     }
 
     fn pull(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
-        sync::pull(&self.repo, &self.dir, progress)
+        sync::pull(&self.repo, &self.dir, self.token.as_ref(), progress)
     }
 
     fn push(&self, progress: &mut dyn FnMut(Progress)) -> Result<(), GitError> {
-        sync::push(&self.repo, &self.dir, progress)
+        sync::push(&self.repo, &self.dir, self.token.as_ref(), progress)
     }
 
     fn publish(&self, progress: &mut dyn FnMut(Progress)) -> Result<String, GitError> {
-        sync::publish(&self.repo, &self.dir, progress)
+        sync::publish(&self.repo, &self.dir, self.token.as_ref(), progress)
     }
 }
 

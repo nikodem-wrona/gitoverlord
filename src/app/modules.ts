@@ -7,8 +7,6 @@ export interface ModuleInfo {
   label: string;
   /** The title of the workspace panel. */
   title: string;
-  /** The roadmap phase that makes the module work. Only for modules that are not ready. */
-  phase?: number;
 }
 
 /** The modules in the order of the tab strip. */
@@ -22,7 +20,6 @@ export const MODULES: Record<ModuleId, ModuleInfo> = {
     id: "pullRequests",
     label: "Pull requests",
     title: "Pull requests",
-    phase: 5,
   },
 };
 

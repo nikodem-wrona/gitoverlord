@@ -1,5 +1,10 @@
 import type { StatusState } from "@/hud";
-import { CommandError, type GitError, type GitVersion } from "@/ipc";
+import {
+  CommandError,
+  type GitError,
+  gitErrorText,
+  type GitVersion,
+} from "@/ipc";
 
 export interface GitStatus {
   state: StatusState;
@@ -48,6 +53,6 @@ function describeGitError(error: GitError): GitStatus {
         hint: `Git printed: ${error.message}`,
       };
     default:
-      return { state: "fail", value: "Failed", hint: error.message };
+      return { state: "fail", value: "Failed", hint: gitErrorText(error) };
   }
 }

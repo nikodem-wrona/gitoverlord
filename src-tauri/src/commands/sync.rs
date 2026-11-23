@@ -5,12 +5,15 @@
 use std::path::Path;
 use std::sync::{Mutex, PoisonError};
 
-use git_core::{GitBackend, GitError, Progress, Remote, clone_repo, clone_target};
-use tauri::AppHandle;
+use git_core::{
+    GitBackend, GitError, Progress, Remote, clone_repo, clone_target, open_repo_with_token,
+};
+use tauri::{AppHandle, Manager};
 use tauri_specta::Event;
 
 use crate::blocking::{run_blocking, with_repo};
 use crate::events::{SyncOperation, SyncProgress};
+use crate::session::Session;
 
 /// One network operation runs at a time. A background fetch waits for a push.
 static NETWORK: Mutex<()> = Mutex::new(());
@@ -79,8 +82,9 @@ pub async fn clone_repository(
     run_blocking(move || {
         let target = clone_target(&url, Path::new(&parent))?;
         let path = target.to_string_lossy().into_owned();
+        let token = app.state::<Session>().host_token();
         report(&app, &path, SyncOperation::Clone, |progress| {
-            clone_repo(&url, &target, progress)
+            clone_repo(&url, &target, token.as_ref(), progress)
         })?;
         Ok(path)
     })
@@ -98,9 +102,13 @@ where
     T: Send + 'static,
     F: FnOnce(&dyn GitBackend, &mut dyn FnMut(Progress)) -> Result<T, GitError> + Send + 'static,
 {
-    let target = path.clone();
-    with_repo(path, move |repo| {
-        report(&app, &target, operation, |progress| work(repo, progress))
+    run_blocking(move || {
+        // After a GitHub sign-in, `git` uses the token for the HTTPS remotes on GitHub.
+        let token = app.state::<Session>().host_token();
+        let repo = open_repo_with_token(Path::new(&path), token)?;
+        report(&app, &path, operation, |progress| {
+            work(repo.as_ref(), progress)
+        })
     })
     .await
 }

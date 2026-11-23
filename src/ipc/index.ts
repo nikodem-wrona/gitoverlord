@@ -1,9 +1,13 @@
 export { isDemoBackend, markDemoBackend } from "./backendMode";
 export {
+  type Account,
   type Branch,
+  type Checks,
   type ChangeKind,
   type Commit,
   type CommitDetail,
+  type CreatedPull,
+  type DeviceCode,
   commands,
   type DiffHunk,
   type DiffLine,
@@ -14,20 +18,25 @@ export {
   type GitError,
   type GitVersion,
   type Head,
+  type HubRepository,
   type HunkTarget,
   type LineKind,
   type LogPage,
   type MockCommandHandlers,
   mockCommands,
   type Progress,
+  type PullList,
+  type PullRequest,
   type RecentRepo,
   type Remote,
   type RepoChange,
+  type RepoId,
   type RepoSummary,
+  type SignInStep,
   type StashEntry,
   type SyncOperation,
   type SyncProgress,
   type WorkingTree,
 } from "./bindings";
-export { errorMessage } from "./errorMessage";
+export { errorMessage, gitErrorText } from "./errorMessage";
 export { CommandError, type CommandResult, unwrap } from "./unwrap";

@@ -12,4 +12,4 @@ pub use commit::{Commit, CommitDetail, LogPage};
 pub use diff::{DiffHunk, DiffLine, DiffTarget, FileDiff, HunkTarget, LineKind};
 pub use repo::{Branch, Head, RepoSummary};
 pub use stash::StashEntry;
-pub use sync::{Progress, Remote};
+pub use sync::{HostToken, Progress, Remote};

@@ -31,6 +31,12 @@ pub enum GitError {
     /// `git` does not ask for a password, so a credential helper or the SSH agent must give it.
     #[error("authentication failed: {0}")]
     AuthFailed(String),
+    /// GitHub refused the saved token. The user must sign in again.
+    #[error("the GitHub sign-in is not valid")]
+    SignInExpired,
+    /// A request to a web service, for example GitHub, did not get an answer.
+    #[error("the service did not answer: {0}")]
+    Service(String),
     /// A file of the application could not be read or written.
     #[error("file access failed: {0}")]
     Io(String),

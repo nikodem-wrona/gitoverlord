@@ -7,11 +7,12 @@ use git2::Repository;
 use super::remotes::{self, Upstream};
 use crate::GitError;
 use crate::cli::remote;
-use crate::model::Progress;
+use crate::model::{HostToken, Progress};
 
 pub(super) fn fetch(
     repo: &Repository,
     dir: &Path,
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
     if remotes::remote_names(repo)?.is_empty() {
@@ -19,17 +20,18 @@ pub(super) fn fetch(
             "The repository has no remote.".to_owned(),
         ));
     }
-    remote::fetch(dir, progress)
+    remote::fetch(dir, token, progress)
 }
 
 /// Fast-forwards the current branch to its upstream. A branch with its own new commits stays.
 pub(super) fn pull(
     repo: &Repository,
     dir: &Path,
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
     let (branch, _) = tracked_branch(repo)?;
-    remote::pull(dir, progress).map_err(|error| match remotes::diverged(repo, &branch) {
+    remote::pull(dir, token, progress).map_err(|error| match remotes::diverged(repo, &branch) {
         Ok(true) => GitError::Rejected(format!(
             "The branch {branch} and its upstream both have new commits. \
              A pull only fast-forwards. Merge or rebase the branch in a terminal."
@@ -42,6 +44,7 @@ pub(super) fn pull(
 pub(super) fn push(
     repo: &Repository,
     dir: &Path,
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
     let (branch, upstream) = tracked_branch(repo)?;
@@ -51,7 +54,7 @@ pub(super) fn push(
         )));
     }
     let refspec = format!("refs/heads/{branch}:{}", upstream.merge);
-    remote::push(dir, &upstream.remote, &refspec, false, progress)
+    remote::push(dir, &upstream.remote, &refspec, false, token, progress)
 }
 
 /// Pushes the current branch to `origin`, or to the first remote, and makes it the upstream.
@@ -60,12 +63,13 @@ pub(super) fn push(
 pub(super) fn publish(
     repo: &Repository,
     dir: &Path,
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<String, GitError> {
     let branch = remotes::current_branch(repo)?;
     let remote = remotes::default_remote(repo)?;
     let refspec = format!("refs/heads/{branch}:refs/heads/{branch}");
-    remote::push(dir, &remote, &refspec, true, progress)?;
+    remote::push(dir, &remote, &refspec, true, token, progress)?;
     Ok(format!("{remote}/{branch}"))
 }
 

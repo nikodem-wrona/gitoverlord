@@ -15,12 +15,13 @@ mod recent;
 mod version;
 mod watch;
 
-pub use backend::{GitBackend, open_repo};
+pub use backend::{GitBackend, open_repo, open_repo_with_token};
 pub use clone::{clone_repo, clone_target};
 pub use error::GitError;
 pub use model::{
     Branch, ChangeKind, Commit, CommitDetail, DiffHunk, DiffLine, DiffTarget, FileDelta, FileDiff,
-    Head, HunkTarget, LineKind, LogPage, Progress, Remote, RepoSummary, StashEntry, WorkingTree,
+    Head, HostToken, HunkTarget, LineKind, LogPage, Progress, Remote, RepoSummary, StashEntry,
+    WorkingTree,
 };
 pub use recent::{RecentRepo, RecentStore};
 pub use version::GitVersion;

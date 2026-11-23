@@ -1,0 +1,20 @@
+[package]
+name = "github"
+description = "GitHub access for gitoverlord: sign-in, the API, and the token in the keychain."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+git-core.workspace = true
+# The keychain of macOS, the Credential Manager of Windows, and the Secret Service of Linux.
+keyring = "4.2"
+serde.workspace = true
+serde_json.workspace = true
+specta.workspace = true
+ureq = { version = "3.5", features = ["json"] }

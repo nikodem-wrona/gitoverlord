@@ -1,0 +1,37 @@
+.text {
+  margin: 0;
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+}
+
+.code {
+  display: block;
+  margin: var(--space-3) 0;
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-align: center;
+  text-shadow: var(--text-glow-accent);
+}
+
+.failure {
+  margin: 0;
+  color: var(--tone);
+  font-size: var(--text-sm);
+}
+
+.list {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  height: 20rem;
+}
+
+.tag {
+  color: var(--tone);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}

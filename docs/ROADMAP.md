@@ -23,6 +23,7 @@ Phases 0 to 4 are the minimum product. Each phase ends with a version that you c
 
 ```
 crates/git-core/   Rust library without Tauri: domain types, git access, tests
+crates/github/     Rust library without Tauri: GitHub sign-in, API, keychain
 src-tauri/         Tauri shell: one small file for each command group
 src/app/           application root and providers
 src/hud/           design system: tokens, primitives, motion
@@ -121,11 +122,11 @@ Done when clone, commit, and push work from start to end. This is the first publ
 
 Done when a pull request opens from the application.
 
-- [ ] Sign in with the OAuth device flow
-- [ ] Token in the keychain of the operating system
-- [ ] Clone from the account
-- [ ] Pull request list with check status
-- [ ] Create a pull request
+- [x] Sign in with the OAuth device flow
+- [x] Token in the keychain of the operating system
+- [x] Clone from the account
+- [x] Pull request list with check status
+- [x] Create a pull request
 
 ### Phase 6: History surgery
 
@@ -157,6 +158,7 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Calm mode:** each animation must stop in calm mode. Calm mode applies when the user selects it or when the system asks for reduced motion.
 - **Read-only core:** `git2` does each read operation. A read operation must not write to the repository.
 - **Write operations:** the system `git` does each write operation, so hooks, signing, and the configuration of the user apply. Each write operation runs in an action. The background fetch is the only exception.
+- **Secrets:** the GitHub token stays in the backend and in the keychain. The user interface never receives it. A `git` process gets it through its environment, not on the command line.
 - **Network operations:** one network operation runs at a time. `git` gets the credentials from the credential helper and the SSH agent of the system. It must fail, not wait for a password.
 - **Sample data:** `pnpm dev` in a browser has no Rust core. The demo backend in `src/demo` gives a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend.
 - **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer and run in calm mode.
@@ -174,4 +176,6 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Stash with paths:** in Git 2.54, `git stash push --keep-index` loses the staged changes when the paths include an untracked file. A discard does not use `--keep-index`. It restores the staged versions from the stash entry.
 - **Pull:** a pull only fast-forwards until Phase 6 adds merge and rebase. When the branch and its upstream both have new commits, the user must merge or rebase in a terminal.
 - **SSH host keys:** `ssh` runs in batch mode, so it cannot ask to accept a new host key. The user connects one time in a terminal first.
+- **GitHub client ID:** the sign-in needs a GitHub OAuth app with the device flow. Each build reads its client ID from `GITOVERLORD_GITHUB_CLIENT_ID`. A release build must set it.
+- **GitHub token for git:** after a sign-in, the token replaces the credential helpers of the user for github.com in the `git` processes of gitoverlord. A user with a second GitHub account must sign in with the account that has the access.
 - **Linux file watches:** inotify needs one watch for each folder. A very large working tree can reach the limit of the system. The repository then opens without automatic refresh.

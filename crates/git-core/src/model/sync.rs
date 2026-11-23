@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::Serialize;
 use specta::Type;
 
@@ -21,4 +23,26 @@ pub struct Remote {
     pub url: Option<String>,
     /// The remote branches from the last fetch, for example `origin/main`.
     pub branches: Vec<String>,
+}
+
+/// A token that `git` gives to the HTTPS remotes of one host, for example after a GitHub sign-in.
+///
+/// It never goes to the user interface.
+#[derive(Clone, PartialEq, Eq)]
+pub struct HostToken {
+    /// For example `github.com`.
+    pub host: String,
+    pub username: String,
+    pub secret: String,
+}
+
+impl fmt::Debug for HostToken {
+    // The secret must not show in a log.
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("HostToken")
+            .field("host", &self.host)
+            .field("username", &self.username)
+            .finish_non_exhaustive()
+    }
 }

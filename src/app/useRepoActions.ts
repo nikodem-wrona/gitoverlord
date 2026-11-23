@@ -1,6 +1,13 @@
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useRegisterActions } from "@/actions";
 import { branchActions } from "@/features/branches";
 import { changesActions } from "@/features/changes";
+import {
+  createPullAction,
+  useGitHubAccount,
+  usePullRequests,
+} from "@/features/github";
 import {
   useBranches,
   useRepoSummary,
@@ -18,6 +25,10 @@ export function useRepoActions(repoPath: string): void {
   const branches = useBranches(repoPath).data;
   const stashes = useStashes(repoPath).data;
   const summary = useRepoSummary(repoPath).data;
+  const signedIn = Boolean(useGitHubAccount().data);
+  const pulls = usePullRequests(repoPath, signedIn).data;
+  const client = useQueryClient();
+  const current = branches?.find((branch) => branch.current);
   const changes = (tree?.staged.length ?? 0) + (tree?.unstaged.length ?? 0);
 
   useRegisterActions([
@@ -25,5 +36,6 @@ export function useRepoActions(repoPath: string): void {
     ...branchActions(repo, branches),
     ...stashActions(repo, changes, stashes),
     ...syncActions(repo, summary, branches),
+    ...(signedIn ? [createPullAction(client, repoPath, pulls, current)] : []),
   ]);
 }

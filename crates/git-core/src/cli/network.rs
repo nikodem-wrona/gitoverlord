@@ -11,13 +11,18 @@ use std::thread;
 
 use super::{git_command, progress, run_git_in, spawn_error};
 use crate::GitError;
-use crate::model::Progress;
+use crate::model::{HostToken, Progress};
 
 /// Makes `git` fail when it needs a user name or a password from the terminal.
 const NO_PROMPT: (&str, &str) = ("GIT_TERMINAL_PROMPT", "0");
 
 /// Makes `ssh` fail when it needs a passphrase or the confirmation of a host key.
 const BATCH_SSH: (&str, &str) = ("GIT_SSH_COMMAND", "ssh -o BatchMode=yes");
+
+/// A credential helper that gives the token of the application. The token is in
+/// the environment of the `git` process, so it is not on a command line.
+const TOKEN_HELPER: &str = "!f() { if test \"$1\" = get; then \
+    echo \"username=$GITOVERLORD_USERNAME\"; echo \"password=$GITOVERLORD_TOKEN\"; fi; }; f";
 
 /// Parts of the messages of `git` and `ssh` when the remote refuses the access.
 const AUTH_FAILURES: [&str; 5] = [
@@ -31,12 +36,14 @@ const AUTH_FAILURES: [&str; 5] = [
 /// Runs `git` in `dir` with `args`. Each progress line goes to `progress`.
 ///
 /// `args` must contain `--progress`, because the error output is not a terminal.
+/// `token`, when it is there, signs in to the HTTPS remotes of its host.
 pub(crate) fn run_network(
     dir: &Path,
     args: &[&str],
+    token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
-    let mut child = network_command(dir)
+    let mut child = network_command(dir, token)
         .args(args)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -62,13 +69,33 @@ pub(crate) fn run_network(
     Err(failure(&messages, output.as_deref().unwrap_or_default()))
 }
 
-fn network_command(dir: &Path) -> Command {
+fn network_command(dir: &Path, token: Option<&HostToken>) -> Command {
     let mut command = git_command();
     command.current_dir(dir).env(NO_PROMPT.0, NO_PROMPT.1);
     if !custom_ssh(dir) {
         command.env(BATCH_SSH.0, BATCH_SSH.1);
     }
+    if let Some(token) = token {
+        use_token(&mut command, token);
+    }
     command
+}
+
+/// Makes the token the only credential for the HTTPS remotes of its host.
+///
+/// An empty helper removes the helpers of the user for that host, so that an
+/// old password in the keychain does not replace the token.
+fn use_token(command: &mut Command, token: &HostToken) {
+    let key = format!("credential.https://{}.helper", token.host);
+    command
+        .args([
+            "-c",
+            &format!("{key}="),
+            "-c",
+            &format!("{key}={TOKEN_HELPER}"),
+        ])
+        .env("GITOVERLORD_USERNAME", &token.username)
+        .env("GITOVERLORD_TOKEN", &token.secret);
 }
 
 /// Returns `true` when the user selected an SSH program. That program then stays.
@@ -142,9 +169,41 @@ mod tests {
         let mut steps = Vec::new();
 
         let args = ["init", "--quiet"];
-        run_network(dir.path(), &args, &mut |step| steps.push(step)).unwrap();
+        run_network(dir.path(), &args, None, &mut |step| steps.push(step)).unwrap();
 
         assert!(steps.is_empty());
         assert!(dir.path().join(".git").is_dir());
+    }
+
+    /// Asks `git` for the credentials of `host`, as a fetch would.
+    fn fill(token: &HostToken, host: &str) -> Result<String, GitError> {
+        let dir = tempfile::tempdir().unwrap();
+        let mut child = network_command(dir.path(), Some(token))
+            .args(["credential", "fill"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let request = format!("protocol=https\nhost={host}\n\n");
+        let mut stdin = child.stdin.take().unwrap();
+        std::io::Write::write_all(&mut stdin, request.as_bytes()).unwrap();
+        drop(stdin);
+        super::super::finish(child.wait_with_output())
+    }
+
+    #[test]
+    fn gives_the_token_to_the_https_remotes_of_its_host() {
+        let token = HostToken {
+            host: "github.com".into(),
+            username: "x-access-token".into(),
+            secret: "gho_secret".into(),
+        };
+
+        let filled = fill(&token, "github.com").unwrap();
+
+        assert!(filled.contains("username=x-access-token"), "{filled}");
+        assert!(filled.contains("password=gho_secret"), "{filled}");
+        assert!(fill(&token, "example.com").is_err());
     }
 }

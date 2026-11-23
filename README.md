@@ -6,11 +6,11 @@
 
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
-**Status:** Phase 4, sync. This is the first alpha. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, and its stash.
+**Status:** Phase 5, GitHub. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, its stash, and its pull requests.
 
-You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. The panels refresh when the repository changes on the disk.
+You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. The panels refresh when the repository changes on the disk.
 
-Phase 5 adds GitHub sign-in and pull requests. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
+Phase 6 adds merge, rebase, and conflict resolution. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
 
 ## Prerequisites
 
@@ -88,6 +88,41 @@ The application does not ask for passwords. Git gets the credentials from your s
 
 If the remote refuses the sign-in, the notification tells you which part to set up.
 
+## GitHub
+
+### Give the application a client ID
+
+The GitHub sign-in needs a GitHub OAuth app. Each build of gitoverlord needs the client ID of one.
+
+1. On GitHub, open **Settings**, then **Developer settings**, then **OAuth Apps**.
+2. Select **New OAuth App**, and type a name and a homepage URL. The sign-in does not use the callback URL, but GitHub needs one.
+3. Select **Enable Device Flow**, then register the app.
+4. Set `GITOVERLORD_GITHUB_CLIENT_ID` to the client ID when you build or start the application.
+
+```bash
+GITOVERLORD_GITHUB_CLIENT_ID=<client ID> pnpm tauri dev
+```
+
+Without a client ID, the sign-in dialog tells you that the client ID is missing.
+
+### Sign in
+
+1. Select **Sign in** in the top bar.
+2. Select **Copy the code and open GitHub**.
+3. Paste the code on the GitHub page, then give the access.
+
+The dialog closes when GitHub accepts the code. The token goes to the keychain of your system. After the sign-in, `git` uses the token for the HTTPS remotes on github.com. In gitoverlord, the token then replaces your credential helper for github.com.
+
+To sign out, select your user name in the top bar.
+
+### Clone and pull requests
+
+Select **Clone from GitHub** on the start screen to see your repositories. Type a part of a name to filter the list, then select a repository and a folder.
+
+The **Pull requests** tab shows the open pull requests of the GitHub remote, with the state of their checks. The GitHub remote is `origin`, or else the first remote on github.com. Select a pull request, then select **Open on GitHub** to see it in your browser.
+
+To create a pull request, publish the current branch. Then select **Create…** on the **Pull requests** tab and type a title. The pull request goes into the default branch of the repository.
+
 ## Undo a destructive action
 
 The application asks before it discards changes, deletes a branch, or drops a stash entry. After the action, the notification shows an **Undo** button.
@@ -100,21 +135,21 @@ Press ⌘K to open the command palette. Type a part of the name of a command, th
 
 On Windows and Linux, use Ctrl in place of ⌘.
 
-| Shortcut | Command                                                    |
-| -------- | ---------------------------------------------------------- |
-| ⌘K       | Open the command palette                                   |
-| ⌘1 to ⌘5 | Show the Changes, History, Branches, Remotes, or Stash tab |
-| ⌘↩       | Commit the staged changes, on the Changes tab              |
-| ⇧⌘A      | Stage all changes                                          |
-| ⇧⌘U      | Unstage all changes                                        |
-| ⇧⌘N      | Create a branch                                            |
-| ⇧⌘S      | Stash all changes                                          |
-| ⇧⌘T      | Fetch the remotes                                          |
-| ⇧⌘P      | Pull the current branch                                    |
-| ⌘P       | Push or publish the current branch                         |
-| ⌘O       | Open a repository                                          |
-| ⇧⌘O      | Clone a repository                                         |
-| Escape   | Close the diff or the dialog                               |
+| Shortcut | Command                                                                   |
+| -------- | ------------------------------------------------------------------------- |
+| ⌘K       | Open the command palette                                                  |
+| ⌘1 to ⌘6 | Show the Changes, History, Branches, Remotes, Stash, or Pull requests tab |
+| ⌘↩       | Commit the staged changes, on the Changes tab                             |
+| ⇧⌘A      | Stage all changes                                                         |
+| ⇧⌘U      | Unstage all changes                                                       |
+| ⇧⌘N      | Create a branch                                                           |
+| ⇧⌘S      | Stash all changes                                                         |
+| ⇧⌘T      | Fetch the remotes                                                         |
+| ⇧⌘P      | Pull the current branch                                                   |
+| ⌘P       | Push or publish the current branch                                        |
+| ⌘O       | Open a repository                                                         |
+| ⇧⌘O      | Clone a repository                                                        |
+| Escape   | Close the diff or the dialog                                              |
 
 ## Demo backend
 
@@ -132,6 +167,7 @@ Select **Calm mode** in the top bar to stop all animations. Calm mode is always 
 
 ```
 crates/git-core/   Rust library without Tauri: domain types, git access, tests
+crates/github/     Rust library without Tauri: GitHub sign-in, API, keychain
 src-tauri/         Tauri shell: one small file for each command group
 src/app/           application root, providers, and shell layout
 src/hud/           design system: tokens, primitives, and motion
