@@ -2,30 +2,39 @@
 :root {
   color-scheme: dark;
 
-  /* Color: surfaces */
-  --color-bg: #04070b;
-  --color-panel: rgb(7 13 20 / 90%);
-  --color-panel-header: rgb(11 21 31 / 95%);
+  /* Color: surfaces. Black and neutral greys. */
+  --color-bg: #050505;
+  --color-panel: rgb(11 11 11 / 92%);
+  --color-panel-header: rgb(18 18 18 / 96%);
   --color-row-stripe: rgb(255 255 255 / 1.5%);
-  --color-row-hover: rgb(47 212 255 / 7%);
-  --color-row-selected: rgb(47 212 255 / 16%);
-  --color-line: #142230;
-  --color-line-strong: #24394b;
-  --color-backdrop: rgb(2 4 7 / 72%);
+  --color-row-hover: rgb(255 255 255 / 5%);
+  --color-row-selected: rgb(255 255 255 / 10%);
+  --color-line: #1e1e1e;
+  --color-line-strong: #383838;
+  --color-backdrop: rgb(0 0 0 / 72%);
 
   /* Color: text */
-  --color-text: #c9d6df;
-  --color-text-dim: #7088a0;
-  --color-text-faint: #4a5f72;
+  --color-text: #d6d6d6;
+  --color-text-dim: #8a8a8a;
+  --color-text-faint: #555;
+
+  /* Color: highlights. White marks the frame: titles, borders, and focus. */
+  --color-accent: #ededed;
+  --color-accent-strong: #fff;
+  --color-accent-soft: rgb(255 255 255 / 8%);
+  --color-glow: rgb(255 255 255 / 35%);
+
+  /* Color: the one green. It marks what is active: the current tab, primary
+     buttons, selections, and success. */
+  --color-active: #74f8b2;
+  --color-active-strong: #b9ffd9;
+  --color-active-soft: rgb(116 248 178 / 12%);
 
   /* Color: signals */
-  --color-accent: #2fd4ff;
-  --color-accent-strong: #9becff;
-  --color-accent-soft: rgb(47 212 255 / 14%);
-  --color-ok: #3ddc97;
+  --color-ok: var(--color-active);
   --color-warn: #ffb547;
   --color-fail: #ff4d5e;
-  --color-ok-soft: rgb(61 220 151 / 12%);
+  --color-ok-soft: var(--color-active-soft);
   --color-fail-soft: rgb(255 77 94 / 18%);
 
   /* Type */
@@ -57,12 +66,14 @@
   --row-height: 1.25rem;
 
   /* Glow */
-  --glow-accent: 0 0 12px rgb(47 212 255 / 35%);
-  --text-glow-accent: 0 0 8px rgb(47 212 255 / 55%);
+  --glow-accent: 0 0 12px rgb(255 255 255 / 14%);
+  --text-glow-accent: 0 0 8px rgb(255 255 255 / 28%);
+  --glow-active: 0 0 12px rgb(116 248 178 / 35%);
+  --text-glow-active: 0 0 8px rgb(116 248 178 / 55%);
 
   /* Grid */
   --grid-size: 32px;
-  --grid-line: rgb(47 212 255 / 4%);
+  --grid-line: rgb(255 255 255 / 3%);
 
   /* Motion */
   --duration-fast: 120ms;
@@ -79,6 +90,10 @@
 /* Tones. An element with `data-tone` gets `--tone` for its color. */
 [data-tone="accent"] {
   --tone: var(--color-accent);
+}
+
+[data-tone="active"] {
+  --tone: var(--color-active);
 }
 
 [data-tone="ok"] {

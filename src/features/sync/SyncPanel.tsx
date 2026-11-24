@@ -44,7 +44,7 @@ export function SyncPanel({ repoPath, delay }: SyncPanelProps) {
           label="Ahead"
           value={current?.ahead ?? 0}
           max={GAUGE_MAX}
-          tone="accent"
+          tone="active"
         />
         <Meter
           label="Behind"

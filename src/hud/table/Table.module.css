@@ -73,7 +73,7 @@
 
 .table tbody tr[aria-selected="true"] {
   background: var(--color-row-selected);
-  box-shadow: inset 2px 0 0 var(--color-accent);
+  box-shadow: inset 2px 0 0 var(--color-active);
 }
 
 .table tbody tr[aria-selected="true"] td {

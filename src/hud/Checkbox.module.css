@@ -35,8 +35,8 @@
 }
 
 .input:checked + .box {
-  border-color: var(--color-accent);
-  box-shadow: var(--glow-accent);
+  border-color: var(--color-active);
+  box-shadow: var(--glow-active);
 }
 
 .input:checked + .box::before,
@@ -47,7 +47,7 @@
   left: 50%;
   width: 10px;
   height: 1px;
-  background: var(--color-accent);
+  background: var(--color-active);
 }
 
 .input:checked + .box::before {

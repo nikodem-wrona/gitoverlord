@@ -35,7 +35,7 @@
 .row[aria-current="true"] {
   background: var(--color-row-selected);
   color: var(--color-accent-strong);
-  box-shadow: inset 2px 0 0 var(--color-accent);
+  box-shadow: inset 2px 0 0 var(--color-active);
 }
 
 .toggle {

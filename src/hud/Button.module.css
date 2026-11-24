@@ -25,9 +25,9 @@
 }
 
 .button[data-variant="primary"] {
-  --button-line: var(--color-accent);
-  --button-text: var(--color-accent);
-  --button-hover: var(--color-accent-strong);
+  --button-line: var(--color-active);
+  --button-text: var(--color-active);
+  --button-hover: var(--color-active-strong);
 }
 
 .button[data-variant="danger"] {
@@ -83,8 +83,8 @@
 
 @keyframes busy {
   to {
-    border-color: var(--color-accent-strong);
-    box-shadow: var(--glow-accent);
+    border-color: var(--color-active);
+    box-shadow: var(--glow-active);
   }
 }
 

@@ -66,6 +66,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - Put git logic in `git-core`, not in a Tauri command and not in TypeScript.
 - Use the tokens in `src/hud/tokens.css` for colors, spacing, and type. Do not put literal values in component CSS.
 - For a signal color, set `data-tone` to a `Tone` value and use `var(--tone)` in the CSS.
+- The palette is black, white, and neutral greys, with one green. `--color-accent` is white, for titles, borders, and focus. Use `--color-active` (green) or the `active` tone only for an active or primary state, for example the current tab, a primary button, or a selection marker. Do not add blue.
 - Each animation must stop in calm mode. The rule in `base.css` stops CSS animations. A JavaScript animation must check `useMotion().calm`. Write CSS animations so that their end state is correct when they stop at once.
 - Use a factory only where it removes repeated code.
 - Frontend tests mock the backend with `mockRepository` from `@/test/mockRepository` and render with `renderWithProviders`. `mockRepository` gives the sample repository, and its argument replaces the handlers that a test changes. `git-core` tests use the real `git` through `RepoFixture`.

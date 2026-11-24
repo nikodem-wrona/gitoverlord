@@ -9,7 +9,7 @@
   gap: var(--space-3);
   background: radial-gradient(
     ellipse at 50% 45%,
-    rgb(47 212 255 / 10%),
+    var(--color-accent-soft),
     var(--color-bg) 65%
   );
   animation: power-on 500ms var(--ease-out) both;
