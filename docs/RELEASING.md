@@ -14,11 +14,29 @@ Each installer gets a `.sig` file. The workflow also attaches `latest.json`, whi
 
 ## Automatic updates
 
-The application asks for `latest.json` of the newest release when it starts, and then one time each six hours. When a newer version is available, the status bar shows **Update to** and the version. Select it to download the update, install it, and start the new version. The command palette also has **Check for updates**.
+The application asks for `latest.json` of the newest release when it starts, and then one time each six hours. When a newer version is available, the status bar shows **Update to** and the version. Select it to download the update, install it, and start the new version. The command palette has **Check for updates**. When this command finds a newer version, the application asks to install it.
 
 The updater installs a download only when its signature matches the public key in `src-tauri/tauri.conf.json`. `requireSignedVersion` is on, so the signature must also give the version of the release. Then a changed `latest.json` cannot install an older release.
 
 A development build does not update. `pnpm tauri dev` shows the version in the status bar and no update.
+
+## Install script
+
+`install.sh` installs the newest published release on macOS and on Linux. The [README](../README.md#install-a-release) gives the command for the user.
+
+The script reads the same `latest.json` as the updater. It uses the entries `darwin-aarch64`, `darwin-x86_64`, and `linux-x86_64`. On macOS, it installs the `.app.tar.gz` file. On Linux, it installs the AppImage.
+
+Each entry of `latest.json` gives a signature. The script decodes the signature and gives it to `minisign`, with the public key of the updater. The script installs nothing when the signature is not correct.
+
+`PUBLIC_KEY` in `install.sh` must be the public key in `src-tauri/tauri.conf.json`, without the base64 layer. To see that key, run this command:
+
+```bash
+sed -n 's/.*"pubkey": "\(.*\)".*/\1/p' src-tauri/tauri.conf.json | base64 --decode
+```
+
+`pnpm test:install` does a test of the script. It signs a small release with a temporary key and installs it into a temporary folder. It fails when the script installs a wrong signature, or when the two public keys are different. The test needs `minisign`. CI runs it on macOS and on Linux.
+
+To use a release that is not on GitHub, set `GITOVERLORD_RELEASE_URL`. Its value is the address of the folder that holds `latest.json`.
 
 ## Set up the secrets one time
 
@@ -37,11 +55,25 @@ The release fails without the private key of the updater. A key pair is in `~/.t
 2. If the key has a password, add it as the secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. The current key has no password.
 3. Keep a copy of the private key in a safe place, for example a password manager.
 
-If you lose the private key, the installed copies cannot verify a new release. Then make a new key pair with `pnpm tauri signer generate`, and put the new public key in `src-tauri/tauri.conf.json`. Each user must then install the next version manually.
+If you lose the private key, the installed copies cannot verify a new release. Then make a new key pair with `pnpm tauri signer generate`. Put the new public key in `src-tauri/tauri.conf.json` and in `install.sh`. Each user must then install the next version manually.
 
 ### The GitHub sign-in
 
-The application has the client ID of the gitoverlord OAuth app, so a release needs no variable for the sign-in. To use a different OAuth app in a release, add its client ID as the variable `GITOVERLORD_GITHUB_CLIENT_ID`. It is not a secret. The [README](../README.md#use-your-own-oauth-app) tells you how to make the OAuth app.
+The application has the client ID of the gitoverlord OAuth app, so a release needs no variable for the sign-in. To use a different OAuth app in a release, add its client ID as the variable `GITOVERLORD_GITHUB_CLIENT_ID`. It is not a secret.
+
+A fork can make its own OAuth app:
+
+1. On GitHub, open **Settings**, then **Developer settings**, then **OAuth Apps**.
+2. Select **New OAuth App**, and type a name and a homepage URL. The sign-in does not use the redirect URI. If GitHub asks for one, type `http://127.0.0.1`.
+3. Select **Enable Device Flow**.
+4. Clear **Expire user access tokens**. gitoverlord does not refresh a token.
+5. Register the app.
+
+For a local build, set the variable when you build or start the application. The variable replaces the built-in client ID.
+
+```bash
+GITOVERLORD_GITHUB_CLIENT_ID=<client ID> pnpm tauri dev
+```
 
 ### macOS signing and notarization
 
@@ -93,6 +125,7 @@ When `AZURE_CLIENT_ID` has a value, the workflow writes `src-tauri/tauri.windows
 4. Wait for the **Release** workflow. It stops if the tag is not the version in `Cargo.toml` and `package.json`.
 5. Open the draft release on GitHub. Install each installer and do a test of it.
 6. Publish the draft. The updater of each installed copy then finds the new version.
+7. Run the install script on macOS and on Linux. The script reads only a published release.
 
 ## Test the workflow without a release
 

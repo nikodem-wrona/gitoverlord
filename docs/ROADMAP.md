@@ -147,6 +147,7 @@ Done when a signed 1.0 release runs on macOS, Windows, and Linux.
 - [x] Performance pass and accessibility pass
 - [x] Installers for macOS, Windows, and Linux from a release workflow
 - [x] Automatic updates with signed update files
+- [x] Install script for macOS and Linux, with a check of the release signature
 - [x] Code signing in the release workflow, when the certificates are in the secrets
 - [ ] Updater key, Apple certificate, and Windows signing account in the release secrets
 - [ ] Signed 1.0 release

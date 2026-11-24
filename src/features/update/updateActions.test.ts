@@ -30,6 +30,19 @@ describe("checkUpdateAction", () => {
     expect(client.getQueryData(updateKeys.check)).toEqual(update);
   });
 
+  it("gives the install action as the action that follows", async () => {
+    const update = { version: "9.0.0", currentVersion: APP_VERSION };
+    mockCommands({ checkForUpdate: () => update });
+
+    const outcome = await checkUpdateAction(createQueryClient()).run("");
+
+    expect(outcome?.next).toMatchObject({
+      id: "application.installUpdate",
+      label: "Update gitoverlord to 9.0.0…",
+      confirm: { confirm: "Install and restart" },
+    });
+  });
+
   it("fails when a development build checks", async () => {
     const message = "A development build does not update.";
     mockCommands({ checkForUpdate: rejectWith({ kind: "rejected", message }) });

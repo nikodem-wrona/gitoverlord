@@ -26,9 +26,12 @@ export function useActionRunner() {
       const stopProgress = showProgress(toast, action);
       try {
         const outcome = await action.run(text);
-        if (outcome) succeed(outcome);
+        if (!outcome) return undefined;
+        succeed(outcome);
+        return outcome.next;
       } catch (error) {
         fail(action, error);
+        return undefined;
       } finally {
         stopProgress();
         running.current = false;
@@ -39,14 +42,14 @@ export function useActionRunner() {
   );
 
   const run = useCallback(
-    (action: Action) => {
+    function start(action: Action) {
       if (running.current) return;
       if (action.blocked) {
         toast.info(action.label, action.blocked);
       } else if (action.prompt || action.confirm) {
         setAsking(action);
       } else {
-        void execute(action, "");
+        void execute(action, "").then(follow(start));
       }
     },
     [execute, toast],
@@ -54,11 +57,18 @@ export function useActionRunner() {
 
   const answer = (text: string) => {
     setAsking(null);
-    if (asking) void execute(asking, text);
+    if (asking) void execute(asking, text).then(follow(run));
   };
   const cancel = () => setAsking(null);
 
   return { run, busy, last: results.last, asking, answer, cancel };
+}
+
+/** Starts the action that follows a result, if the result has one. */
+function follow(start: (action: Action) => void) {
+  return (next: Action | undefined) => {
+    if (next) start(next);
+  };
 }
 
 /** Shows the result of an action: the notification, the status bar, and the sound. */
