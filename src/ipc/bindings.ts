@@ -131,6 +131,14 @@ export const commands = {
 	githubCreatePullRequest: (path: string, title: string, base: string, options?: InvokeOptions) => typedError<CreatedPull, GitError>(__TAURI_INVOKE("github_create_pull_request", { path, title, base }, options)),
 	/**  Opens a GitHub page in the browser of the user. Other addresses are refused. */
 	openGithubPage: (url: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("open_github_page", { url }, options)),
+	/**  Asks the release server for a newer version. `None` when this version is the newest. */
+	checkForUpdate: (options?: InvokeOptions) => typedError<AppUpdate | null, GitError>(__TAURI_INVOKE("check_for_update", undefined, options)),
+	/**
+	 *  Downloads and installs the newest version, then starts it.
+	 * 
+	 *  On Windows, the installer closes the application itself.
+	 */
+	installUpdate: (options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("install_update", undefined, options)),
 };
 
 /** Events */
@@ -145,6 +153,12 @@ export type Account = {
 	login: string,
 	/**  The display name. `None` when the user did not set one. */
 	name: string | null,
+};
+
+/**  A newer version of the application. */
+export type AppUpdate = {
+	version: string,
+	currentVersion: string,
 };
 
 /**  A local branch. */
@@ -664,6 +678,8 @@ export type MockCommandHandlers = {
     githubPullRequests: (args: { path: string }) => PullList | null | Promise<PullList | null>,
     githubCreatePullRequest: (args: { path: string; title: string; base: string }) => CreatedPull | Promise<CreatedPull>,
     openGithubPage: (args: { url: string }) => null | Promise<null>,
+    checkForUpdate: () => AppUpdate | null | Promise<AppUpdate | null>,
+    installUpdate: () => null | Promise<null>,
 };
 
 /**
@@ -749,6 +765,8 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "github_pull_requests": return mockCommandHandler(mockHandlers.githubPullRequests, "github_pull_requests", args);
             case "github_create_pull_request": return mockCommandHandler(mockHandlers.githubCreatePullRequest, "github_create_pull_request", args);
             case "open_github_page": return mockCommandHandler(mockHandlers.openGithubPage, "open_github_page", args);
+            case "check_for_update": return mockCommandHandler(mockHandlers.checkForUpdate, "check_for_update", args);
+            case "install_update": return mockCommandHandler(mockHandlers.installUpdate, "install_update", args);
             default: throw new Error(`No mock handler registered for command '${cmd}'`);
         }
     }, { shouldMockEvents: true });

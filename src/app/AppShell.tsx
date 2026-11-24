@@ -4,6 +4,7 @@ import { useRegisterActions } from "@/actions";
 import { CloneFromGitHubButton, GitHubProvider } from "@/features/github";
 import { RepoDock, useRepoSession } from "@/features/repository";
 import { CloneControl } from "@/features/sync";
+import { useUpdateActions } from "@/features/update";
 import { Tabs, useMotion, useSound, useTheme } from "@/hud";
 
 import { appActions } from "./appActions";
@@ -32,6 +33,7 @@ export function AppShell() {
   useRegisterActions(
     appActions({ session, motion, theme, sound, showModule: setModuleId }),
   );
+  useUpdateActions();
 
   return (
     <GitHubProvider onCloned={session.open}>

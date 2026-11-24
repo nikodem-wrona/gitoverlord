@@ -3,7 +3,8 @@
 use tauri_specta::{Builder, Commands, ErrorHandlingMode, collect_commands, collect_events};
 
 use crate::commands::{
-    branches, changes, commit, conflicts, github, history, repository, stash, surgery, sync, system,
+    branches, changes, commit, conflicts, github, history, repository, stash, surgery, sync,
+    system, update,
 };
 use crate::events::{RepoChanged, SyncProgress};
 
@@ -84,6 +85,8 @@ fn commands() -> Commands<tauri::Wry> {
         github::github_pull_requests,
         github::github_create_pull_request,
         github::open_github_page,
+        update::check_for_update,
+        update::install_update,
     ]
 }
 

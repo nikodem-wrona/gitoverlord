@@ -18,6 +18,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `pnpm bench`: measure each read operation of `git-core` on a repository with 50 000 commits. The test is slow and is not part of `pnpm check`. Run it after a change to a read operation.
 - `pnpm bindings`: write `src/ipc/bindings.ts` again. Run it after each change to a command or to a type that a command uses.
 - `pnpm format` and `cargo fmt --all`: format the code.
+- `gh workflow run release.yml`: build the installers on GitHub without a release. `docs/RELEASING.md` tells you how to make a release and which secrets it needs.
 - `pnpm icons`: build the icons in `src-tauri/icons/` again from `assets/logo-source.png`. Run it only when the logo changes. It needs ImageMagick 7.
 
 ## Architecture
@@ -39,7 +40,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `device.rs`: the sign-in with the OAuth device flow. `account.rs`, `pulls.rs`: the account, the repositories, and the pull requests. One GraphQL query reads the pull requests with their checks.
   - `keychain.rs`: the token in the keychain, with `keyring`. `repo_links.rs`: finds the GitHub remote of a repository and makes the `HostToken` for `git`.
   - `client_id()` reads `GITOVERLORD_GITHUB_CLIENT_ID` at run time, else at build time.
-- `src-tauri/`: a thin shell. `src/ipc.rs` registers the commands and the events. Each file in `src/commands/` holds one command group. A command calls `git-core` through `run_blocking` or `with_repo` and returns `Result<T, GitError>`. `session.rs` holds the recent repositories and the watcher of the open repository. `events.rs` holds the `RepoChanged` and `SyncProgress` events. `commands/sync.rs` runs one network operation at a time and sends a `SyncProgress` event for each step and one at the end. `commands/github.rs` holds the GitHub commands. `Session` keeps the GitHub token, and the sync commands give it to `git` as a `HostToken`.
+- `src-tauri/`: a thin shell. `src/ipc.rs` registers the commands and the events. Each file in `src/commands/` holds one command group. A command calls `git-core` through `run_blocking` or `with_repo` and returns `Result<T, GitError>`. `session.rs` holds the recent repositories and the watcher of the open repository. `events.rs` holds the `RepoChanged` and `SyncProgress` events. `commands/sync.rs` runs one network operation at a time and sends a `SyncProgress` event for each step and one at the end. `commands/github.rs` holds the GitHub commands. `Session` keeps the GitHub token, and the sync commands give it to `git` as a `HostToken`. `commands/update.rs` checks for a new version and installs it with `tauri-plugin-updater`. A development build does not update. `tauri.release.conf.json` adds the signed updater files to a release build.
 - `src/ipc/`: `tauri-specta` generates `bindings.ts`. Do not edit it. `unwrap` changes a command result into data or a thrown `CommandError`. `errorMessage` changes a failure into a sentence for the user.
 - `src/actions/`: the action factory. `defineAction` makes an `Action`. `ActionButton`, the command palette, and the shortcuts run each action through one runner in `ActionProvider`.
   - The runner asks the `confirm` or `prompt` question of the action. Then it shows the progress, the result notification, and the Undo button of an `Outcome`.
@@ -67,10 +68,12 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `github`: `GitHubProvider` holds the sign-in dialog and the clone dialog, and puts the GitHub actions in the palette. `AccountButton` is in the top bar. `PullRequestPanel` is the Pull requests tab. `queries.ts` has its own `githubKeys`, so a change on the disk does not ask GitHub again.
   - `sync`: `SyncButtons` in the top bar, `SyncPanel` with the counts and the progress, `RemotePanel` on the Remotes tab, and `CloneControl` on the start screen. `useSyncProgress` reads the `SyncProgress` events. `useBackgroundFetch` fetches when the last fetch is older than five minutes. `upstreamActions` merges the upstream into a diverged branch, rebases the branch on it, or force-pushes the branch. `useSyncPulse` gives the operation for the sync pulse, and keeps a short operation for 1.2 seconds. It reads `useSyncOperation`, so that each progress step does not render the timeline again.
   - `diff`: the diff viewer, with the stage and unstage buttons of each hunk.
+  - `update`: `UpdateStatus` in the status bar shows the version, or a button that installs a new version. `useUpdateActions` puts **Check for updates** in the palette. `APP_VERSION` is the version in `package.json`, which `vite.config.ts` gives as `import.meta.env.APP_VERSION`.
   - `system`: the git status readout and the alert when git fails. `boot`: the start-up sequence.
 - `src/app/`: `AppProviders`, `Root` (boot sequence, then shell), `AppShell` (the layout), `RepoDeck` (the three columns of an open repository), `TopBar`, `StatusBar`, `Workspace`, and the module list in `modules.ts`. `appActions` and `useRepoActions` put the actions in the command palette. `useDeckSelection` holds the selected commit and the open file. `CenterView` shows the conflict resolver, the diff viewer, or the timeline.
-- `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`.
+- `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`. The demo always offers one update.
 - `src/gallery/`: the component gallery. Vite serves it in development only.
+- `.github/workflows/release.yml`: a tag such as `v1.0.0` builds the installers and attaches them to a draft release. `scripts/release/` checks the version, and exports only the signing secrets that have a value.
 - `src/test/`: helpers for frontend tests. `expectAccessible` checks the page with axe. `contrast.ts` reads the color tokens and computes WCAG contrast ratios.
 
 ## Rules
@@ -106,4 +109,6 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - Frontend tests run in calm mode. Call `mockReducedMotion(false)` from `@/test/matchMedia` to test an animation, and `advanceInSteps` from `@/test/timers` for a timer sequence.
 - When the Browser pane is hidden, the page runs in the background and CSS animations pause. The panels can then look empty in a screenshot. Turn on calm mode to check the layout.
 - The versions of `specta`, `tauri-specta`, and `specta-typescript` are pinned. Change them together.
+- Keep the version in `Cargo.toml` and in `package.json` the same. The release workflow stops when they are not the version of the tag.
+- The private key of the updater stays out of the repository. Only the release workflow reads it, from the secret `TAURI_SIGNING_PRIVATE_KEY`.
 - When you add a tool or a command, update `README.md` and this file.

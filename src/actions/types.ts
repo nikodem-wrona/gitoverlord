@@ -11,6 +11,7 @@ export const ACTION_GROUPS = [
   "GitHub",
   "Repository",
   "View",
+  "Application",
 ] as const;
 
 export type ActionGroup = (typeof ACTION_GROUPS)[number];

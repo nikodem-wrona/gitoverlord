@@ -8,9 +8,9 @@ gitoverlord is an open-source desktop Git client. It is an alternative to GitHub
 
 **Status:** Phase 7, showpieces and 1.0, in progress. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, its stash, and its pull requests.
 
-You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. You can merge, rebase, cherry-pick, revert, and reset, and resolve conflicts in the application. The panels refresh when the repository changes on the disk. You can select a theme and turn on sound.
+You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. You can merge, rebase, cherry-pick, revert, and reset, and resolve conflicts in the application. The panels refresh when the repository changes on the disk. You can select a theme and turn on sound. The application updates itself from the GitHub releases.
 
-The rest of Phase 7 is the signed 1.0 release: code signing, automatic updates, and installers. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
+The release workflow builds the installers for macOS, Windows, and Linux. The rest of Phase 7 is the signed 1.0 release. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
 
 ## Prerequisites
 
@@ -27,21 +27,22 @@ pnpm install
 
 ## Commands
 
-| Command                  | Function                                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------ |
-| `pnpm tauri dev`         | Start the application in development mode                                                  |
-| `pnpm dev`               | Start only the frontend at `http://localhost:1420`, with a sample repository               |
-| `pnpm check`             | Run each check for TypeScript and Rust                                                     |
-| `pnpm check:ui`          | Run the Prettier check, oxlint, the type check, and the frontend tests                     |
-| `pnpm check:rust`        | Run the rustfmt check, Clippy, and the Rust tests                                          |
-| `pnpm test`              | Run the frontend tests                                                                     |
-| `cargo test --workspace` | Run the Rust tests                                                                         |
-| `pnpm bench`             | Measure the read operations on a repository with 50 000 commits                            |
-| `pnpm format`            | Format TypeScript, CSS, JSON, and Markdown                                                 |
-| `cargo fmt --all`        | Format Rust                                                                                |
-| `pnpm bindings`          | Write `src/ipc/bindings.ts` again from the Rust commands                                   |
-| `pnpm icons`             | Build the application icons again from `assets/logo-source.png`. This needs ImageMagick 7. |
-| `pnpm tauri build`       | Build the release bundle                                                                   |
+| Command                       | Function                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `pnpm tauri dev`              | Start the application in development mode                                                  |
+| `pnpm dev`                    | Start only the frontend at `http://localhost:1420`, with a sample repository               |
+| `pnpm check`                  | Run each check for TypeScript and Rust                                                     |
+| `pnpm check:ui`               | Run the Prettier check, oxlint, the type check, and the frontend tests                     |
+| `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
+| `pnpm test`                   | Run the frontend tests                                                                     |
+| `cargo test --workspace`      | Run the Rust tests                                                                         |
+| `pnpm bench`                  | Measure the read operations on a repository with 50 000 commits                            |
+| `pnpm format`                 | Format TypeScript, CSS, JSON, and Markdown                                                 |
+| `cargo fmt --all`             | Format Rust                                                                                |
+| `pnpm bindings`               | Write `src/ipc/bindings.ts` again from the Rust commands                                   |
+| `pnpm icons`                  | Build the application icons again from `assets/logo-source.png`. This needs ImageMagick 7. |
+| `pnpm tauri build`            | Build the release bundle                                                                   |
+| `gh workflow run release.yml` | Build the installers on GitHub, without a release                                          |
 
 ## Open a repository
 
@@ -187,9 +188,17 @@ On Windows and Linux, use Ctrl in place of ⌘.
 | ⇧F10     | Show the commands of the selected commit, on the timeline                 |
 | Escape   | Close the diff, the conflict resolver, the menu, or the dialog            |
 
+## Updates
+
+The application looks for a new release when it starts, and then one time each six hours. The status bar shows the version. When a new version is available, the status bar shows **Update to** and the version. Select it to download the update, install it, and start the new version. Your repositories and your changes stay as they are.
+
+To look for a new release now, select **Check for updates** in the command palette. A development build does not update.
+
+The updater installs an update only when its signature matches the public key in the application. [RELEASING.md](docs/RELEASING.md) tells you how to make a release.
+
 ## Demo backend
 
-`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. A merge or a rebase of `spike/radar` stops at a conflict, so that you can try the conflict resolver. The release bundle does not contain the demo backend.
+`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. A merge or a rebase of `spike/radar` stops at a conflict, so that you can try the conflict resolver. The demo backend always offers one update. The release bundle does not contain the demo backend.
 
 ## Component gallery
 
@@ -226,8 +235,9 @@ src/gallery/       component gallery, for development only
 src/demo/          sample repository for the browser and for tests
 src/test/          helpers for frontend tests
 assets/            source image of the logo
-scripts/           maintenance scripts
+scripts/           maintenance scripts, and the release scripts in scripts/release/
 docs/ROADMAP.md    stack, phases, practices, risks
+docs/RELEASING.md  release workflow, signing secrets, updater key
 ```
 
 ## Add a command

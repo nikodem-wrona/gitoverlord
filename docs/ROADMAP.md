@@ -18,6 +18,7 @@ Phases 0 to 4 are the minimum product. Each phase ends with a version that you c
 | Fonts           | Rajdhani for titles and JetBrains Mono for data, from Fontsource, in the application bundle                           | The application works offline. The strict content security policy stays.                      |
 | Lint and format | oxlint and Prettier for TypeScript. Clippy and rustfmt for Rust.                                                      | Fast checks that CI can enforce                                                               |
 | Secrets         | The keychain of the operating system                                                                                  | Tokens are never written to disk as plain text                                                |
+| Releases        | `tauri-action` builds the installers. `tauri-plugin-updater` reads `latest.json` of the newest GitHub release.        | No update server to run. A signature protects each update.                                    |
 
 ## Structure
 
@@ -144,7 +145,11 @@ Done when a signed 1.0 release runs on macOS, Windows, and Linux.
 - [x] Themes
 - [x] Optional sound
 - [x] Performance pass and accessibility pass
-- [ ] Code signing, automatic updates, installers
+- [x] Installers for macOS, Windows, and Linux from a release workflow
+- [x] Automatic updates with signed update files
+- [x] Code signing in the release workflow, when the certificates are in the secrets
+- [ ] Updater key, Apple certificate, and Windows signing account in the release secrets
+- [ ] Signed 1.0 release
 
 ## Practices
 
@@ -169,6 +174,8 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Network operations:** one network operation runs at a time. `git` gets the credentials from the credential helper and the SSH agent of the system. It must fail, not wait for a password.
 - **Sample data:** `pnpm dev` in a browser has no Rust core. The demo backend in `src/demo` gives a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend.
 - **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer and run in calm mode.
+- **Releases:** a tag builds the installers and attaches them to a draft release. The tag must be the version in `Cargo.toml` and `package.json`. `docs/RELEASING.md` gives the steps and the secrets.
+- **Updates:** the updater installs a download only when its signature matches the public key in `tauri.conf.json`. The signature must also give the version of the release.
 - **Workflow:** one vertical slice for each pull request. Use conventional commit messages. CI must pass before a merge.
 
 ## Risks
@@ -176,7 +183,10 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Scope:** GitHub Desktop is the result of years of work. Each phase ends with a usable version, so the project can stop after any phase.
 - **Linux webview:** WebKitGTK is the slowest of the three webviews for heavy effects. Animations have a budget from Phase 1.
 - **`tauri-specta` version:** the crate is a release candidate and its versions are pinned. An upgrade can change the generated bindings.
-- **macOS distribution:** code signing needs a paid Apple Developer account. This is only necessary in Phase 7.
+- **macOS distribution:** code signing needs a paid Apple Developer account. Without it, the release has an ad-hoc signature, and the user must permit the app one time.
+- **Windows distribution:** without a signing account, SmartScreen shows a warning before the first start.
+- **Updater key:** if the private key of the updater is lost, the installed copies cannot verify a new release. Each user must then install the next version manually.
+- **Linux installers:** the release builds them on Ubuntu 22.04, so that systems with an older glibc can run them. When GitHub removes this runner image, use the oldest image that remains.
 - **History depth:** a page of the history at a large offset reads each newer commit first. A page at commit 100 000 takes approximately 0.4 seconds. The first pages take a few milliseconds.
 - **History order:** the history uses the unsorted walk of libgit2, which gives the order of `git log`. Each sorted walk reads the full history before the first commit, so do not use one.
 - **Git version:** the write operations send paths with `--pathspec-from-file`. This option needs Git 2.26 or later.

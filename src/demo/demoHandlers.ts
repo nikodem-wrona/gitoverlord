@@ -13,6 +13,7 @@ import {
 import * as stash from "./demoStash";
 import { surgeryHandlers } from "./demoSteps";
 import * as sync from "./demoSync";
+import { updateHandlers } from "./demoUpdate";
 import { sampleDiff } from "./sampleDiff";
 import { SAMPLE_ACTIVITY, SAMPLE_RECENT } from "./sampleRepository";
 
@@ -29,6 +30,7 @@ export function createDemoHandlers(): MockCommandHandlers {
     ...gitHubHandlers(repo),
     ...surgeryHandlers(repo),
     ...conflictHandlers(repo),
+    ...updateHandlers(),
     stageFiles: ({ files }) => changes.stage(repo, files),
     unstageFiles: ({ files }) => changes.unstage(repo, files),
     // The sample diff has one hunk, so a hunk is the whole file.
