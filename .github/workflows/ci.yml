@@ -27,7 +27,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf minisign
+
+      - name: Install minisign on macOS
+        if: runner.os == 'macOS'
+        run: brew install minisign
 
       - uses: pnpm/action-setup@v6
 
@@ -59,6 +63,11 @@ jobs:
 
       - name: Build the frontend
         run: pnpm build
+
+      # The test signs a small release with a temporary key, then runs install.sh on it.
+      - name: Test the install script
+        if: runner.os != 'Windows'
+        run: pnpm test:install
 
       - name: Check the Rust format
         run: cargo fmt --all --check

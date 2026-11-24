@@ -24,7 +24,7 @@ _An open-source desktop Git client that looks like a futuristic control panel_
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
 > [!NOTE]
-> gitoverlord is in development. Phase 7, showpieces and 1.0, is in progress. The release workflow builds the installers for macOS, Windows, and Linux. The rest of Phase 7 is the signed 1.0 release. Until that release, [build the application from the source](#get-started). The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
+> gitoverlord is in development. Phase 7, showpieces and 1.0, is in progress. The release workflow builds the installers for macOS, Windows, and Linux. The rest of Phase 7 is the signed 1.0 release. Until that release, [build the application from the source](#build-from-the-source). The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
 
 ## Features
 
@@ -67,14 +67,61 @@ The screenshots show the sample repository of the [demo backend](#demo-backend).
 
 ## Get started
 
-### Prerequisites
+### Install a release
+
+The [releases page](https://github.com/nikodem-wrona/gitoverlord/releases/latest) has the installers of the newest release.
+
+| System  | Installers                                                  |
+| ------- | ----------------------------------------------------------- |
+| macOS   | The install script, or the `.dmg` file                      |
+| Linux   | The install script, or the AppImage, `.deb`, or `.rpm` file |
+| Windows | The `-setup.exe` file                                       |
+
+If macOS stops the first start of a copy from the `.dmg` file, open **System Settings**, then **Privacy & Security**. Then permit gitoverlord.
+
+#### Install script for macOS and Linux
+
+The script needs `curl` and [minisign](https://jedisct1.github.io/minisign/). minisign does a check of the release signature. On macOS:
+
+```bash
+brew install minisign
+```
+
+On Debian or Ubuntu:
+
+```bash
+sudo apt install minisign
+```
+
+Then install gitoverlord:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nikodem-wrona/gitoverlord/master/install.sh | sh
+```
+
+The script downloads the newest release from GitHub. It installs the download only when the signature matches the public key of the updater.
+
+- On macOS, the script puts `gitoverlord.app` in `/Applications`. If you cannot write to that folder, the script uses `~/Applications`.
+- On Linux, the script puts the AppImage in `~/.local/bin/gitoverlord` and adds gitoverlord to the application menu. The AppImage needs an x86_64 processor.
+
+To use a different folder, set `GITOVERLORD_INSTALL_DIR` for `sh`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nikodem-wrona/gitoverlord/master/install.sh | GITOVERLORD_INSTALL_DIR="$HOME/Applications" sh
+```
+
+After the installation, the application [updates itself](#updates).
+
+### Build from the source
+
+You must have these tools:
 
 - [Rust](https://rustup.rs). rustup installs the version that `rust-toolchain.toml` gives.
 - Node.js 26 and pnpm 10.
 - Git 2.26 or later.
 - The [Tauri system dependencies](https://tauri.app/start/prerequisites/) for your operating system.
 
-### Build and start
+Then build and start the application:
 
 ```bash
 git clone https://github.com/nikodem-wrona/gitoverlord.git
@@ -262,7 +309,7 @@ The tests check each screen with the WCAG 2.1 AA rules of [axe](https://github.c
 
 The application looks for a new release when it starts, and then one time each six hours. The status bar shows the version. When a new version is available, the status bar shows **Update to** and the version. Select it to download the update, install it, and start the new version. Your repositories and your changes stay as they are.
 
-To look for a new release now, select **Check for updates** in the command palette. A development build does not update.
+You can also update from the command palette. Select **Check for updates** to look for a new release now. If there is a new version, the application then asks to install it. When the application knows about a new version, the command palette also has **Update gitoverlord to** and the version. A development build does not update.
 
 The updater installs an update only when its signature matches the public key in the application. [RELEASING.md](docs/RELEASING.md) tells you how to make a release.
 
@@ -281,6 +328,7 @@ The updater installs an update only when its signature matches the public key in
 | `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
 | `pnpm test`                   | Run the frontend tests                                                                     |
 | `cargo test --workspace`      | Run the Rust tests                                                                         |
+| `pnpm test:install`           | Do a test of the install script with a temporary key. This needs minisign.                 |
 | `pnpm bench`                  | Measure the read operations on a repository with 50 000 commits                            |
 | `pnpm format`                 | Format TypeScript, CSS, JSON, and Markdown                                                 |
 | `cargo fmt --all`             | Format Rust                                                                                |
@@ -313,6 +361,7 @@ src/demo/          sample repository for the browser and for tests
 src/test/          helpers for frontend tests
 assets/            source image of the logo
 scripts/           maintenance scripts, and the release scripts in scripts/release/
+install.sh         install script for macOS and Linux
 docs/ROADMAP.md    stack, phases, practices, risks
 docs/RELEASING.md  release workflow, signing secrets, updater key
 docs/images/       screenshots for this file

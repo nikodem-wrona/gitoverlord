@@ -15,7 +15,7 @@ export function useUpdateActions(): void {
   ]);
 }
 
-/** Asks the release server for a newer version now. */
+/** Asks the release server for a newer version now. If there is one, the install question follows. */
 export function checkUpdateAction(client: QueryClient): Action {
   return defineAction({
     id: "application.checkUpdate",
@@ -29,7 +29,8 @@ export function checkUpdateAction(client: QueryClient): Action {
       }
       return {
         title: `gitoverlord ${update.version} is available`,
-        message: "To install it, select the update in the status bar.",
+        message: "To install it later, select the update in the status bar.",
+        next: installUpdateAction(client, update),
       };
     },
   });
@@ -42,7 +43,8 @@ export function installUpdateAction(
 ): Action {
   return defineAction({
     id: "application.installUpdate",
-    label: `Install gitoverlord ${update.version}…`,
+    // The label starts with "Update", so that the word finds it in the command palette.
+    label: `Update gitoverlord to ${update.version}…`,
     group: "Application",
     confirm: {
       title: `Install gitoverlord ${update.version}`,

@@ -14,6 +14,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:install": "bash scripts/release/test-install.sh",
     "bindings": "cargo test -p gitoverlord export_bindings",
     "bench": "cargo test -p git-core --release large_repository -- --ignored --nocapture",
     "icons": "bash scripts/make-icons.sh",

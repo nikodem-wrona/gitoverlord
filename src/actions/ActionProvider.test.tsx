@@ -63,6 +63,44 @@ describe("actions", () => {
     await waitFor(() => expect(run).toHaveBeenCalledOnce());
   });
 
+  it("asks the question of the action that follows a result", async () => {
+    const land = vi.fn<(text: string) => void>();
+    const confirm = {
+      title: "Land?",
+      message: "It comes down.",
+      confirm: "Land",
+    };
+    const next = makeAction({ id: "test.land", confirm, run: land });
+    renderWithProviders(
+      <Harness run={async () => ({ title: "Probe launched", next })} />,
+    );
+
+    fireEvent.click(button());
+    expect(await screen.findByText("Probe launched")).toBeInTheDocument();
+    expect(land).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Land" }));
+
+    await waitFor(() => expect(land).toHaveBeenCalledOnce());
+  });
+
+  it("runs at once an action without a question that follows a result", async () => {
+    const land = vi.fn<(text: string) => void>();
+    const confirm = {
+      title: "Launch?",
+      message: "It goes.",
+      confirm: "Launch",
+    };
+    const next = makeAction({ id: "test.land", run: land });
+    renderWithProviders(
+      <Harness confirm={confirm} run={async () => ({ title: "Up", next })} />,
+    );
+
+    fireEvent.click(button());
+    fireEvent.click(screen.getByRole("button", { name: "Launch" }));
+
+    await waitFor(() => expect(land).toHaveBeenCalledOnce());
+  });
+
   it("asks for a text and gives it to the action", async () => {
     const run = vi.fn<(text: string) => void>();
     const prompt = { title: "Name the probe", label: "Name", submit: "Launch" };

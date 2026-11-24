@@ -15,6 +15,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `pnpm check:rust`: run the rustfmt check, Clippy with `-D warnings`, and `cargo test --workspace`.
 - `pnpm vitest run src/path/to/file.test.tsx`: run one frontend test file.
 - `cargo test -p git-core <test name>`: run one Rust test.
+- `pnpm test:install`: do a test of `install.sh` with a release that a temporary key signs. The test needs `minisign` and is not part of `pnpm check`. Run it after a change to `install.sh` or to the updater key.
 - `pnpm bench`: measure each read operation of `git-core` on a repository with 50 000 commits. The test is slow and is not part of `pnpm check`. Run it after a change to a read operation.
 - `pnpm bindings`: write `src/ipc/bindings.ts` again. Run it after each change to a command or to a type that a command uses.
 - `pnpm format` and `cargo fmt --all`: format the code.
@@ -47,6 +48,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `useRegisterActions` puts actions in the command palette and turns on their shortcuts. `ActionStatus` shows the last result in the status bar.
   - `ActionMenu` shows actions in a `Menu`, for example the context menu of a commit. `ActionMenuButton` opens an `ActionMenu` under a button.
   - An `Outcome` with `tone: "warn"` shows a result that needs the user, for example a merge that stopped. The runner also plays the sound of the tone of each result.
+  - An `Outcome` with `next` starts a second action after the result. The runner asks the question of that action at once. **Check for updates** uses it to ask about the install.
 - `src/hud/`: the design system. Components are presentational and do not call the backend.
   - `global.css` imports the fonts, `tokens.css`, and `base.css`. Each entry point imports it once.
   - Primitives: `Panel`, `Table` with `textColumn` (a column with `shortHeader` shows a short text, for example `+`, and a screen reader reads `header`), `Tree`, `Tabs` with `TabPanel`, `Button`, `Checkbox`, `TextField`, `Dialog`, `Menu`, `ToolLayout`, `Readout`, `Meter`, `EmptyState`, `PathText`, `LogoMark`, `useEscapeKey`, and `useToast` with `ToastProvider`.
@@ -68,12 +70,13 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `github`: `GitHubProvider` holds the sign-in dialog and the clone dialog, and puts the GitHub actions in the palette. `AccountButton` is in the top bar. `PullRequestPanel` is the Pull requests tab. `queries.ts` has its own `githubKeys`, so a change on the disk does not ask GitHub again.
   - `sync`: `SyncButtons` in the top bar, `SyncPanel` with the counts and the progress, `RemotePanel` on the Remotes tab, and `CloneControl` on the start screen. `useSyncProgress` reads the `SyncProgress` events. `useBackgroundFetch` fetches when the last fetch is older than five minutes. `upstreamActions` merges the upstream into a diverged branch, rebases the branch on it, or force-pushes the branch. `useSyncPulse` gives the operation for the sync pulse, and keeps a short operation for 1.2 seconds. It reads `useSyncOperation`, so that each progress step does not render the timeline again.
   - `diff`: the diff viewer, with the stage and unstage buttons of each hunk.
-  - `update`: `UpdateStatus` in the status bar shows the version, or a button that installs a new version. `useUpdateActions` puts **Check for updates** in the palette. `APP_VERSION` is the version in `package.json`, which `vite.config.ts` gives as `import.meta.env.APP_VERSION`.
+  - `update`: `UpdateStatus` in the status bar shows the version, or a button that installs a new version. `useUpdateActions` puts **Check for updates** in the palette. When a newer version is known, it also puts **Update gitoverlord to** and the version there. `APP_VERSION` is the version in `package.json`, which `vite.config.ts` gives as `import.meta.env.APP_VERSION`.
   - `system`: the git status readout and the alert when git fails. `boot`: the start-up sequence.
 - `src/app/`: `AppProviders`, `Root` (boot sequence, then shell), `AppShell` (the layout), `RepoDeck` (the three columns of an open repository), `TopBar`, `StatusBar`, `Workspace`, and the module list in `modules.ts`. `appActions` and `useRepoActions` put the actions in the command palette. `useDeckSelection` holds the selected commit and the open file. `CenterView` shows the conflict resolver, the diff viewer, or the timeline.
 - `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`. The demo always offers one update.
 - `src/gallery/`: the component gallery. Vite serves it in development only.
 - `.github/workflows/release.yml`: a tag such as `v1.0.0` builds the installers and attaches them to a draft release. `scripts/release/` checks the version, and exports only the signing secrets that have a value.
+- `install.sh`: the install script for macOS and Linux, which a user runs with `curl … | sh`. It reads `latest.json` of the newest release, checks the download with `minisign`, and installs it. It is POSIX `sh`, not Bash. `scripts/release/test-install.sh` is its test.
 - `src/test/`: helpers for frontend tests. `expectAccessible` checks the page with axe. `contrast.ts` reads the color tokens and computes WCAG contrast ratios.
 
 ## Rules
@@ -110,5 +113,6 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - When the Browser pane is hidden, the page runs in the background and CSS animations pause. The panels can then look empty in a screenshot. Turn on calm mode to check the layout.
 - The versions of `specta`, `tauri-specta`, and `specta-typescript` are pinned. Change them together.
 - Keep the version in `Cargo.toml` and in `package.json` the same. The release workflow stops when they are not the version of the tag.
+- Keep `PUBLIC_KEY` in `install.sh` the same as the public key in `src-tauri/tauri.conf.json`. `pnpm test:install` fails when they are different.
 - The private key of the updater stays out of the repository. Only the release workflow reads it, from the secret `TAURI_SIGNING_PRIVATE_KEY`.
 - When you add a tool or a command, update `README.md` and this file.

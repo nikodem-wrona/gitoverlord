@@ -44,6 +44,8 @@ export interface Outcome {
   /** `warn` shows a result that needs the user, for example a merge that stopped. */
   tone?: "ok" | "warn";
   undo?(): Promise<unknown>;
+  /** The action that the runner starts after this result. Its question shows at once. */
+  next?: Action;
 }
 
 /** The fields that `defineAction` takes. */
