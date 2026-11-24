@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 
 import { ActionStatus } from "@/actions";
 import { GitReadout } from "@/features/system";
+import { UpdateStatus } from "@/features/update";
 import { SoundToggle, ThemePicker, useMotion } from "@/hud";
 import { isDemoBackend } from "@/ipc";
 
 import styles from "./StatusBar.module.css";
 
-/** The bottom line: git status, data source, motion mode, and the time. */
+/** The bottom line: git status, data source, motion mode, the version, and the time. */
 export function StatusBar() {
   const { calm } = useMotion();
   const demo = isDemoBackend();
@@ -23,7 +24,7 @@ export function StatusBar() {
       <SoundToggle />
       <ActionStatus />
       <span className={styles.spacer} />
-      <span>Phase 7 · Showpieces</span>
+      <UpdateStatus />
       <Clock />
     </footer>
   );

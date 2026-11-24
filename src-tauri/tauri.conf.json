@@ -39,5 +39,17 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI4MjVDNjg2MEZBQzU1NDcKUldSSFZhd1Boc1lsdUIwUGRya1A1aHN0YWRMOHlhVGlZNE5FRE5oZ1o4UVJ2em5IVFI0MThFbUsK",
+      "endpoints": [
+        "https://github.com/nikodem-wrona/gitoverlord/releases/latest/download/latest.json"
+      ],
+      "requireSignedVersion": true,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

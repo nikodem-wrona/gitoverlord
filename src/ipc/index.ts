@@ -1,6 +1,7 @@
 export { isDemoBackend, markDemoBackend } from "./backendMode";
 export {
   type Account,
+  type AppUpdate,
   type Branch,
   type Checks,
   type ChangeKind,

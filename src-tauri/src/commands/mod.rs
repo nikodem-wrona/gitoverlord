@@ -11,3 +11,4 @@ pub mod stash;
 pub mod surgery;
 pub mod sync;
 pub mod system;
+pub mod update;
