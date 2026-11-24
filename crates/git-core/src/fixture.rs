@@ -33,6 +33,9 @@ impl RepoFixture {
         fixture.git(&["config", "user.email", "author@example.com"]);
         fixture.git(&["config", "commit.gpgsign", "false"]);
         fixture.git(&["config", "core.hooksPath", ".git/hooks"]);
+        // Git for Windows sets `core.autocrlf` in its system settings. Then the
+        // backend writes CRLF line endings, and the tests read LF.
+        fixture.git(&["config", "core.autocrlf", "false"]);
         fixture
     }
 

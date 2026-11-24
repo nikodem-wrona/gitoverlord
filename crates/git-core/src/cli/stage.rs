@@ -130,13 +130,15 @@ mod tests {
 
     #[test]
     fn reads_each_path_as_a_file_name_and_not_as_a_pattern() {
+        // As a pattern, `a[b].txt` also matches `ab.txt`. Windows permits
+        // brackets in a file name, but not `*` or `?`.
         let fixture = RepoFixture::new()
-            .write("a*.txt", "star\n")
+            .write("a[b].txt", "brackets\n")
             .write("ab.txt", "plain\n");
 
-        fixture.backend().stage(&names(&["a*.txt"])).unwrap();
+        fixture.backend().stage(&names(&["a[b].txt"])).unwrap();
 
-        assert_eq!(paths(&status(&fixture).staged), ["a*.txt"]);
+        assert_eq!(paths(&status(&fixture).staged), ["a[b].txt"]);
     }
 
     /// A file with two hunks: line 2 and line 19 change.
