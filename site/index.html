@@ -489,13 +489,14 @@
           >
             <header class="panel-header">
               <h2 class="panel-title" id="get-started-title">Get started</h2>
-              <p class="panel-meta">Build from the source</p>
+              <p class="panel-meta">Install or build</p>
             </header>
             <div class="panel-body prose">
               <p>
                 gitoverlord is in development. The signed installers for macOS,
                 Windows, and Linux come with the 1.0 release. Until that
-                release, build the application from the source.
+                release, the install script finds no release. Build the
+                application from the source.
               </p>
               <p>
                 To see the interface now, try the demo. It runs in your browser
@@ -507,7 +508,22 @@
                   >Try the demo</a
                 >
               </p>
-              <h3>Prerequisites</h3>
+              <h3>Install a release</h3>
+              <p>
+                On macOS and Linux, the install script downloads the newest
+                release. The script needs <code>curl</code> and
+                <a href="https://jedisct1.github.io/minisign/">minisign</a>. It
+                installs the download only when the signature matches the public
+                key of the updater.
+              </p>
+              <p>
+                On Windows, use the <code>-setup.exe</code> file on the
+                <a href="https://github.com/nikodem-wrona/gitoverlord/releases"
+                  >releases page</a
+                >.
+              </p>
+              <h3>Build from the source</h3>
+              <p>You must have these tools:</p>
               <ul>
                 <li>
                   <a href="https://rustup.rs">Rust</a>. rustup installs the
@@ -556,28 +572,54 @@
           <section class="panel" aria-labelledby="terminal-title">
             <header class="panel-header">
               <h2 class="panel-title" id="terminal-title">Terminal</h2>
-              <div class="panel-meta">
+            </header>
+            <div class="panel-body prose">
+              <div class="terminal-head">
+                <h3 id="install-title">Install on macOS or Linux</h3>
                 <button
                   class="button"
                   type="button"
                   data-variant="ghost"
                   data-compact
-                  data-copy="#build-commands"
+                  data-copy="#install-command"
+                  aria-describedby="install-title"
                   data-needs-script
                   hidden
                 >
                   Copy
                 </button>
               </div>
-            </header>
-            <div class="panel-body prose">
-              <pre
-                class="terminal"
-                tabindex="0"
-              ><code id="build-commands">git clone https://github.com/nikodem-wrona/gitoverlord.git
-cd gitoverlord
-pnpm install
-pnpm tauri dev</code></pre>
+              <div class="terminal" id="install-command">
+                <code data-line
+                  >curl -fsSL
+                  https://raw.githubusercontent.com/nikodem-wrona/gitoverlord/master/install.sh
+                  | sh</code
+                >
+              </div>
+              <div class="terminal-head">
+                <h3 id="build-title">Build from the source</h3>
+                <button
+                  class="button"
+                  type="button"
+                  data-variant="ghost"
+                  data-compact
+                  data-copy="#build-commands"
+                  aria-describedby="build-title"
+                  data-needs-script
+                  hidden
+                >
+                  Copy
+                </button>
+              </div>
+              <div class="terminal" id="build-commands">
+                <code data-line
+                  >git clone
+                  https://github.com/nikodem-wrona/gitoverlord.git</code
+                >
+                <code data-line>cd gitoverlord</code>
+                <code data-line>pnpm install</code>
+                <code data-line>pnpm tauri dev</code>
+              </div>
               <p>
                 You do not need a build to see the interface. The
                 <a href="./demo/">demo</a> runs in your browser, without the

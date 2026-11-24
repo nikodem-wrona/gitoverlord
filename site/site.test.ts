@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { expectAccessible } from "@/test/axe";
 import { mockReducedMotion } from "@/test/matchMedia";
 
+import installScript from "../install.sh?raw";
+
 import page from "./index.html?raw";
 import { startPage } from "./scripts/startPage";
 
@@ -106,22 +108,34 @@ describe("the landing page", () => {
     expect(select("[data-motion-label]")).toHaveTextContent("Calm");
   });
 
-  it("copies the build commands", async () => {
+  it.each([
+    [
+      "the install command",
+      "#install-command",
+      "curl -fsSL https://raw.githubusercontent.com/nikodem-wrona/gitoverlord/master/install.sh | sh",
+    ],
+    [
+      "the build commands, one for each line",
+      "#build-commands",
+      "git clone https://github.com/nikodem-wrona/gitoverlord.git\ncd gitoverlord\npnpm install\npnpm tauri dev",
+    ],
+  ])("copies %s", async (_name, source, commands) => {
     const writeText = vi.fn<(text: string) => Promise<void>>(() =>
       Promise.resolve(),
     );
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     startPage();
 
-    const button = select("[data-copy]");
+    const button = select(`[data-copy='${source}']`);
     button.click();
 
     await vi.waitFor(() => expect(button).toHaveTextContent("Copied"));
-    expect(writeText).toHaveBeenCalledWith(
-      expect.stringMatching(
-        /^git clone .+\ncd gitoverlord\n.+\npnpm tauri dev$/,
-      ),
-    );
+    expect(writeText).toHaveBeenCalledWith(commands);
     vi.unstubAllGlobals();
+  });
+
+  it("shows the install command that the install script gives", () => {
+    const command = select("#install-command").textContent.replace(/\s+/g, " ");
+    expect(installScript).toContain(command.trim());
   });
 });

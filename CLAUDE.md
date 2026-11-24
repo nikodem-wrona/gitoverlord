@@ -84,6 +84,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `styles/site.css` imports the fonts, `src/hud/tokens.css`, and `src/hud/themes.css`, so the page has the tokens and the themes of the application. `styles/controls.css` and `styles/panel.css` copy the look of the HUD components.
   - `index.html` shows the screenshots in `docs/images/` with a path such as `../docs/images/history.png`. The build reads the file from the disk. The plugin in `vite.site.config.ts` gives the file to the development server.
   - `scripts/` adds calm mode, the theme switch, the tabs of the tour, and the copy button. `site.test.ts` starts the scripts and checks the page with axe.
+  - A terminal block of the page has one `code` element with `data-line` for each command, and the copy button joins the commands with line breaks. `site.test.ts` fails when the install command of the page is not in `install.sh`.
   - `index.html` links to the web demo with the relative address `./demo/`. The link works in the build, where the demo is below the page. It does not work with `pnpm dev:site`.
   - `public/og.png` is the image that a link to the page shows. It is a screenshot of the top of the page at 1200×630.
 - `.github/workflows/pages.yml`: a push to `master` that changes the landing page or the frontend builds the landing page and the web demo. Then it publishes them on GitHub Pages.
