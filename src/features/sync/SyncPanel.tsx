@@ -1,14 +1,18 @@
+import { ActionButton } from "@/actions";
 import {
   formatTime,
+  type RepoWriter,
   useBranches,
   useRepoSummary,
   useRepoWriter,
 } from "@/features/repository";
+import { useHistoryState } from "@/features/surgery";
 import { Meter, Panel } from "@/hud";
-import type { SyncProgress } from "@/ipc";
+import type { Branch, SyncProgress } from "@/ipc";
 
 import styles from "./SyncPanel.module.css";
 import { SyncStep } from "./SyncStep";
+import { upstreamActions } from "./upstreamActions";
 import { useBackgroundFetch } from "./useBackgroundFetch";
 import { useSyncProgress } from "./useSyncProgress";
 
@@ -31,7 +35,8 @@ export function SyncPanel({ repoPath, delay }: SyncPanelProps) {
   const branches = useBranches(repoPath).data ?? [];
   const current = branches.find((branch) => branch.current);
   const progress = useSyncProgress(repoPath);
-  const fetchError = useBackgroundFetch(useRepoWriter(repoPath), summary);
+  const repo = useRepoWriter(repoPath);
+  const fetchError = useBackgroundFetch(repo, summary);
 
   return (
     <Panel
@@ -57,8 +62,33 @@ export function SyncPanel({ repoPath, delay }: SyncPanelProps) {
           fetched={summary?.fetched}
           error={fetchError}
         />
+        <DivergedTools repo={repo} branch={current} />
       </div>
     </Panel>
+  );
+}
+
+/** Merge and rebase buttons when the branch and its upstream both have new commits. */
+function DivergedTools({
+  repo,
+  branch,
+}: {
+  repo: RepoWriter;
+  branch?: Branch;
+}) {
+  const state = useHistoryState(repo.path);
+  const [merge, rebase] = upstreamActions(repo, state, branch);
+  if (!merge || !rebase) return null;
+  return (
+    <div className={styles.diverged}>
+      <p className={styles.status} data-tone="warn">
+        Both sides have new commits
+      </p>
+      <div className={styles.tools}>
+        <ActionButton action={merge} compact text="Merge upstream" />
+        <ActionButton action={rebase} compact text="Rebase…" />
+      </div>
+    </div>
   );
 }
 

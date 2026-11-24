@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { ChangeKindTag, formatTime, shortHash } from "@/features/repository";
 import {
   type Column,
@@ -30,13 +32,15 @@ const FILE_COLUMNS: readonly Column<FileDelta>[] = [
 
 interface CommitReportProps {
   detail: CommitDetail;
+  /** The commands of the commit, under the author. */
+  tools?: ReactNode;
   selectedPath?: string;
   onSelectFile(path: string): void;
 }
 
 /** The message, the readouts, and the changed files of one commit. */
 export function CommitReport(props: CommitReportProps) {
-  const { detail, selectedPath, onSelectFile } = props;
+  const { detail, tools, selectedPath, onSelectFile } = props;
   const { commit, files } = detail;
   const added = sum(files.map((file) => file.additions));
   const removed = sum(files.map((file) => file.deletions));
@@ -50,6 +54,7 @@ export function CommitReport(props: CommitReportProps) {
         <span title={detail.email}>{commit.author}</span>
         <span className={styles.hash}>{shortHash(commit.hash)}</span>
       </div>
+      {tools}
       {detail.body && <p className={styles.body}>{detail.body}</p>}
       <ReadoutList>
         <Readout label="Refs" value={commit.refs.join(", ") || "None"} />

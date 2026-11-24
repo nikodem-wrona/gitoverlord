@@ -78,6 +78,14 @@ export function useCommitDetail(path: string, hash: string | undefined) {
   });
 }
 
+/** Reads one file with conflicts. The query waits while `file` is `undefined`. */
+export function useConflictFile(path: string, file: string | undefined) {
+  return useQuery({
+    queryKey: repoKeys.conflict(path, file ?? ""),
+    queryFn: file ? () => unwrap(commands.conflictFile(path, file)) : skipToken,
+  });
+}
+
 /** Reads the changed lines of one file. The last diff stays until the next diff arrives. */
 export function useFileDiff(path: string, target: DiffTarget) {
   return useQuery({

@@ -4,6 +4,10 @@
   overflow: hidden;
 }
 
+.frame:focus-visible {
+  outline-offset: -2px;
+}
+
 /* The drawing has no view box: one unit is one pixel, so the text keeps its size. */
 .svg {
   display: block;

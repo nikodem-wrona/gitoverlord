@@ -8,6 +8,7 @@ import {
   useBranches,
   useRepoWriter,
 } from "@/features/repository";
+import { mergeAction, rebaseAction, useHistoryState } from "@/features/surgery";
 import { type Column, EmptyState, Table, textColumn, ToolLayout } from "@/hud";
 import type { Branch } from "@/ipc";
 
@@ -101,10 +102,17 @@ function BranchTools({
   repo: RepoWriter;
   selected?: Branch;
 }) {
+  const state = useHistoryState(repo.path);
+  const target = selected?.name ?? "";
   return (
     <>
       <ActionButton action={newBranchAction(repo)} variant="primary" />
       <ActionButton action={switchBranchAction(repo, selected)} text="Switch" />
+      <ActionButton action={mergeAction(repo, state, target)} text="Merge" />
+      <ActionButton
+        action={rebaseAction(repo, state, target)}
+        text="Rebase onto…"
+      />
       <ActionButton
         action={renameBranchAction(repo, selected)}
         text="Rename…"

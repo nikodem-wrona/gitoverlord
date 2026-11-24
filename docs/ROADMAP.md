@@ -132,9 +132,9 @@ Done when a pull request opens from the application.
 
 Done when a merge conflict resolves fully in the application.
 
-- [ ] Merge, rebase, cherry-pick, revert, reset
-- [ ] Conflict resolution interface
-- [ ] Interactive commit graph
+- [x] Merge, rebase, cherry-pick, revert, reset
+- [x] Conflict resolution interface
+- [x] Interactive commit graph
 
 ### Phase 7: Showpieces and 1.0
 
@@ -154,7 +154,8 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Feature isolation:** each folder in `src/features/` has one `index.ts`. Other code imports only from that file.
 - **Thin shell:** git logic stays in `git-core`. A Tauri command only calls `git-core` and returns the result.
 - **Blocking work:** each command that starts a `git` process uses `run_blocking`. The main thread stays free.
-- **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery. The action has `confirm`, and its result has `undo`. A discard keeps a copy of the changes in the stash.
+- **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery. The action has `confirm`, and its result has `undo`. A discard and a hard reset keep a copy of the changes in the stash. Abort and Skip of a stopped operation are the exceptions: they ask for confirmation, but git keeps no copy of the resolutions.
+- **History operations:** a merge, a rebase, a cherry-pick, or a revert gives an `OperationResult`. A stop at conflicts is a result, not a failure. The banner then continues, skips, or aborts the operation. The undo of a complete operation moves the branch back with `git reset --keep`.
 - **Calm mode:** each animation must stop in calm mode. Calm mode applies when the user selects it or when the system asks for reduced motion.
 - **Read-only core:** `git2` does each read operation. A read operation must not write to the repository.
 - **Write operations:** the system `git` does each write operation, so hooks, signing, and the configuration of the user apply. Each write operation runs in an action. The background fetch is the only exception.
@@ -174,7 +175,11 @@ Tools enforce these rules. CI fails when a rule fails.
 - **History order:** the history uses the unsorted walk of libgit2, which gives the order of `git log`. Each sorted walk reads the full history before the first commit, so do not use one.
 - **Git version:** the write operations send paths with `--pathspec-from-file`. This option needs Git 2.26 or later.
 - **Stash with paths:** in Git 2.54, `git stash push --keep-index` loses the staged changes when the paths include an untracked file. A discard does not use `--keep-index`. It restores the staged versions from the stash entry.
-- **Pull:** a pull only fast-forwards until Phase 6 adds merge and rebase. When the branch and its upstream both have new commits, the user must merge or rebase in a terminal.
+- **Pull:** a pull only fast-forwards. When the branch and its upstream both have new commits, the user merges the upstream or rebases the branch on it.
+- **Force push:** gitoverlord does not force-push yet. After a rebase of a branch that is on a remote, the push fails. The user must push with force in a terminal.
+- **Editor:** each `git` process gets `GIT_EDITOR=true`. A merge or a rebase then uses the commit message that `git` proposes.
+- **Conflict markers:** the resolver reads markers of seven characters, the default size. A file with a `conflict-marker-size` attribute shows no markers. Resolve such a file in an editor.
+- **Restored conflicts:** the undo of a resolution writes the conflict again from the index. The markers then have the labels `ours` and `theirs`, not the branch names.
 - **SSH host keys:** `ssh` runs in batch mode, so it cannot ask to accept a new host key. The user connects one time in a terminal first.
 - **GitHub client ID:** the sign-in needs a GitHub OAuth app with the device flow. Each build reads its client ID from `GITOVERLORD_GITHUB_CLIENT_ID`. A release build must set it.
 - **GitHub token for git:** after a sign-in, the token replaces the credential helpers of the user for github.com in the `git` processes of gitoverlord. A user with a second GitHub account must sign in with the account that has the access.

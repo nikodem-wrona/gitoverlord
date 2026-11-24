@@ -3,8 +3,9 @@ use std::path::Path;
 use crate::GitError;
 use crate::libgit::Git2Backend;
 use crate::model::{
-    Branch, CommitDetail, DiffTarget, FileDiff, HostToken, HunkTarget, LogPage, Progress, Remote,
-    RepoSummary, StashEntry, WorkingTree,
+    Branch, CommitDetail, ConflictFile, DiffTarget, FileDiff, HostToken, HunkTarget, LogPage,
+    OperationResult, Progress, Remote, RepoSummary, ResetMode, ResetReceipt, Resolution,
+    StashEntry, WorkingTree,
 };
 
 /// Access to one repository.
@@ -63,6 +64,38 @@ pub trait GitBackend {
     fn drop_stash(&self, hash: &str) -> Result<(), GitError>;
     /// Puts a dropped entry back in the stash list.
     fn restore_stash(&self, hash: &str, message: &str) -> Result<(), GitError>;
+
+    // The history operations. Each one returns `Stopped` when `git` stops at conflicts.
+
+    /// Merges `target`, a branch or a commit, into the current branch.
+    fn merge(&self, target: &str) -> Result<OperationResult, GitError>;
+    /// Replays the commits of the current branch on top of `onto`.
+    fn rebase(&self, onto: &str) -> Result<OperationResult, GitError>;
+    /// Applies the changes of the commit `hash` as a new commit on the current branch.
+    fn cherry_pick(&self, hash: &str) -> Result<OperationResult, GitError>;
+    /// Makes a new commit that removes the changes of the commit `hash`.
+    fn revert(&self, hash: &str) -> Result<OperationResult, GitError>;
+    /// Commits the resolved changes of the operation that stopped, and goes on.
+    fn continue_operation(&self) -> Result<OperationResult, GitError>;
+    /// Drops the commit that the stopped rebase, cherry-pick, or revert applies, and goes on.
+    fn skip_operation(&self) -> Result<OperationResult, GitError>;
+    /// Stops the operation and puts back the state from before it.
+    fn abort_operation(&self) -> Result<(), GitError>;
+    /// Moves the current branch to `hash`. A hard reset keeps the uncommitted
+    /// changes in a stash entry.
+    fn reset(&self, hash: &str, mode: ResetMode) -> Result<ResetReceipt, GitError>;
+    /// Moves the branch back to the commit from before a reset, with the uncommitted changes.
+    fn undo_reset(&self, receipt: &ResetReceipt) -> Result<(), GitError>;
+    /// Moves the current branch back to `hash` and keeps the uncommitted changes.
+    /// This is the undo of a merge, a rebase, a cherry-pick, or a revert.
+    fn restore_head(&self, hash: &str) -> Result<(), GitError>;
+
+    /// Reads one file with conflicts.
+    fn conflict_file(&self, path: &str) -> Result<ConflictFile, GitError>;
+    /// Resolves the conflicts of one file and stages the file.
+    fn resolve_conflict(&self, path: &str, resolution: &Resolution) -> Result<(), GitError>;
+    /// Puts the conflicts of a resolved file back. This is the undo of `resolve_conflict`.
+    fn restore_conflict(&self, path: &str) -> Result<(), GitError>;
 
     // The network operations send each progress line of `git` to `progress`.
 

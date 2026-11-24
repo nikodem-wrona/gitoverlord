@@ -1,4 +1,5 @@
 import { shortHash } from "@/features/repository";
+import type { MenuPoint } from "@/hud";
 
 import styles from "./CommitTimeline.module.css";
 import type {
@@ -75,10 +76,13 @@ interface CommitMarkProps {
   node: TimelineNode;
   selected: boolean;
   onSelect(hash: string): void;
+  /** Opens the commands of the commit at the mouse position. */
+  onMenu(hash: string, at: MenuPoint): void;
 }
 
 /** One commit. A merge commit is hollow, HEAD has a ring, and the selected commit has a larger ring. */
-export function CommitMark({ node, selected, onSelect }: CommitMarkProps) {
+export function CommitMark(props: CommitMarkProps) {
+  const { node, selected, onSelect, onMenu } = props;
   return (
     <g
       transform={`translate(${node.x} ${node.y})`}
@@ -86,6 +90,10 @@ export function CommitMark({ node, selected, onSelect }: CommitMarkProps) {
       data-tone={node.tone}
       data-merge={node.merge || undefined}
       onClick={() => onSelect(node.hash)}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onMenu(node.hash, { x: event.clientX, y: event.clientY });
+      }}
     >
       <title>{`${shortHash(node.hash)}  ${node.subject}`}</title>
       <circle r={HIT_RADIUS} className={styles.hit} />

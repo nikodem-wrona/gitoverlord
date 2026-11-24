@@ -2,17 +2,22 @@
 
 mod activity;
 mod branches;
+mod conflict;
 mod delta;
 mod detail;
 mod diff;
 mod discard;
 mod hunk;
 mod log;
+mod operation;
 mod refs;
 mod remotes;
 mod stash;
 mod status;
 mod summary;
+mod surgery;
+#[cfg(test)]
+mod surgery_tests;
 mod sync;
 
 use std::path::{Path, PathBuf};
@@ -20,10 +25,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use git2::Repository;
 
-use crate::cli::{branch, commit, remote, stage, stash as stash_cli};
+use crate::cli::sequence::{self, Step};
+use crate::cli::{branch, commit, remote, resolve, stage, stash as stash_cli};
 use crate::model::{
-    Branch, CommitDetail, DiffTarget, FileDiff, HostToken, HunkTarget, LogPage, Progress, Remote,
-    RepoSummary, StashEntry, WorkingTree,
+    Branch, CommitDetail, ConflictFile, DiffTarget, FileDiff, HostToken, HunkTarget, LogPage,
+    OperationResult, Progress, Remote, RepoSummary, ResetMode, ResetReceipt, Resolution,
+    StashEntry, WorkingTree,
 };
 use crate::{GitBackend, GitError};
 
@@ -172,6 +179,58 @@ impl GitBackend for Git2Backend {
     fn restore_stash(&self, hash: &str, message: &str) -> Result<(), GitError> {
         let id = stash::parse(hash)?;
         stash_cli::store(&self.dir, &id.to_string(), message)
+    }
+
+    fn merge(&self, target: &str) -> Result<OperationResult, GitError> {
+        surgery::start(&self.repo, || sequence::merge(&self.dir, target))
+    }
+
+    fn rebase(&self, onto: &str) -> Result<OperationResult, GitError> {
+        surgery::start(&self.repo, || sequence::rebase(&self.dir, onto))
+    }
+
+    fn cherry_pick(&self, hash: &str) -> Result<OperationResult, GitError> {
+        surgery::cherry_pick(&self.repo, &self.dir, hash)
+    }
+
+    fn revert(&self, hash: &str) -> Result<OperationResult, GitError> {
+        surgery::revert(&self.repo, &self.dir, hash)
+    }
+
+    fn continue_operation(&self) -> Result<OperationResult, GitError> {
+        surgery::step(&self.repo, &self.dir, Step::Continue)
+    }
+
+    fn skip_operation(&self) -> Result<OperationResult, GitError> {
+        surgery::step(&self.repo, &self.dir, Step::Skip)
+    }
+
+    fn abort_operation(&self) -> Result<(), GitError> {
+        surgery::abort(&self.repo, &self.dir)
+    }
+
+    fn reset(&self, hash: &str, mode: ResetMode) -> Result<ResetReceipt, GitError> {
+        surgery::reset(&self.repo, &self.dir, hash, mode)
+    }
+
+    fn undo_reset(&self, receipt: &ResetReceipt) -> Result<(), GitError> {
+        surgery::undo_reset(&self.repo, &self.dir, receipt)
+    }
+
+    fn restore_head(&self, hash: &str) -> Result<(), GitError> {
+        surgery::restore_head(&self.repo, &self.dir, hash)
+    }
+
+    fn conflict_file(&self, path: &str) -> Result<ConflictFile, GitError> {
+        conflict::read(&self.repo, &self.dir, path)
+    }
+
+    fn resolve_conflict(&self, path: &str, resolution: &Resolution) -> Result<(), GitError> {
+        conflict::resolve(&self.repo, &self.dir, path, resolution)
+    }
+
+    fn restore_conflict(&self, path: &str) -> Result<(), GitError> {
+        resolve::restore(&self.dir, &[path.to_owned()])
     }
 
     fn add_remote(&self, name: &str, url: &str) -> Result<(), GitError> {

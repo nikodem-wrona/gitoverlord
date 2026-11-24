@@ -63,6 +63,32 @@ export const commands = {
 	dropStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("drop_stash", { path, hash }, options)),
 	/**  Puts a dropped entry back in the stash list. */
 	restoreStash: (path: string, hash: string, message: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_stash", { path, hash, message }, options)),
+	/**  Merges `target`, a branch or a commit, into the current branch. */
+	mergeBranch: (path: string, target: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("merge_branch", { path, target }, options)),
+	/**  Replays the commits of the current branch on top of `onto`. */
+	rebaseBranch: (path: string, onto: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("rebase_branch", { path, onto }, options)),
+	/**  Applies the changes of a commit as a new commit on the current branch. */
+	cherryPick: (path: string, hash: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("cherry_pick", { path, hash }, options)),
+	/**  Makes a new commit that removes the changes of a commit. */
+	revertCommit: (path: string, hash: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("revert_commit", { path, hash }, options)),
+	/**  Commits the resolved changes of the operation that stopped, and goes on. */
+	continueOperation: (path: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("continue_operation", { path }, options)),
+	/**  Drops the commit that the stopped operation applies, and goes on. */
+	skipOperation: (path: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("skip_operation", { path }, options)),
+	/**  Stops the operation and puts back the state from before it. */
+	abortOperation: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("abort_operation", { path }, options)),
+	/**  Moves the current branch to a commit. Returns the data for the undo. */
+	resetBranch: (path: string, hash: string, mode: ResetMode, options?: InvokeOptions) => typedError<ResetReceipt, GitError>(__TAURI_INVOKE("reset_branch", { path, hash, mode }, options)),
+	/**  Moves the branch back to the commit from before a reset, with the uncommitted changes. */
+	undoReset: (path: string, receipt: ResetReceipt, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("undo_reset", { path, receipt }, options)),
+	/**  Moves the current branch back to a commit and keeps the uncommitted changes. */
+	restoreHead: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_head", { path, hash }, options)),
+	/**  Reads one file with conflicts. */
+	conflictFile: (path: string, file: string, options?: InvokeOptions) => typedError<ConflictFile, GitError>(__TAURI_INVOKE("conflict_file", { path, file }, options)),
+	/**  Resolves the conflicts of one file and stages the file. */
+	resolveConflict: (path: string, file: string, resolution: Resolution, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("resolve_conflict", { path, file, resolution }, options)),
+	/**  Puts the conflicts of a resolved file back. */
+	restoreConflict: (path: string, file: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_conflict", { path, file }, options)),
 	/**  Lists the remotes with their remote branches. */
 	repoRemotes: (path: string, options?: InvokeOptions) => typedError<Remote[], GitError>(__TAURI_INVOKE("repo_remotes", { path }, options)),
 	addRemote: (path: string, name: string, url: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("add_remote", { path, name, url }, options)),
@@ -164,6 +190,43 @@ export type CommitDetail = {
 	/**  The changes against the first parent. */
 	files: FileDelta[],
 };
+
+/**  A part of a file with conflict markers. */
+export type ConflictBlock = 
+/**  Lines without a conflict. */
+{ kind: "clean"; lines: string[] } | 
+/**  One conflict: the lines of each side. */
+{ kind: "conflict"; 
+/**  The line of the `<<<<<<<` marker, from 1. */
+line: number; ours: string[]; theirs: string[]; 
+/**  The name after the `<<<<<<<` marker, for example `HEAD`. */
+oursLabel: string; 
+/**  The name after the `>>>>>>>` marker, for example `feature`. */
+theirsLabel: string };
+
+/**  The lines that replace one conflict. */
+export type ConflictChoice = "ours" | "theirs" | 
+/**  The lines of ours, then the lines of theirs. */
+"both";
+
+/**  A file with conflicts, as the working tree has it. */
+export type ConflictFile = {
+	path: string,
+	/**
+	 *  `false` when the file is binary, is not UTF-8, or is not in the working
+	 *  tree. Then only a full side can resolve it.
+	 */
+	text: boolean,
+	/**  `true` when `HEAD` deleted the file. */
+	oursDeleted: boolean,
+	/**  `true` when the incoming commit deleted the file. */
+	theirsDeleted: boolean,
+	/**  The file in parts. Empty when the file is not text. */
+	blocks: ConflictBlock[],
+};
+
+/**  One version of a file with conflicts. "Ours" is `HEAD`, "theirs" is the incoming commit. */
+export type ConflictSide = "ours" | "theirs";
 
 /**  A pull request that the application opened. */
 export type CreatedPull = {
@@ -310,6 +373,35 @@ export type LogPage = {
 	next: number | null,
 };
 
+/**  An operation that stopped. The user continues it, skips a commit, or aborts it. */
+export type Operation = {
+	kind: OperationKind,
+	/**  The commit that `git` applies now. `None` when `git` does not say. */
+	commit: string | null,
+	/**  The branch that a rebase changes. `HEAD` is detached while a rebase runs. */
+	branch: string | null,
+	/**  The step of a rebase, from 1. `None` for the other operations. */
+	step: number | null,
+	/**  The count of the steps of a rebase. */
+	steps: number | null,
+};
+
+/**  A git operation that can stop and wait for the user, for example at a conflict. */
+export type OperationKind = "merge" | "rebase" | "cherryPick" | "revert";
+
+/**  The result of a merge, rebase, cherry-pick, or revert. */
+export type OperationResult = 
+/**
+ *  The operation is complete. `previous` is the commit of `HEAD` before it,
+ *  for the undo. `head` is the commit of `HEAD` now.
+ */
+{ kind: "done"; previous: string; head: string } | 
+/**
+ *  `git` stopped at conflicts in these files. The user resolves them, then
+ *  continues or aborts the operation.
+ */
+{ kind: "stopped"; conflicts: string[] };
+
 /**  One step of a network operation, from the progress output of `git`. */
 export type Progress = {
 	/**  What `git` does now, for example `Receiving objects`. */
@@ -393,7 +485,34 @@ export type RepoSummary = {
 	tags: string[],
 	/**  The time of the last fetch, in Unix seconds. `None` before the first fetch. */
 	fetched: number | null,
+	/**  The merge, rebase, cherry-pick, or revert that stopped. `None` when no operation runs. */
+	operation: Operation | null,
 };
+
+/**  What a reset does with the changes of the commits that the branch drops. */
+export type ResetMode = 
+/**  The changes stay in the index. */
+"soft" | 
+/**  The changes stay in the working tree. */
+"mixed" | 
+/**  The changes go. A stash entry keeps the uncommitted changes. */
+"hard";
+
+/**  The data that the undo of a reset needs. */
+export type ResetReceipt = {
+	mode: ResetMode,
+	/**  The commit of `HEAD` before the reset. */
+	previous: string,
+	/**  The stash entry with the uncommitted changes from before a hard reset. */
+	backup: string | null,
+};
+
+/**  How to resolve the conflicts of one file. */
+export type Resolution = 
+/**  One choice for each conflict of the file, in the order of the file. */
+{ kind: "blocks"; choices: ConflictChoice[] } | 
+/**  The full file of one side. When that side deleted the file, the file is deleted. */
+{ kind: "file"; side: ConflictSide };
 
 /**  The state of a sign-in for the user interface. The token stays in the backend. */
 export type SignInStep = { kind: "pending" } | 
@@ -506,6 +625,19 @@ export type MockCommandHandlers = {
     popStash: (args: { path: string; hash: string }) => null | Promise<null>,
     dropStash: (args: { path: string; hash: string }) => null | Promise<null>,
     restoreStash: (args: { path: string; hash: string; message: string }) => null | Promise<null>,
+    mergeBranch: (args: { path: string; target: string }) => OperationResult | Promise<OperationResult>,
+    rebaseBranch: (args: { path: string; onto: string }) => OperationResult | Promise<OperationResult>,
+    cherryPick: (args: { path: string; hash: string }) => OperationResult | Promise<OperationResult>,
+    revertCommit: (args: { path: string; hash: string }) => OperationResult | Promise<OperationResult>,
+    continueOperation: (args: { path: string }) => OperationResult | Promise<OperationResult>,
+    skipOperation: (args: { path: string }) => OperationResult | Promise<OperationResult>,
+    abortOperation: (args: { path: string }) => null | Promise<null>,
+    resetBranch: (args: { path: string; hash: string; mode: ResetMode }) => ResetReceipt | Promise<ResetReceipt>,
+    undoReset: (args: { path: string; receipt: ResetReceipt }) => null | Promise<null>,
+    restoreHead: (args: { path: string; hash: string }) => null | Promise<null>,
+    conflictFile: (args: { path: string; file: string }) => ConflictFile | Promise<ConflictFile>,
+    resolveConflict: (args: { path: string; file: string; resolution: Resolution }) => null | Promise<null>,
+    restoreConflict: (args: { path: string; file: string }) => null | Promise<null>,
     repoRemotes: (args: { path: string }) => Remote[] | Promise<Remote[]>,
     addRemote: (args: { path: string; name: string; url: string }) => null | Promise<null>,
     fetchRemotes: (args: { path: string }) => null | Promise<null>,
@@ -576,6 +708,19 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "pop_stash": return mockCommandHandler(mockHandlers.popStash, "pop_stash", args);
             case "drop_stash": return mockCommandHandler(mockHandlers.dropStash, "drop_stash", args);
             case "restore_stash": return mockCommandHandler(mockHandlers.restoreStash, "restore_stash", args);
+            case "merge_branch": return mockCommandHandler(mockHandlers.mergeBranch, "merge_branch", args);
+            case "rebase_branch": return mockCommandHandler(mockHandlers.rebaseBranch, "rebase_branch", args);
+            case "cherry_pick": return mockCommandHandler(mockHandlers.cherryPick, "cherry_pick", args);
+            case "revert_commit": return mockCommandHandler(mockHandlers.revertCommit, "revert_commit", args);
+            case "continue_operation": return mockCommandHandler(mockHandlers.continueOperation, "continue_operation", args);
+            case "skip_operation": return mockCommandHandler(mockHandlers.skipOperation, "skip_operation", args);
+            case "abort_operation": return mockCommandHandler(mockHandlers.abortOperation, "abort_operation", args);
+            case "reset_branch": return mockCommandHandler(mockHandlers.resetBranch, "reset_branch", args);
+            case "undo_reset": return mockCommandHandler(mockHandlers.undoReset, "undo_reset", args);
+            case "restore_head": return mockCommandHandler(mockHandlers.restoreHead, "restore_head", args);
+            case "conflict_file": return mockCommandHandler(mockHandlers.conflictFile, "conflict_file", args);
+            case "resolve_conflict": return mockCommandHandler(mockHandlers.resolveConflict, "resolve_conflict", args);
+            case "restore_conflict": return mockCommandHandler(mockHandlers.restoreConflict, "restore_conflict", args);
             case "repo_remotes": return mockCommandHandler(mockHandlers.repoRemotes, "repo_remotes", args);
             case "add_remote": return mockCommandHandler(mockHandlers.addRemote, "add_remote", args);
             case "fetch_remotes": return mockCommandHandler(mockHandlers.fetchRemotes, "fetch_remotes", args);

@@ -18,3 +18,14 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+
+.diverged {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

@@ -34,7 +34,7 @@ pub(super) fn pull(
     remote::pull(dir, token, progress).map_err(|error| match remotes::diverged(repo, &branch) {
         Ok(true) => GitError::Rejected(format!(
             "The branch {branch} and its upstream both have new commits. \
-             A pull only fast-forwards. Merge or rebase the branch in a terminal."
+             A pull only fast-forwards. Merge the upstream into the branch, or rebase the branch on it."
         )),
         _ => error,
     })

@@ -6,11 +6,11 @@
 
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
-**Status:** Phase 5, GitHub. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, its stash, and its pull requests.
+**Status:** Phase 6, history surgery. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, its stash, and its pull requests.
 
-You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. The panels refresh when the repository changes on the disk.
+You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. You can merge, rebase, cherry-pick, revert, and reset, and resolve conflicts in the application. The panels refresh when the repository changes on the disk.
 
-Phase 6 adds merge, rebase, and conflict resolution. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
+Phase 7 adds the animated commit graph, themes, and the signed 1.0 release. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
 
 ## Prerequisites
 
@@ -50,6 +50,8 @@ To clone a repository, select **Clone a repository** and type its URL. Then sele
 
 Select a commit on the timeline or in the commit log to see its details. Select a file in the commit details or on the **Changes** tab to see its diff. Press Escape to close the diff.
 
+On the timeline, the left and right arrow keys select an older or a newer commit. Right-click a commit, or press Shift+F10, to see its commands.
+
 ## Commit changes
 
 1. Select the **Changes** tab.
@@ -71,13 +73,39 @@ Use the toolbar on the **Stash** tab to stash all changes, or to apply, pop, or 
 Use the **Fetch**, **Pull**, and **Push** buttons in the top bar. The buttons show the number of commits to pull and to push. The **Sync status** panel shows the progress of the operation and the time of the last fetch.
 
 - **Fetch** gets the new commits of each remote. The local branches do not change.
-- **Pull** gets the new commits of the upstream and fast-forwards the current branch. A pull does not merge or rebase. If the branch and its upstream both have new commits, merge or rebase them in a terminal.
+- **Pull** gets the new commits of the upstream and fast-forwards the current branch. A pull does not merge or rebase. If the branch and its upstream both have new commits, the **Sync status** panel shows **Merge upstream** and **Rebase**.
 - **Push** sends the commits of the current branch to its upstream.
 - **Publish** shows in place of **Push** when the branch has no upstream. It pushes the branch to `origin`, or to the first remote, and makes that branch the upstream.
 
 The application fetches in the background when the last fetch is older than five minutes. A failed background fetch shows only in the **Sync status** panel.
 
 The **Remotes** tab lists the remotes. If the repository has no remote, select **Add origin** and type the URL of the remote repository.
+
+## Merge, rebase, and other history operations
+
+- To merge a branch into the current branch, select the branch on the **Branches** tab. Then select **Merge**.
+- To rebase the current branch, select the other branch on the **Branches** tab. Then select **Rebase onto…**.
+- To cherry-pick, revert, or reset to a commit, select the commit. Then use the buttons in the commit details.
+
+The context menu of a commit on the timeline has the same commands. When the commit is the tip of a branch, the menu also merges that branch or rebases on it.
+
+A reset has three modes. **Keep the changes staged** is a soft reset. **Keep the changes** is a mixed reset. **Discard the changes** is a hard reset, and the stash keeps a copy of your uncommitted changes.
+
+After a merge, a rebase, a cherry-pick, a revert, or a reset, the notification shows an **Undo** button. The undo moves the branch back to its last commit before the operation.
+
+## Resolve conflicts
+
+When an operation stops at conflicts, a banner shows above the timeline. It gives the operation and the number of files with conflicts.
+
+1. Select the **Changes** tab. The files with conflicts show in red.
+2. Select a file with conflicts. The conflict resolver shows each conflict with the current lines and the incoming lines.
+3. For each conflict, select **Current**, **Incoming**, or **Both**. The kept lines show in green.
+4. Select **Resolve file**. The application writes the file and stages it.
+5. When no conflict is left, select **Continue** in the banner.
+
+**All current** and **All incoming** select one side for each conflict. **Whole file** keeps the full file of one side. Use it for a binary file or a deleted file. If you edit the file in an editor, select **Mark as resolved** when no markers are left.
+
+The undo of a resolution puts the conflicts back in the file. **Skip** drops the commit that a rebase, a cherry-pick, or a revert applies. **Abort** puts back the state from before the operation. Skip and Abort have no undo, because git keeps no copy of your resolutions.
 
 ## Sign in to a remote
 
@@ -125,7 +153,7 @@ To create a pull request, publish the current branch. Then select **Create…** 
 
 ## Undo a destructive action
 
-The application asks before it discards changes, deletes a branch, or drops a stash entry. After the action, the notification shows an **Undo** button.
+The application asks before it discards changes, deletes a branch, drops a stash entry, rebases, or resets. After the action, the notification shows an **Undo** button.
 
 A discard keeps a copy of the changes in the stash. When the notification closes, the copy stays on the **Stash** tab. Drop the entry to delete the copy.
 
@@ -149,11 +177,13 @@ On Windows and Linux, use Ctrl in place of ⌘.
 | ⌘P       | Push or publish the current branch                                        |
 | ⌘O       | Open a repository                                                         |
 | ⇧⌘O      | Clone a repository                                                        |
-| Escape   | Close the diff or the dialog                                              |
+| ← and →  | Select an older or a newer commit, on the timeline                        |
+| ⇧F10     | Show the commands of the selected commit, on the timeline                 |
+| Escape   | Close the diff, the conflict resolver, the menu, or the dialog            |
 
 ## Demo backend
 
-`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. The release bundle does not contain the demo backend.
+`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. A merge or a rebase of `spike/radar` stops at a conflict, so that you can try the conflict resolver. The release bundle does not contain the demo backend.
 
 ## Component gallery
 

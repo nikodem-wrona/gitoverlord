@@ -47,6 +47,24 @@ pub(crate) fn drop_entry(dir: &Path, index: usize) -> Result<(), GitError> {
     run_git_in(dir, &["stash", "drop", "--quiet", &entry(index)]).map(drop)
 }
 
+/// Applies the entry at `index` with its staged changes. The entry stays in the list.
+pub(crate) fn apply_with_index(dir: &Path, index: usize) -> Result<(), GitError> {
+    run_git_in(
+        dir,
+        &["stash", "apply", "--index", "--quiet", &entry(index)],
+    )
+    .map(drop)
+}
+
+/// Makes a stash commit of the tracked changes. The working tree and the list do not change.
+///
+/// Returns `None` when there are no changes.
+pub(crate) fn create(dir: &Path, message: &str) -> Result<Option<String>, GitError> {
+    let hash = run_git_in(dir, &["stash", "create", message])?;
+    let hash = hash.trim();
+    Ok((!hash.is_empty()).then(|| hash.to_owned()))
+}
+
 /// Puts the stash commit `hash` at the start of the list.
 pub(crate) fn store(dir: &Path, hash: &str, message: &str) -> Result<(), GitError> {
     run_git_in(dir, &["stash", "store", "--message", message, hash]).map(drop)

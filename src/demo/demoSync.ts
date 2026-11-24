@@ -43,7 +43,7 @@ export async function pull(repo: DemoRepository): Promise<null> {
   const branch = await tracked(repo);
   if (branch.ahead > 0 && branch.behind > 0) {
     return reject(
-      `The branch ${branch.name} and its upstream both have new commits. A pull only fast-forwards.`,
+      `The branch ${branch.name} and its upstream both have new commits. A pull only fast-forwards. Merge the upstream into the branch, or rebase the branch on it.`,
     );
   }
   await simulate(repo.summary.path, "pull");

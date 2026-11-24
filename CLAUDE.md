@@ -22,13 +22,15 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 ## Architecture
 
 - `crates/git-core/`: all git logic. This crate does not depend on Tauri. Types that go to the user interface derive `serde::Serialize` and `specta::Type`.
-  - `backend.rs`: the `GitBackend` trait and the factory `open_repo(path)`. Each read operation and each write operation is a method of the trait. A network method sends each progress line of `git` to its `progress` argument.
+  - `backend.rs`: the `GitBackend` trait and the factory `open_repo(path)`. Each read operation and each write operation is a method of the trait. A network method sends each progress line of `git` to its `progress` argument. A merge, rebase, cherry-pick, revert, continue, or skip gives an `OperationResult`: `done` with the commit before it, or `stopped` with the files that have conflicts.
   - `clone.rs`: `clone_target(url, parent)` gives the folder of a clone, and `clone_repo` clones. A clone has no repository yet, so it is not a method of the trait.
   - `libgit/`: the backend. It reads with `git2` and changes the repository through `cli`. There is one file for each operation: `summary`, `log`, `status`, `branches`, `detail`, `diff`, `activity`, `stash`, `hunk`, `discard`, `remotes`, and `sync`.
+  - `libgit/operation.rs` reads the operation that stopped. `RepoSummary.operation` gives it to the user interface. `libgit/surgery.rs` runs merge, rebase, cherry-pick, revert, reset, and their continue, skip, and abort. `libgit/conflict.rs` reads and resolves a file with conflicts. Its tests are in `libgit/surgery_tests.rs`.
+  - `markers.rs`: reads the conflict markers of a file and replaces each conflict with the chosen lines. Each line keeps its line ending.
   - `model/`: the types of the data. `recent.rs`: the list of recent repositories. `watch.rs`: `RepoWatcher`, which reports changes on the disk.
-  - `cli/`: starts each `git` process through `git_command()`. `stage.rs`, `commit.rs`, `branch.rs`, `stash.rs`, and `remote.rs` hold the write operations. `run_git_on_paths` sends a list of paths on the standard input.
+  - `cli/`: starts each `git` process through `git_command()`, which sets `GIT_EDITOR=true`. `stage.rs`, `commit.rs`, `branch.rs`, `stash.rs`, `remote.rs`, `sequence.rs`, `reset.rs`, and `resolve.rs` hold the write operations. `run_git_on_paths` sends a list of paths on the standard input.
   - `cli/network.rs`: `run_network` runs fetch, pull, push, and clone. It sets `GIT_TERMINAL_PROMPT=0` and, if the user selected no SSH program, `ssh -o BatchMode=yes`. Then `git` fails and does not wait for a password. `progress.rs` reads the progress lines of `git`.
-  - `fixture.rs`: `RepoFixture`, which builds real repositories for tests. The configuration of each repository replaces the user, the signing, and the hooks path of the machine.
+  - `fixture.rs`: `RepoFixture`, which builds real repositories for tests. The configuration of each repository replaces the user, the signing, and the hooks path of the machine. `RepoFixture::diverged()` gives two branches that change one file, for conflict tests.
 - `crates/github/`: GitHub access without Tauri. Each failure is a `GitError`.
   - `client.rs`: `GitHub`, the HTTP client. A 401 answer gives `GitError::SignInExpired`. Tests send the requests to `test_server.rs`.
   - `device.rs`: the sign-in with the OAuth device flow. `account.rs`, `pulls.rs`: the account, the repositories, and the pull requests. One GraphQL query reads the pull requests with their checks.
@@ -39,23 +41,28 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `src/actions/`: the action factory. `defineAction` makes an `Action`. `ActionButton`, the command palette, and the shortcuts run each action through one runner in `ActionProvider`.
   - The runner asks the `confirm` or `prompt` question of the action. Then it shows the progress, the result notification, and the Undo button of an `Outcome`.
   - `useRegisterActions` puts actions in the command palette and turns on their shortcuts. `ActionStatus` shows the last result in the status bar.
+  - `ActionMenu` shows actions in a `Menu`, for example the context menu of a commit. `ActionMenuButton` opens an `ActionMenu` under a button.
+  - An `Outcome` with `tone: "warn"` shows a result that needs the user, for example a merge that stopped.
 - `src/hud/`: the design system. Components are presentational and do not call the backend.
   - `global.css` imports the fonts, `tokens.css`, and `base.css`. Each entry point imports it once.
-  - Primitives: `Panel`, `Table` with `textColumn`, `Tree`, `Tabs` with `TabPanel`, `Button`, `Checkbox`, `TextField`, `Dialog`, `ToolLayout`, `Readout`, `Meter`, `EmptyState`, `PathText`, `LogoMark`, and `useToast` with `ToastProvider`.
+  - Primitives: `Panel`, `Table` with `textColumn`, `Tree`, `Tabs` with `TabPanel`, `Button`, `Checkbox`, `TextField`, `Dialog`, `Menu`, `ToolLayout`, `Readout`, `Meter`, `EmptyState`, `PathText`, `LogoMark`, `useEscapeKey`, and `useToast` with `ToastProvider`.
+  - `Menu` is a pop-up list in a portal. The arrow keys move the focus. Escape, Tab, or a press outside closes it.
   - `useToast` returns the id of each notification. A notification can have an `action` button, and a `sticky` notification stays until `dismiss`.
   - `rows/`: `useRowWindow` renders only the rows in view. `Table` and the diff viewer use it. Each row must have the height `--row-height`.
   - `motion/`: `MotionProvider` and `useMotion` decide calm mode. `DecodeText`, `PulseDot`, and `CalmToggle` use it.
 - `src/features/<name>/`: one folder for each feature. `index.ts` is its only public entry.
   - `repository`: the data layer. `queries.ts` holds one TanStack Query hook for each read command, and `keys.ts` holds the cache keys. `useRepoWriter` runs a write command, then refreshes the queries. `useRepoSession` holds the open repository. `useRepoWatcher` refreshes the queries after a `RepoChanged` event. `QueryPanel` shows the state of a query. `RepoDock` is the start screen.
-  - `history`: the commit timeline, the commit log, and the commit inspector. `assignLanes` and `layoutTimeline` are pure functions. The timeline draws in pixels without a view box, so its text keeps one size.
+  - `history`: the commit timeline, the commit log, and the commit inspector. `assignLanes` and `layoutTimeline` are pure functions. The timeline draws in pixels without a view box, so its text keeps one size. `useTimelineControls` gives the arrow keys and the context menu of the timeline. The inspector shows the `tools` that it gets, under the author.
+  - `surgery`: the history operations. `historyActions.ts`, `resetActions.ts`, and `stepActions.ts` make the actions. `operationOutcome` makes the notification of an `OperationResult`. `OperationBanner` shows the operation that stopped. `CommitTools` is the toolbar of the commit inspector. `commitActions` and `useCommitMenu` give the context menu of a commit.
+  - `conflicts`: `ConflictPanel`, the conflict resolver. The user chooses the lines of each conflict, then the file is resolved and staged in one command.
   - `changes`, `branches`, `stash`: the tables with their toolbars. Each one has a file that makes its actions, for example `branchActions.ts`.
   - `commit`: the commit console. `telemetry`: the activity panel.
   - `github`: `GitHubProvider` holds the sign-in dialog and the clone dialog, and puts the GitHub actions in the palette. `AccountButton` is in the top bar. `PullRequestPanel` is the Pull requests tab. `queries.ts` has its own `githubKeys`, so a change on the disk does not ask GitHub again.
-  - `sync`: `SyncButtons` in the top bar, `SyncPanel` with the counts and the progress, `RemotePanel` on the Remotes tab, and `CloneControl` on the start screen. `useSyncProgress` reads the `SyncProgress` events. `useBackgroundFetch` fetches when the last fetch is older than five minutes.
+  - `sync`: `SyncButtons` in the top bar, `SyncPanel` with the counts and the progress, `RemotePanel` on the Remotes tab, and `CloneControl` on the start screen. `useSyncProgress` reads the `SyncProgress` events. `useBackgroundFetch` fetches when the last fetch is older than five minutes. `upstreamActions` merges the upstream into a diverged branch, or rebases the branch on it.
   - `diff`: the diff viewer, with the stage and unstage buttons of each hunk.
   - `system`: the git status readout and the alert when git fails. `boot`: the start-up sequence.
-- `src/app/`: `AppProviders`, `Root` (boot sequence, then shell), `AppShell` (the layout), `RepoDeck` (the three columns of an open repository), `TopBar`, `StatusBar`, `Workspace`, and the module list in `modules.ts`. `appActions` and `useRepoActions` put the actions in the command palette.
-- `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri.
+- `src/app/`: `AppProviders`, `Root` (boot sequence, then shell), `AppShell` (the layout), `RepoDeck` (the three columns of an open repository), `TopBar`, `StatusBar`, `Workspace`, and the module list in `modules.ts`. `appActions` and `useRepoActions` put the actions in the command palette. `useDeckSelection` holds the selected commit and the open file. `CenterView` shows the conflict resolver, the diff viewer, or the timeline.
+- `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`.
 - `src/gallery/`: the component gallery. Vite serves it in development only.
 - `src/test/`: helpers for frontend tests.
 
@@ -78,7 +85,10 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - Run each write command in an action from `defineAction`, through `useRepoWriter(path).write`. Then the panels refresh and the user sees the result. The background fetch is the only exception. It shows no notification.
 - Run each network command through `run_network` with `--progress`. A network command must not ask for input.
 - The GitHub token stays in the backend. Do not send it to the user interface, and do not put it on a command line.
-- A destructive action must have `confirm`, and its `Outcome` must have `undo`. A discard keeps a copy of the changes in the stash.
+- A destructive action must have `confirm`, and its `Outcome` must have `undo`. A discard and a hard reset keep a copy of the changes in the stash. Abort and Skip of a stopped operation are the only exceptions: they have `confirm`, but git keeps no copy of the resolutions.
+- A `git` process must not open an editor. `git_command()` sets `GIT_EDITOR=true`, so start each process there.
+- A new history operation must not start while a stopped operation waits or while a file has conflicts. `startBlocked` in `surgery` gives the reason, and `git-core` rejects it too.
+- Write the file of a resolution only for a path that has a conflict in the index. Then the path is a file of the repository.
 - A shortcut uses `Mod`, which is Command on macOS and Control on other systems. In tests, `Mod` is Control.
 - Give each mock function a type, for example `vi.fn<MockCommandHandlers["stageFiles"]>()`. oxlint rejects a mock function without a type.
 - Frontend tests run in calm mode. Call `mockReducedMotion(false)` from `@/test/matchMedia` to test an animation, and `advanceInSteps` from `@/test/timers` for a timer sequence.

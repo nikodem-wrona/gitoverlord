@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 import { ActionButton } from "@/actions";
 import {
   QueryView,
@@ -7,7 +5,7 @@ import {
   useFileDiff,
   useRepoWriter,
 } from "@/features/repository";
-import { Button, Panel, PathText } from "@/hud";
+import { Button, Panel, PathText, useEscapeKey } from "@/hud";
 import type { DiffTarget } from "@/ipc";
 
 import styles from "./DiffPanel.module.css";
@@ -73,14 +71,4 @@ function sourceOf(target: DiffTarget): string {
     case "unstaged":
       return "Working tree against the index";
   }
-}
-
-function useEscapeKey(onEscape: () => void): void {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onEscape();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onEscape]);
 }

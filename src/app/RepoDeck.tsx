@@ -1,23 +1,15 @@
-import { useCallback, useState } from "react";
-
 import { CommitComposer } from "@/features/commit";
-import { DiffPanel } from "@/features/diff";
-import {
-  CommitInspector,
-  CommitTimeline,
-  useHistory,
-} from "@/features/history";
-import {
-  RepoNavigator,
-  useRepoSummary,
-  useRepoWatcher,
-} from "@/features/repository";
+import { CommitInspector } from "@/features/history";
+import { RepoNavigator, useRepoWatcher } from "@/features/repository";
+import { CommitTools, OperationBanner } from "@/features/surgery";
 import { SyncPanel } from "@/features/sync";
 import { ActivityPanel } from "@/features/telemetry";
-import type { DiffTarget } from "@/ipc";
+import type { Commit, DiffTarget } from "@/ipc";
 
 import styles from "./AppShell.module.css";
+import { CenterView } from "./CenterView";
 import type { ModuleId } from "./modules";
+import { useDeckSelection } from "./useDeckSelection";
 import { useRepoActions } from "./useRepoActions";
 import { Workspace } from "./Workspace";
 
@@ -26,57 +18,50 @@ interface RepoDeckProps {
   moduleId: ModuleId;
 }
 
-/** The file in the diff viewer, and the module tab that opened it. */
-interface Inspection {
-  moduleId: ModuleId;
-  target: DiffTarget;
-}
-
-/** The three columns of an open repository. The diff viewer covers the timeline. */
+/**
+ * The three columns of an open repository. The diff viewer and the conflict
+ * resolver cover the timeline. A banner shows an operation that stopped.
+ */
 export function RepoDeck({ repoPath, moduleId }: RepoDeckProps) {
   useRepoWatcher(repoPath);
-  useRepoActions(repoPath);
-  const headHash = useRepoSummary(repoPath).data?.head.hash ?? undefined;
-  const history = useHistory(repoPath);
-  const [pickedHash, setPickedHash] = useState<string>();
-  const { target, inspect, closeDiff } = useInspection(moduleId);
-  const selectedHash = pickedHash ?? headHash;
-  const selectCommit = (hash: string) => {
-    setPickedHash(hash);
-    closeDiff();
-  };
+  const deck = useDeckSelection(repoPath, moduleId);
+  useRepoActions(repoPath, deck.selected);
 
   return (
     <>
       <Overview repoPath={repoPath} />
-      <main className={styles.center}>
-        {target ? (
-          <DiffPanel repoPath={repoPath} target={target} onClose={closeDiff} />
-        ) : (
-          <CommitTimeline
-            commits={history.commits}
-            headHash={headHash}
-            selectedHash={selectedHash}
-            onSelect={selectCommit}
-            delay={120}
-          />
-        )}
+      <main
+        className={styles.center}
+        data-operation={deck.operation || undefined}
+      >
+        <OperationBanner repoPath={repoPath} />
+        <CenterView
+          repoPath={repoPath}
+          history={deck.history}
+          headHash={deck.headHash}
+          selectedHash={deck.selectedHash}
+          onSelectCommit={deck.selectCommit}
+          target={deck.target}
+          onInspect={deck.inspect}
+          onClose={deck.closeDiff}
+        />
         <Workspace
           moduleId={moduleId}
           repoPath={repoPath}
-          history={history}
-          selectedHash={selectedHash}
-          onSelectCommit={selectCommit}
-          target={target}
-          onInspect={inspect}
+          history={deck.history}
+          selectedHash={deck.selectedHash}
+          onSelectCommit={deck.selectCommit}
+          target={deck.target}
+          onInspect={deck.inspect}
         />
       </main>
       <Inspector
         repoPath={repoPath}
         moduleId={moduleId}
-        hash={selectedHash}
-        target={target}
-        onSelectFile={inspect}
+        hash={deck.selectedHash}
+        selected={deck.selected}
+        target={deck.target}
+        onSelectFile={deck.inspect}
       />
     </>
   );
@@ -86,6 +71,8 @@ interface InspectorProps {
   repoPath: string;
   moduleId: ModuleId;
   hash?: string;
+  /** The selected commit of the history. It gets the commit commands. */
+  selected?: Commit;
   /** The file that the diff viewer shows. */
   target?: DiffTarget;
   onSelectFile(target: DiffTarget): void;
@@ -93,7 +80,7 @@ interface InspectorProps {
 
 /** The right column: the commit console on the Changes tab, else the commit inspector. */
 function Inspector(props: InspectorProps) {
-  const { repoPath, target } = props;
+  const { repoPath, target, selected } = props;
   return (
     <aside className={styles.right} aria-label="Inspector">
       {props.moduleId === "changes" ? (
@@ -104,23 +91,14 @@ function Inspector(props: InspectorProps) {
           hash={props.hash}
           selectedPath={target?.kind === "commit" ? target.path : undefined}
           onSelectFile={props.onSelectFile}
+          tools={
+            selected && <CommitTools repoPath={repoPath} commit={selected} />
+          }
           delay={200}
         />
       )}
     </aside>
   );
-}
-
-/** Holds the file in the diff viewer. A different module tab closes the viewer. */
-function useInspection(moduleId: ModuleId) {
-  const [inspection, setInspection] = useState<Inspection>();
-  const target =
-    inspection?.moduleId === moduleId ? inspection.target : undefined;
-  const closeDiff = useCallback(() => setInspection(undefined), []);
-  const inspect = (next: DiffTarget) =>
-    setInspection({ moduleId, target: next });
-
-  return { target, inspect, closeDiff };
 }
 
 function Overview({ repoPath }: { repoPath: string }) {

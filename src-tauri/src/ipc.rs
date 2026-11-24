@@ -3,7 +3,7 @@
 use tauri_specta::{Builder, Commands, ErrorHandlingMode, collect_commands, collect_events};
 
 use crate::commands::{
-    branches, changes, commit, github, history, repository, stash, sync, system,
+    branches, changes, commit, conflicts, github, history, repository, stash, surgery, sync, system,
 };
 use crate::events::{RepoChanged, SyncProgress};
 
@@ -54,6 +54,19 @@ fn commands() -> Commands<tauri::Wry> {
         stash::pop_stash,
         stash::drop_stash,
         stash::restore_stash,
+        surgery::merge_branch,
+        surgery::rebase_branch,
+        surgery::cherry_pick,
+        surgery::revert_commit,
+        surgery::continue_operation,
+        surgery::skip_operation,
+        surgery::abort_operation,
+        surgery::reset_branch,
+        surgery::undo_reset,
+        surgery::restore_head,
+        conflicts::conflict_file,
+        conflicts::resolve_conflict,
+        conflicts::restore_conflict,
         sync::repo_remotes,
         sync::add_remote,
         sync::fetch_remotes,

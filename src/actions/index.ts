@@ -1,4 +1,5 @@
 export { ActionButton } from "./ActionButton";
+export { ActionMenu, ActionMenuButton } from "./ActionMenu";
 export {
   type ActionsApi,
   useActions,

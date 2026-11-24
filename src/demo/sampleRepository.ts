@@ -18,6 +18,7 @@ export const SAMPLE_SUMMARY: RepoSummary = {
   tags: ["v0.1.0", "v0.0.1"],
   // One minute ago, so that the background fetch waits.
   fetched: Math.floor(Date.now() / 1000) - 60,
+  operation: null,
 };
 
 export const SAMPLE_RECENT: RecentRepo[] = [

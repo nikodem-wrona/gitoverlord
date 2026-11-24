@@ -17,6 +17,7 @@ export function refreshRepository(
   } else if (change.files) {
     void client.invalidateQueries({ queryKey: repoKeys.status(path) });
     void client.invalidateQueries({ queryKey: repoKeys.diffs(path) });
+    void client.invalidateQueries({ queryKey: repoKeys.conflicts(path) });
   }
 }
 

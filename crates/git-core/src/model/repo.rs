@@ -1,6 +1,8 @@
 use serde::Serialize;
 use specta::Type;
 
+use super::Operation;
+
 /// The commit and the branch that `HEAD` points to.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -26,6 +28,8 @@ pub struct RepoSummary {
     /// The time of the last fetch, in Unix seconds. `None` before the first fetch.
     #[specta(type = Option<i32>)]
     pub fetched: Option<i64>,
+    /// The merge, rebase, cherry-pick, or revert that stopped. `None` when no operation runs.
+    pub operation: Option<Operation>,
 }
 
 /// A local branch.

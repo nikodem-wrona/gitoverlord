@@ -110,12 +110,16 @@ function exists(name: string): Promise<never> {
   return reject(`A branch named '${name}' already exists.`);
 }
 
-/** Points `HEAD` and the current branch to `hash`. */
-function moveHead(repo: DemoRepository, hash: string, ahead: number): void {
+/** Points `HEAD` and the current branch to `hash`. `ahead` changes the ahead count. */
+export function moveHead(
+  repo: DemoRepository,
+  hash: string,
+  ahead: number,
+): void {
   repo.summary.head.hash = hash;
   const branch = currentBranch(repo);
   if (!branch) return;
   branch.tip = hash;
   branch.updated = now();
-  branch.ahead += ahead;
+  branch.ahead = Math.max(branch.ahead + ahead, 0);
 }

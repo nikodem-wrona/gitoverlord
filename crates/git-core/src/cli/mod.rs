@@ -8,6 +8,9 @@ pub(crate) mod commit;
 mod network;
 mod progress;
 pub(crate) mod remote;
+pub(crate) mod reset;
+pub(crate) mod resolve;
+pub(crate) mod sequence;
 pub(crate) mod stage;
 pub(crate) mod stash;
 
@@ -76,8 +79,21 @@ pub(crate) fn run_git_on_paths(
 /// Creates the base `git` command. Each `git` process starts here.
 pub(crate) fn git_command() -> Command {
     let mut command = Command::new("git");
+    // There is no terminal for an editor. `true` accepts the message that `git` proposes,
+    // for example when a merge or a rebase continues.
+    command.env("GIT_EDITOR", "true");
     hide_console_window(&mut command);
     command
+}
+
+/// Rejects a name of a branch or a commit that `git` would read as an option.
+pub(crate) fn checked_name(name: &str) -> Result<&str, GitError> {
+    if name.trim().is_empty() || name.starts_with('-') {
+        return Err(GitError::Rejected(format!(
+            "\"{name}\" is not a valid branch or commit name."
+        )));
+    }
+    Ok(name)
 }
 
 /// Prevents a console window when a GUI application starts `git` on Windows.

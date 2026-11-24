@@ -2,6 +2,7 @@ import { markDemoBackend, mockCommands } from "@/ipc";
 
 import { createDemoHandlers } from "./demoHandlers";
 
+export { sampleConflict } from "./demoConflicts";
 export { createDemoHandlers } from "./demoHandlers";
 export { SAMPLE_COMMITS } from "./sampleCommits";
 export { SAMPLE_SUMMARY, SAMPLE_WORKING_TREE } from "./sampleRepository";

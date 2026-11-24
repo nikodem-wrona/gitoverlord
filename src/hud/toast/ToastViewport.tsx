@@ -7,6 +7,7 @@ import styles from "./Toast.module.css";
 const TONES: Record<ToastKind, Tone> = {
   info: "accent",
   ok: "ok",
+  warn: "warn",
   fail: "fail",
 };
 

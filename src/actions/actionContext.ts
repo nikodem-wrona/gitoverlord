@@ -8,7 +8,7 @@ export interface LastOutcome {
   /** A new id for each result, so the status bar can animate each one. */
   id: number;
   title: string;
-  tone: "ok" | "fail";
+  tone: "ok" | "warn" | "fail";
 }
 
 export interface ActionsApi {

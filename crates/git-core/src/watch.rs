@@ -139,6 +139,11 @@ fn classify_git_file(inner: &Path) -> RepoChange {
     let first = inner.components().next();
     match first.and_then(|part| part.as_os_str().to_str()) {
         Some("HEAD" | "packed-refs" | "refs") => RepoChange::ALL,
+        // A merge, rebase, cherry-pick, or revert started, stopped, or ended.
+        Some(
+            "MERGE_HEAD" | "REBASE_HEAD" | "CHERRY_PICK_HEAD" | "REVERT_HEAD" | "rebase-merge"
+            | "rebase-apply" | "sequencer",
+        ) => RepoChange::ALL,
         Some("index") => RepoChange::FILES,
         _ => RepoChange::default(),
     }
@@ -162,6 +167,11 @@ mod tests {
         let fixture = RepoFixture::new().commit("a");
 
         assert_eq!(classify_in(&fixture, ".git/HEAD"), RepoChange::ALL);
+        assert_eq!(classify_in(&fixture, ".git/MERGE_HEAD"), RepoChange::ALL);
+        assert_eq!(
+            classify_in(&fixture, ".git/rebase-merge/msgnum"),
+            RepoChange::ALL
+        );
         assert_eq!(
             classify_in(&fixture, ".git/refs/heads/main"),
             RepoChange::ALL

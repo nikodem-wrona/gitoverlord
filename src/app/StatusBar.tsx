@@ -21,7 +21,7 @@ export function StatusBar() {
       <span>Motion: {calm ? "calm" : "full"}</span>
       <ActionStatus />
       <span className={styles.spacer} />
-      <span>Phase 5 · GitHub</span>
+      <span>Phase 6 · History surgery</span>
       <Clock />
     </footer>
   );

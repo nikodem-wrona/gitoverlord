@@ -6,6 +6,7 @@ export {
   useBranches,
   useCommitDetail,
   useCommitLog,
+  useConflictFile,
   useFileDiff,
   useRemotes,
   useRepoSummary,

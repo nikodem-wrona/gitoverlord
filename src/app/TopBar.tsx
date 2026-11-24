@@ -3,7 +3,7 @@ import { AccountButton } from "@/features/github";
 import { shortHash, useRepoSummary } from "@/features/repository";
 import { SyncButtons } from "@/features/sync";
 import { Button, CalmToggle, DecodeText, LogoMark, Readout } from "@/hud";
-import type { Head } from "@/ipc";
+import type { RepoSummary } from "@/ipc";
 
 import styles from "./TopBar.module.css";
 
@@ -57,14 +57,18 @@ function RepoReadouts({ repoPath }: { repoPath: string }) {
       <Readout label="Repository" value={summary?.name ?? "Scanning"} />
       <Readout
         label="Branch"
-        value={summary ? headLabel(summary.head) : "Scanning"}
+        value={summary ? headLabel(summary) : "Scanning"}
       />
     </>
   );
 }
 
-function headLabel(head: Head): string {
+/** A rebase detaches `HEAD`, so the label names the branch that the rebase changes. */
+function headLabel({ head, operation }: RepoSummary): string {
   if (head.branch !== null) return head.branch;
+  if (operation?.kind === "rebase" && operation.branch) {
+    return `${operation.branch} (rebase)`;
+  }
   return head.hash === null
     ? "No commits"
     : `Detached at ${shortHash(head.hash)}`;

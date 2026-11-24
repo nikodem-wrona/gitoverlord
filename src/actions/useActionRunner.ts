@@ -29,7 +29,7 @@ export function useActionRunner() {
         const outcome = await action.run(text);
         if (outcome) {
           showOutcome(toast, outcome);
-          report(outcome.title, "ok");
+          report(outcome.title, outcome.tone ?? "ok");
         }
       } catch (error) {
         toast.fail(`${action.label} failed`, errorMessage(error));
@@ -79,7 +79,8 @@ function showProgress(toast: ToastApi, action: Action): () => void {
 }
 
 function showOutcome(toast: ToastApi, outcome: Outcome): void {
-  toast.ok(outcome.title, outcome.message, { action: undoOf(toast, outcome) });
+  const show = toast[outcome.tone ?? "ok"];
+  show(outcome.title, outcome.message, { action: undoOf(toast, outcome) });
 }
 
 function undoOf(toast: ToastApi, outcome: Outcome): ToastAction | undefined {

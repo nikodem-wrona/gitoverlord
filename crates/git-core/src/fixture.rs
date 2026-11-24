@@ -36,6 +36,23 @@ impl RepoFixture {
         fixture
     }
 
+    /// Makes `main` and `feature` change `file.txt` in two ways after the commit "a".
+    ///
+    /// `feature` has two commits: "feature change" and "feature extra". `main`
+    /// has "main change". The current branch is `main`.
+    pub(crate) fn diverged() -> Self {
+        Self::new()
+            .write("file.txt", "base\n")
+            .commit("a")
+            .branch("feature")
+            .write("file.txt", "feature\n")
+            .save("feature change")
+            .commit("feature extra")
+            .switch("main")
+            .write("file.txt", "main\n")
+            .save("main change")
+    }
+
     pub(crate) fn path(&self) -> PathBuf {
         self.root.path().join("repo")
     }
@@ -134,7 +151,8 @@ impl RepoFixture {
         FIRST_COMMIT_TIME + (self.commits - 1) * COMMIT_INTERVAL
     }
 
-    fn try_git(&self, args: &[&str]) -> (bool, String) {
+    /// Runs `git` in the repository. Returns `true` on success, and the output.
+    pub(crate) fn try_git(&self, args: &[&str]) -> (bool, String) {
         let date = format!(
             "@{} +0000",
             FIRST_COMMIT_TIME + self.commits * COMMIT_INTERVAL

@@ -5,6 +5,7 @@ export { Dialog } from "./Dialog";
 export { EmptyState } from "./EmptyState";
 export { nextKey, type Orientation } from "./keys";
 export { LogoMark } from "./LogoMark";
+export { Menu, type MenuItem, type MenuPoint } from "./Menu";
 export { Meter } from "./Meter";
 export { CalmToggle } from "./motion/CalmToggle";
 export { DecodeText } from "./motion/DecodeText";
@@ -28,6 +29,7 @@ export {
   useToast,
 } from "./toast/toastContext";
 export { type ElementSize, useElementSize } from "./useElementSize";
+export { useEscapeKey } from "./useEscapeKey";
 export { ToastProvider } from "./toast/ToastProvider";
 export { ToolLayout } from "./ToolLayout";
 export type { Tone } from "./tone";

@@ -2,6 +2,7 @@ import type { CommitDetail, LogPage, MockCommandHandlers } from "@/ipc";
 
 import * as branches from "./demoBranches";
 import * as changes from "./demoChanges";
+import { conflictHandlers } from "./demoConflicts";
 import * as hub from "./demoGitHub";
 import {
   commitsOf,
@@ -10,6 +11,7 @@ import {
   reject,
 } from "./demoRepository";
 import * as stash from "./demoStash";
+import { surgeryHandlers } from "./demoSteps";
 import * as sync from "./demoSync";
 import { sampleDiff } from "./sampleDiff";
 import { SAMPLE_ACTIVITY, SAMPLE_RECENT } from "./sampleRepository";
@@ -25,6 +27,8 @@ export function createDemoHandlers(): MockCommandHandlers {
   return {
     ...readHandlers(repo),
     ...gitHubHandlers(repo),
+    ...surgeryHandlers(repo),
+    ...conflictHandlers(repo),
     stageFiles: ({ files }) => changes.stage(repo, files),
     unstageFiles: ({ files }) => changes.unstage(repo, files),
     // The sample diff has one hunk, so a hunk is the whole file.

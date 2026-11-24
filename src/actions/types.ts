@@ -5,6 +5,7 @@ export const ACTION_GROUPS = [
   "Changes",
   "Commit",
   "Branches",
+  "History",
   "Stash",
   "Sync",
   "GitHub",
@@ -39,6 +40,8 @@ export interface Prompt {
 export interface Outcome {
   title: string;
   message?: string;
+  /** `warn` shows a result that needs the user, for example a merge that stopped. */
+  tone?: "ok" | "warn";
   undo?(): Promise<unknown>;
 }
 

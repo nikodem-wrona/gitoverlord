@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-export type ToastKind = "info" | "ok" | "fail";
+export type ToastKind = "info" | "ok" | "warn" | "fail";
 
 /** A button in a notification, for example Undo. */
 export interface ToastAction {
@@ -61,6 +61,7 @@ export function createToastApi(
   return {
     info: forKind("info"),
     ok: forKind("ok"),
+    warn: forKind("warn"),
     fail: forKind("fail"),
     dismiss,
   };

@@ -1,7 +1,9 @@
 import type {
   Branch,
   Commit,
+  FileDelta,
   GitError,
+  OperationKind,
   Remote,
   RepoSummary,
   StashEntry,
@@ -21,6 +23,18 @@ export interface DemoStash extends Omit<StashEntry, "index"> {
   tree: WorkingTree;
 }
 
+/** A merge, rebase, cherry-pick, or revert that stopped, with what its end needs. */
+export interface DemoStop {
+  kind: OperationKind;
+  /** The working tree from before the operation, for an abort. */
+  tree: WorkingTree;
+  /** The branch from before a rebase. A rebase detaches `HEAD`. */
+  branch: string | null;
+  /** The commit that a continue makes. */
+  subject: string;
+  parents: string[];
+}
+
 /** The state of the sample repository. The write commands change it. */
 export interface DemoRepository {
   summary: RepoSummary;
@@ -35,6 +49,9 @@ export interface DemoRepository {
   dropped: DemoStash[];
   /** The count of the hashes that the demo made. */
   made: number;
+  stopped: DemoStop | null;
+  /** The conflicts that a resolution removed, so that an undo can put them back. */
+  resolved: FileDelta[];
 }
 
 const SAMPLE_BRANCH_NAMES = new Set(SAMPLE_BRANCHES.map(({ name }) => name));
@@ -50,6 +67,8 @@ export function createDemoRepository(): DemoRepository {
     stashes: [],
     dropped: [],
     made: 0,
+    stopped: null,
+    resolved: [],
   });
 }
 

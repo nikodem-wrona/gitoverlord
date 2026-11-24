@@ -1,8 +1,22 @@
 import { useState } from "react";
 
-import { Button, Checkbox, Panel, TabPanel, Tabs } from "@/hud";
+import {
+  Button,
+  Checkbox,
+  Menu,
+  type MenuPoint,
+  Panel,
+  TabPanel,
+  Tabs,
+} from "@/hud";
 
 import styles from "./Gallery.module.css";
+
+const MENU_ITEMS = [
+  { id: "pick", label: "Cherry-pick b7e41c9 onto main" },
+  { id: "revert", label: "Revert b7e41c9", blocked: "Finish the merge first." },
+  { id: "reset", label: "Reset main to b7e41c9…", danger: true },
+];
 
 const TABS = [
   { id: "tracking", label: "Tracking" },
@@ -36,6 +50,7 @@ export function ControlsSection() {
           />
         </div>
       </Panel>
+      <MenuDemo />
       <Panel title="Tabs">
         <Tabs
           label="Gallery tabs"
@@ -51,5 +66,39 @@ export function ControlsSection() {
         </TabPanel>
       </Panel>
     </>
+  );
+}
+
+/** A button that opens a menu under it. */
+function MenuDemo() {
+  const [at, setAt] = useState<MenuPoint | null>(null);
+  const [picked, setPicked] = useState("None");
+  return (
+    <Panel title="Menu">
+      <div className={styles.row}>
+        <Button
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            const box = event.currentTarget.getBoundingClientRect();
+            setAt(at ? null : { x: box.left, y: box.bottom + 2 });
+          }}
+        >
+          Commit commands ▾
+        </Button>
+        <span className={styles.note}>Last item: {picked}</span>
+      </div>
+      {at && (
+        <Menu
+          label="Commit commands"
+          items={MENU_ITEMS}
+          at={at}
+          onSelect={(id) => {
+            setPicked(id);
+            setAt(null);
+          }}
+          onClose={() => setAt(null)}
+        />
+      )}
+    </Panel>
   );
 }

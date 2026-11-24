@@ -23,6 +23,7 @@ const SUMMARY: RepoSummary = {
   remotes: ["origin"],
   tags: [],
   fetched: null,
+  operation: null,
 };
 
 describe("buildNavigatorTree", () => {
