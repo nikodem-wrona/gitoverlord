@@ -150,6 +150,7 @@ Done when a signed 1.0 release runs on macOS, Windows, and Linux.
 - [x] Automatic updates with signed update files
 - [x] Code signing in the release workflow, when the certificates are in the secrets
 - [x] Landing page on GitHub Pages
+- [x] Web demo on GitHub Pages, with the demo backend
 - [ ] Updater key, Apple certificate, and Windows signing account in the release secrets
 - [ ] Signed 1.0 release
 
@@ -174,7 +175,7 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Write operations:** the system `git` does each write operation, so hooks, signing, and the configuration of the user apply. Each write operation runs in an action. The background fetch is the only exception.
 - **Secrets:** the GitHub token stays in the backend and in the keychain. The user interface never receives it. A `git` process gets it through its environment, not on the command line.
 - **Network operations:** one network operation runs at a time. `git` gets the credentials from the credential helper and the SSH agent of the system. It must fail, not wait for a password.
-- **Sample data:** `pnpm dev` in a browser has no Rust core. The demo backend in `src/demo` gives a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend.
+- **Sample data:** `pnpm dev` in a browser has no Rust core. The demo backend in `src/demo` gives a sample repository, and the status bar shows "Demo data". The release bundle does not contain the demo backend. The web demo on GitHub Pages is the same frontend with the demo backend.
 - **Tests:** `git-core` tests use real repositories. Interface tests mock the IPC layer and run in calm mode.
 - **Releases:** a tag builds the installers and attaches them to a draft release. The tag must be the version in `Cargo.toml` and `package.json`. `docs/RELEASING.md` gives the steps and the secrets.
 - **Updates:** the updater installs a download only when its signature matches the public key in `tauri.conf.json`. The signature must also give the version of the release.

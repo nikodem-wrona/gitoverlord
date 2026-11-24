@@ -11,7 +11,10 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `GITOVERLORD_GITHUB_CLIENT_ID=<id> pnpm tauri dev`: start the application with a different GitHub OAuth app. The ID is the client ID of an OAuth app with the device flow. Without the variable, the sign-in uses the built-in client ID.
 - `pnpm dev`: start only the frontend at `http://localhost:1420`. There is no Rust core in this mode. The demo backend in `src/demo` answers each command with a sample repository, and the status bar shows "Demo data". The component gallery is at `http://localhost:1420/gallery.html`.
 - `pnpm dev:site`: start the landing page at `http://localhost:1430`.
-- `pnpm build:site`: build the landing page into `dist-site/`.
+- `pnpm build:site`: build the landing page into `dist-site/`. The build empties `dist-site/`.
+- `pnpm build:demo`: build the web demo into `dist-site/demo/`. The web demo is the frontend with the demo backend, in a build for a browser. GitHub Pages serves it at `https://nikodem-wrona.github.io/gitoverlord/demo/`.
+- `pnpm build:pages`: build the landing page, then the web demo. The Pages workflow runs it.
+- `pnpm preview:pages`: serve `dist-site/` at `http://localhost:1431/gitoverlord/`, the path of GitHub Pages. Run `pnpm build:pages` first.
 - `pnpm check`: run each check for TypeScript and Rust. Run it before you report that work is complete.
 - `pnpm check:ui`: run the Prettier check, oxlint, `tsc -b`, and Vitest.
 - `pnpm check:rust`: run the rustfmt check, Clippy with `-D warnings`, and `cargo test --workspace`.
@@ -73,14 +76,15 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `update`: `UpdateStatus` in the status bar shows the version, or a button that installs a new version. `useUpdateActions` puts **Check for updates** in the palette. `APP_VERSION` is the version in `package.json`, which `vite.config.ts` gives as `import.meta.env.APP_VERSION`.
   - `system`: the git status readout and the alert when git fails. `boot`: the start-up sequence.
 - `src/app/`: `AppProviders`, `Root` (boot sequence, then shell), `AppShell` (the layout), `RepoDeck` (the three columns of an open repository), `TopBar`, `StatusBar`, `Workspace`, and the module list in `modules.ts`. `appActions` and `useRepoActions` put the actions in the command palette. `useDeckSelection` holds the selected commit and the open file. `CenterView` shows the conflict resolver, the diff viewer, or the timeline.
-- `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`. The demo always offers one update.
+- `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only outside Tauri, and only in development or in the `demo` mode of Vite. `vite build --mode demo` builds the web demo: `vite.config.ts` then sets relative URLs and the folder `dist-site/demo/`. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`. The demo always offers one update.
 - `src/gallery/`: the component gallery. Vite serves it in development only.
 - `site/`: the landing page. It is one static page with small scripts and no React. `vite.site.config.ts` builds it into `dist-site/`.
   - `styles/site.css` imports the fonts, `src/hud/tokens.css`, and `src/hud/themes.css`, so the page has the tokens and the themes of the application. `styles/controls.css` and `styles/panel.css` copy the look of the HUD components.
   - `index.html` shows the screenshots in `docs/images/` with a path such as `../docs/images/history.png`. The build reads the file from the disk. The plugin in `vite.site.config.ts` gives the file to the development server.
   - `scripts/` adds calm mode, the theme switch, the tabs of the tour, and the copy button. `site.test.ts` starts the scripts and checks the page with axe.
+  - `index.html` links to the web demo with the relative address `./demo/`. The link works in the build, where the demo is below the page. It does not work with `pnpm dev:site`.
   - `public/og.png` is the image that a link to the page shows. It is a screenshot of the top of the page at 1200×630.
-- `.github/workflows/pages.yml`: a push to `master` that changes the landing page builds it and publishes it on GitHub Pages.
+- `.github/workflows/pages.yml`: a push to `master` that changes the landing page or the frontend builds the landing page and the web demo. Then it publishes them on GitHub Pages.
 - `.github/workflows/release.yml`: a tag such as `v1.0.0` builds the installers and attaches them to a draft release. `scripts/release/` checks the version, and exports only the signing secrets that have a value.
 - `src/test/`: helpers for frontend tests. `expectAccessible` checks the page with axe. `contrast.ts` reads the color tokens and computes WCAG contrast ratios.
 
@@ -119,6 +123,8 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - The versions of `specta`, `tauri-specta`, and `specta-typescript` are pinned. Change them together.
 - Keep the version in `Cargo.toml` and in `package.json` the same. The release workflow stops when they are not the version of the tag.
 - The private key of the updater stays out of the repository. Only the release workflow reads it, from the secret `TAURI_SIGNING_PRIVATE_KEY`.
+- The release bundle must not contain the demo backend. After a change to `src/main.tsx` or to `vite.config.ts`, run `pnpm build`. Then make sure that no file in `dist/` contains a text of the demo, for example `spike/radar`.
+- The web demo must work below each address. Do not put the address of GitHub Pages in the frontend, and keep the link `./demo/` of the landing page relative.
 - The landing page must work without its scripts. A control that needs a script has `data-needs-script` and `hidden`, and `startPage` shows it.
 - The landing page has no copy of a token. When the look of a HUD component changes, change its copy in `site/styles/` too.
 - When you add a tool or a command, update `README.md` and this file.
