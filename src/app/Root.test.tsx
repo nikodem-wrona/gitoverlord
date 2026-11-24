@@ -21,13 +21,13 @@ describe("Root", () => {
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
   });
 
-  it("goes directly to the shell in calm mode", () => {
+  it("goes directly to the shell in calm mode", async () => {
     mockReducedMotion(true);
 
     renderWithProviders(<Root />);
 
     expect(
-      screen.getByRole("tablist", { name: "Modules" }),
+      await screen.findByRole("tablist", { name: "Modules" }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Press any key to skip")).not.toBeInTheDocument();
   });

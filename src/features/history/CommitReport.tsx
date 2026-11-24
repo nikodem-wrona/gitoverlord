@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 
-import { ChangeKindTag, formatTime, shortHash } from "@/features/repository";
+import {
+  ChangeKindTag,
+  formatTime,
+  lineCountColumns,
+  lineTotals,
+  shortHash,
+} from "@/features/repository";
 import {
   type Column,
   DecodeText,
@@ -8,7 +14,6 @@ import {
   ReadoutList,
   PathText,
   Table,
-  textColumn,
 } from "@/hud";
 import type { CommitDetail, FileDelta } from "@/ipc";
 
@@ -17,7 +22,8 @@ import styles from "./CommitInspector.module.css";
 const FILE_COLUMNS: readonly Column<FileDelta>[] = [
   {
     id: "kind",
-    header: "",
+    header: "Change",
+    shortHeader: "",
     width: "1.75rem",
     render: (file) => <ChangeKindTag kind={file.kind} short />,
   },
@@ -26,8 +32,7 @@ const FILE_COLUMNS: readonly Column<FileDelta>[] = [
     header: "File",
     render: (file) => <PathText path={file.path} />,
   },
-  textColumn<FileDelta>("additions", "+", { width: "3rem", align: "end" }),
-  textColumn<FileDelta>("deletions", "−", { width: "3rem", align: "end" }),
+  ...lineCountColumns<FileDelta>(),
 ];
 
 interface CommitReportProps {
@@ -42,8 +47,7 @@ interface CommitReportProps {
 export function CommitReport(props: CommitReportProps) {
   const { detail, tools, selectedPath, onSelectFile } = props;
   const { commit, files } = detail;
-  const added = sum(files.map((file) => file.additions));
-  const removed = sum(files.map((file) => file.deletions));
+  const lines = lineTotals(files);
 
   return (
     <div className={styles.report}>
@@ -64,8 +68,11 @@ export function CommitReport(props: CommitReportProps) {
           value={commit.parents.map(shortHash).join(" ") || "None"}
         />
         <Readout label="Files" value={files.length} />
-        <Readout label="Added" value={`+${added}`} tone="ok" />
-        <Readout label="Removed" value={`−${removed}`} tone="fail" />
+        {lines.counted < files.length && (
+          <Readout label="Lines of" value={`${lines.counted} files`} />
+        )}
+        <Readout label="Added" value={`+${lines.added}`} tone="ok" />
+        <Readout label="Removed" value={`−${lines.removed}`} tone="fail" />
       </ReadoutList>
       <div className={styles.files}>
         <Table
@@ -79,8 +86,4 @@ export function CommitReport(props: CommitReportProps) {
       </div>
     </div>
   );
-}
-
-function sum(values: readonly number[]): number {
-  return values.reduce((total, value) => total + value, 0);
 }

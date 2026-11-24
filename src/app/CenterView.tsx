@@ -3,6 +3,7 @@ import { DiffPanel } from "@/features/diff";
 import { CommitTimeline, type History } from "@/features/history";
 import { useWorkingTree } from "@/features/repository";
 import { useCommitMenu } from "@/features/surgery";
+import { useSyncPulse } from "@/features/sync";
 import type { DiffTarget } from "@/ipc";
 
 interface CenterViewProps {
@@ -25,6 +26,7 @@ export function CenterView(props: CenterViewProps) {
   const { repoPath, target, onInspect, onClose } = props;
   const tree = useWorkingTree(repoPath).data;
   const menu = useCommitMenu(repoPath);
+  const sync = useSyncPulse(repoPath) ?? undefined;
   const conflicted =
     target?.kind === "unstaged" &&
     tree?.unstaged.some(
@@ -52,6 +54,7 @@ export function CenterView(props: CenterViewProps) {
       headHash={props.headHash}
       selectedHash={props.selectedHash}
       onSelect={props.onSelectCommit}
+      sync={sync}
       commitMenu={(hash) => {
         const commit = commits.find((candidate) => candidate.hash === hash);
         return commit ? menu(commit) : [];

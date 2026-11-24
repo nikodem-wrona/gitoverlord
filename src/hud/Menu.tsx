@@ -18,6 +18,8 @@ export interface MenuItem {
   blocked?: string;
   /** Marks an item that removes or replaces data. */
   danger?: boolean;
+  /** Makes the item a choice of a set. `true` marks the chosen item. */
+  checked?: boolean;
 }
 
 /** A position in pixels from the top-left corner of the window. */
@@ -32,6 +34,8 @@ interface MenuProps {
   items: readonly MenuItem[];
   /** The top-left corner of the menu. The menu moves to stay in the window. */
   at: MenuPoint;
+  /** Opens the menu above `at`: `at` is then its bottom-left corner. */
+  above?: boolean;
   onSelect(id: string): void;
   onClose(): void;
 }
@@ -45,9 +49,10 @@ const EDGE = 8;
  * The arrow keys move the focus, and Enter selects an item. Escape, Tab, or a
  * click outside closes the menu. Then the focus goes back to where it was.
  */
-export function Menu({ label, items, at, onSelect, onClose }: MenuProps) {
+export function Menu(props: MenuProps) {
+  const { label, items, at, above = false, onSelect, onClose } = props;
   const ref = useRef<HTMLDivElement>(null);
-  const position = useFitInWindow(ref, at);
+  const position = useFitInWindow(ref, at, above);
   useCloseOutside(ref, onClose);
   useFocusFirst(ref);
 
@@ -62,25 +67,33 @@ export function Menu({ label, items, at, onSelect, onClose }: MenuProps) {
       onContextMenu={(event) => event.preventDefault()}
     >
       {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          role="menuitem"
-          tabIndex={-1}
-          data-id={item.id}
-          className={styles.item}
-          data-danger={item.danger || undefined}
-          aria-disabled={item.blocked ? true : undefined}
-          title={item.blocked}
-          onClick={() => {
-            if (!item.blocked) onSelect(item.id);
-          }}
-        >
-          {item.label}
-        </button>
+        <MenuEntry key={item.id} item={item} onSelect={onSelect} />
       ))}
     </div>,
     document.body,
+  );
+}
+
+function MenuEntry(props: { item: MenuItem; onSelect(id: string): void }) {
+  const { item, onSelect } = props;
+  const choice = item.checked !== undefined;
+  return (
+    <button
+      type="button"
+      role={choice ? "menuitemradio" : "menuitem"}
+      aria-checked={choice ? item.checked : undefined}
+      tabIndex={-1}
+      data-id={item.id}
+      className={styles.item}
+      data-danger={item.danger || undefined}
+      aria-disabled={item.blocked ? true : undefined}
+      title={item.blocked}
+      onClick={() => {
+        if (!item.blocked) onSelect(item.id);
+      }}
+    >
+      {item.label}
+    </button>
   );
 }
 
@@ -102,7 +115,7 @@ function onMenuKey(
   if (next === undefined) return;
   event.preventDefault();
   const buttons =
-    event.currentTarget.querySelectorAll<HTMLElement>("[role='menuitem']");
+    event.currentTarget.querySelectorAll<HTMLElement>("[data-id]");
   buttons[ids.indexOf(next)]?.focus();
 }
 
@@ -110,17 +123,19 @@ function onMenuKey(
 function useFitInWindow(
   ref: RefObject<HTMLDivElement | null>,
   at: MenuPoint,
+  above: boolean,
 ): MenuPoint {
   const [position, setPosition] = useState(at);
   useLayoutEffect(() => {
     const size = ref.current?.getBoundingClientRect();
     const width = size?.width ?? 0;
     const height = size?.height ?? 0;
+    const top = above ? at.y - height : at.y;
     setPosition({
       x: Math.max(EDGE, Math.min(at.x, window.innerWidth - width - EDGE)),
-      y: Math.max(EDGE, Math.min(at.y, window.innerHeight - height - EDGE)),
+      y: Math.max(EDGE, Math.min(top, window.innerHeight - height - EDGE)),
     });
-  }, [ref, at]);
+  }, [ref, at, above]);
   return position;
 }
 
@@ -146,7 +161,11 @@ function useCloseOutside(
 function useFocusFirst(ref: RefObject<HTMLDivElement | null>): void {
   useEffect(() => {
     const before = document.activeElement;
-    ref.current?.querySelector<HTMLElement>("[role='menuitem']")?.focus();
+    const menu = ref.current;
+    const first =
+      menu?.querySelector<HTMLElement>("[aria-checked='true']") ??
+      menu?.querySelector<HTMLElement>("[data-id]");
+    first?.focus();
     return () => {
       if (before instanceof HTMLElement) before.focus();
     };

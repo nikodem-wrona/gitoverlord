@@ -36,6 +36,18 @@ describe("CommitTimeline", () => {
     expect(onSelect).toHaveBeenCalledWith(OLDER?.hash);
   });
 
+  it("tells a screen reader the selected commit while the graph has the focus", () => {
+    mockRepository();
+    renderTimeline();
+    const graph = screen.getByRole("group", { name: "Commit graph" });
+    const status = graph.querySelector("[aria-live]");
+
+    expect(status).toHaveTextContent("");
+    fireEvent.focus(graph);
+
+    expect(status).toHaveTextContent(NEWEST?.subject ?? "");
+  });
+
   it("opens the commands of a commit on a right-click", async () => {
     mockRepository();
     const run = vi.fn<() => void>();

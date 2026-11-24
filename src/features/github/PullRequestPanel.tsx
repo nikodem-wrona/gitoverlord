@@ -19,7 +19,13 @@ import { createPullAction, openPullAction } from "./pullActions";
 import { githubKeys, useGitHubAccount, usePullRequests } from "./queries";
 
 const COLUMNS: readonly Column<PullRequest>[] = [
-  { id: "number", header: "#", width: "3rem", render: (pull) => pull.number },
+  {
+    id: "number",
+    header: "Number",
+    shortHeader: "#",
+    width: "3rem",
+    render: (pull) => pull.number,
+  },
   {
     id: "title",
     header: "Title",

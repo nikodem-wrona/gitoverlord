@@ -71,6 +71,30 @@ pub async fn publish_branch(app: AppHandle, path: String) -> Result<String, GitE
     .await
 }
 
+/// Replaces the upstream with the current branch. Returns the commit that the upstream had.
+#[tauri::command]
+#[specta::specta]
+pub async fn force_push_branch(app: AppHandle, path: String) -> Result<String, GitError> {
+    sync(app, path, SyncOperation::Push, |repo, progress| {
+        repo.force_push(progress)
+    })
+    .await
+}
+
+/// Puts the commit `previous` back on the upstream after a force push.
+#[tauri::command]
+#[specta::specta]
+pub async fn undo_force_push(
+    app: AppHandle,
+    path: String,
+    previous: String,
+) -> Result<(), GitError> {
+    sync(app, path, SyncOperation::Push, move |repo, progress| {
+        repo.undo_force_push(&previous, progress)
+    })
+    .await
+}
+
 /// Clones `url` into a new folder in `parent`. Returns the path of the new working tree.
 #[tauri::command]
 #[specta::specta]

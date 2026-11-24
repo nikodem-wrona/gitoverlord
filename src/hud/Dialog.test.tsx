@@ -24,6 +24,23 @@ describe("Dialog", () => {
     window.removeEventListener("keydown", behind);
   });
 
+  it("keeps the focus in the dialog when the Tab key passes the last button", () => {
+    render(
+      <Dialog title="Rename" onClose={() => {}} footer={<button>Save</button>}>
+        <input aria-label="Name" />
+      </Dialog>,
+    );
+    const field = screen.getByRole("textbox", { name: "Name" });
+    const save = screen.getByRole("button", { name: "Save" });
+
+    save.focus();
+    fireEvent.keyDown(save, { key: "Tab" });
+    expect(field).toHaveFocus();
+
+    fireEvent.keyDown(field, { key: "Tab", shiftKey: true });
+    expect(save).toHaveFocus();
+  });
+
   it("closes on a click outside the dialog only", () => {
     const onClose = vi.fn<() => void>();
     render(

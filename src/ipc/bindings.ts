@@ -100,6 +100,10 @@ export const commands = {
 	pushBranch: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("push_branch", { path }, options)),
 	/**  Pushes the current branch and makes the remote branch its upstream. Returns the upstream. */
 	publishBranch: (path: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("publish_branch", { path }, options)),
+	/**  Replaces the upstream with the current branch. Returns the commit that the upstream had. */
+	forcePushBranch: (path: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("force_push_branch", { path }, options)),
+	/**  Puts the commit `previous` back on the upstream after a force push. */
+	undoForcePush: (path: string, previous: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("undo_force_push", { path, previous }, options)),
 	/**  Clones `url` into a new folder in `parent`. Returns the path of the new working tree. */
 	cloneRepository: (url: string, parent: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("clone_repository", { url, parent }, options)),
 	/**
@@ -281,8 +285,13 @@ export type FileDelta = {
 	/**  The path before a rename. */
 	oldPath: string | null,
 	kind: ChangeKind,
-	additions: number,
-	deletions: number,
+	/**
+	 *  The added lines. `None` when the change has too many files: only the
+	 *  first files get line counts.
+	 */
+	additions: number | null,
+	/**  The removed lines. `None` when `additions` is `None`. */
+	deletions: number | null,
 };
 
 /**  The changed lines of one file. */
@@ -644,6 +653,8 @@ export type MockCommandHandlers = {
     pullBranch: (args: { path: string }) => null | Promise<null>,
     pushBranch: (args: { path: string }) => null | Promise<null>,
     publishBranch: (args: { path: string }) => string | Promise<string>,
+    forcePushBranch: (args: { path: string }) => string | Promise<string>,
+    undoForcePush: (args: { path: string; previous: string }) => null | Promise<null>,
     cloneRepository: (args: { url: string; parent: string }) => string | Promise<string>,
     githubAccount: () => Account | null | Promise<Account | null>,
     githubStartSignIn: () => DeviceCode | Promise<DeviceCode>,
@@ -727,6 +738,8 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "pull_branch": return mockCommandHandler(mockHandlers.pullBranch, "pull_branch", args);
             case "push_branch": return mockCommandHandler(mockHandlers.pushBranch, "push_branch", args);
             case "publish_branch": return mockCommandHandler(mockHandlers.publishBranch, "publish_branch", args);
+            case "force_push_branch": return mockCommandHandler(mockHandlers.forcePushBranch, "force_push_branch", args);
+            case "undo_force_push": return mockCommandHandler(mockHandlers.undoForcePush, "undo_force_push", args);
             case "clone_repository": return mockCommandHandler(mockHandlers.cloneRepository, "clone_repository", args);
             case "github_account": return mockCommandHandler(mockHandlers.githubAccount, "github_account", args);
             case "github_start_sign_in": return mockCommandHandler(mockHandlers.githubStartSignIn, "github_start_sign_in", args);

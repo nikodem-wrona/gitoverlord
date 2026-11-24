@@ -5,3 +5,4 @@ export { syncActions } from "./syncActions";
 export { upstreamActions } from "./upstreamActions";
 export { SyncButtons } from "./SyncButtons";
 export { SyncPanel } from "./SyncPanel";
+export { useSyncPulse } from "./useSyncPulse";

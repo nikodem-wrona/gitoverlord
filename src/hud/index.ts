@@ -16,6 +16,11 @@ export { scramble } from "./motion/scramble";
 export { Panel } from "./Panel";
 export { PathText } from "./PathText";
 export { Readout, ReadoutList } from "./Readout";
+export { type Sound, useSound } from "./sound/soundContext";
+export { SoundProvider } from "./sound/SoundProvider";
+export type { SoundCue } from "./sound/sounds";
+export { SoundToggle } from "./sound/SoundToggle";
+export { StatusButton } from "./StatusButton";
 export { useRowWindow } from "./rows/useRowWindow";
 export { StatusLine, type StatusState } from "./StatusLine";
 export { type Column, textColumn } from "./table/columns";
@@ -23,6 +28,10 @@ export { Table } from "./table/Table";
 export type { RowTone } from "./table/TableParts";
 export { type TabItem, TabPanel, Tabs } from "./Tabs";
 export { TextField } from "./TextField";
+export { type Theme, useTheme } from "./theme/themeContext";
+export { ThemePicker } from "./theme/ThemePicker";
+export { ThemeProvider } from "./theme/ThemeProvider";
+export { THEMES, type ThemeId, themeLabel } from "./theme/themes";
 export {
   type ToastAction,
   type ToastApi,

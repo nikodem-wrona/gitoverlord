@@ -55,6 +55,8 @@ export function createDemoHandlers(): MockCommandHandlers {
     pullBranch: () => sync.pull(repo),
     pushBranch: () => sync.push(repo),
     publishBranch: () => sync.publish(repo),
+    forcePushBranch: () => sync.forcePush(repo),
+    undoForcePush: ({ previous }) => sync.undoForcePush(repo, previous),
     cloneRepository: ({ url, parent }) => sync.cloneRepository(url, parent),
   };
 }

@@ -19,14 +19,16 @@ interface ControlOptions {
 }
 
 /**
- * The keys and the commit menu of the timeline.
+ * The keys, the focus, and the commit menu of the timeline.
  *
  * The arrow keys select an older or a newer commit. A right-click, the context
- * menu key, or Shift+F10 opens the commands of a commit.
+ * menu key, or Shift+F10 opens the commands of a commit. Give `frameEvents` to
+ * the element that takes the focus.
  */
 export function useTimelineControls(options: ControlOptions) {
   const { commits, selectedHash, onSelect, layout } = options;
   const [menu, setMenu] = useState<OpenMenu | null>(null);
+  const [focused, setFocused] = useState(false);
   const closeMenu = useCallback(() => setMenu(null), []);
   const openMenu = (hash: string, at: MenuPoint) => {
     onSelect(hash);
@@ -53,7 +55,12 @@ export function useTimelineControls(options: ControlOptions) {
     if (next !== selectedHash) onSelect(next);
   };
 
-  return { menu, openMenu, closeMenu, onKeyDown };
+  const frameEvents = {
+    onKeyDown,
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+  };
+  return { menu, openMenu, closeMenu, focused, frameEvents };
 }
 
 function isMenuKey(event: KeyboardEvent): boolean {

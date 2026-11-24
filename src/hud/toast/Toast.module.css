@@ -96,6 +96,11 @@
   animation: drain var(--toast-duration) linear forwards;
 }
 
+/* The time stops while the pointer or the focus is on the notification. */
+.toast[data-paused] .timer {
+  animation-play-state: paused;
+}
+
 @keyframes enter {
   from {
     opacity: 0;

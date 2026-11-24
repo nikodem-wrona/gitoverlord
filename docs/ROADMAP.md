@@ -140,10 +140,10 @@ Done when a merge conflict resolves fully in the application.
 
 Done when a signed 1.0 release runs on macOS, Windows, and Linux.
 
-- [ ] Animated commit graph and sync pulses
-- [ ] Themes
-- [ ] Optional sound
-- [ ] Performance pass and accessibility pass
+- [x] Animated commit graph and sync pulses
+- [x] Themes
+- [x] Optional sound
+- [x] Performance pass and accessibility pass
 - [ ] Code signing, automatic updates, installers
 
 ## Practices
@@ -157,6 +157,12 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Destructive actions:** discard, reset, and force-push use one path that asks for confirmation and permits recovery. The action has `confirm`, and its result has `undo`. A discard and a hard reset keep a copy of the changes in the stash. Abort and Skip of a stopped operation are the exceptions: they ask for confirmation, but git keeps no copy of the resolutions.
 - **History operations:** a merge, a rebase, a cherry-pick, or a revert gives an `OperationResult`. A stop at conflicts is a result, not a failure. The banner then continues, skips, or aborts the operation. The undo of a complete operation moves the branch back with `git reset --keep`.
 - **Calm mode:** each animation must stop in calm mode. Calm mode applies when the user selects it or when the system asks for reduced motion.
+- **Themes:** components use the tokens, so each theme applies everywhere. Overlord, the default theme, is black and grey with one green. Each other theme also has one accent color.
+- **Sound:** the sound is off by default. The action runner plays the sound of each result. Other code does not play sounds.
+- **Accessibility:** each screen passes the WCAG 2.1 AA rules of axe in `src/app/accessibility.test.tsx`. A new screen or dialog goes into the test. Each text color of each theme has a contrast of 4.5:1 on each surface, and the border of a text field has 3:1. `themeContrast.test.ts` checks the tokens.
+- **Performance budget:** `pnpm bench` measures each read operation on a repository with 50 000 commits, 5 000 files, and 3 000 changed files. Each read operation must take less than 500 ms. On an Apple M4, the status takes 155 ms, and each other read takes less than 35 ms.
+- **Line counts:** a change gets line counts for its first 1 000 files only. The line counts read the content of each file, so they are the slowest part of the status and of a large commit.
+- **Renders:** a progress event of a network operation renders only the components that show the progress. The timeline renders again only when an operation starts or stops.
 - **Read-only core:** `git2` does each read operation. A read operation must not write to the repository.
 - **Write operations:** the system `git` does each write operation, so hooks, signing, and the configuration of the user apply. Each write operation runs in an action. The background fetch is the only exception.
 - **Secrets:** the GitHub token stays in the backend and in the keychain. The user interface never receives it. A `git` process gets it through its environment, not on the command line.
@@ -176,11 +182,15 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Git version:** the write operations send paths with `--pathspec-from-file`. This option needs Git 2.26 or later.
 - **Stash with paths:** in Git 2.54, `git stash push --keep-index` loses the staged changes when the paths include an untracked file. A discard does not use `--keep-index`. It restores the staged versions from the stash entry.
 - **Pull:** a pull only fast-forwards. When the branch and its upstream both have new commits, the user merges the upstream or rebases the branch on it.
-- **Force push:** gitoverlord does not force-push yet. After a rebase of a branch that is on a remote, the push fails. The user must push with force in a terminal.
+- **Force push:** a force push uses `--force-with-lease` with the commit of the upstream from the last fetch. It refuses when the remote changed after the fetch. Its undo needs the network too.
+- **Sync pulse:** the pulse moves with an SVG `animateMotion`. The calm mode rule of `base.css` does not stop it, so the timeline does not draw it in calm mode.
+- **Web Audio:** the audio context starts at the first sound after a click. A system that blocks the audio of the webview gives no sound.
 - **Editor:** each `git` process gets `GIT_EDITOR=true`. A merge or a rebase then uses the commit message that `git` proposes.
 - **Conflict markers:** the resolver reads markers of seven characters, the default size. A file with a `conflict-marker-size` attribute shows no markers. Resolve such a file in an editor.
 - **Restored conflicts:** the undo of a resolution writes the conflict again from the index. The markers then have the labels `ours` and `theirs`, not the branch names.
 - **SSH host keys:** `ssh` runs in batch mode, so it cannot ask to accept a new host key. The user connects one time in a terminal first.
 - **GitHub client ID:** the sign-in needs a GitHub OAuth app with the device flow. Each build reads its client ID from `GITOVERLORD_GITHUB_CLIENT_ID`. A release build must set it.
 - **GitHub token for git:** after a sign-in, the token replaces the credential helpers of the user for github.com in the `git` processes of gitoverlord. A user with a second GitHub account must sign in with the account that has the access.
+- **Large working trees:** the status scans the full working tree, also when it counts no lines. The scan time grows with the number of files that are not ignored. Add the generated folders to `.gitignore`.
+- **Accessibility tests:** jsdom has no layout, so axe does not check the colors of the components. The contrast test checks the tokens only.
 - **Linux file watches:** inotify needs one watch for each folder. A very large working tree can reach the limit of the system. The repository then opens without automatic refresh.

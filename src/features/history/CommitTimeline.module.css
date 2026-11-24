@@ -35,11 +35,15 @@
   font-size: var(--text-xs);
 }
 
+/* A link draws itself from its start when it comes into view. */
 .link {
   fill: none;
   stroke: var(--tone);
   stroke-width: 1.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
   opacity: 0.85;
+  animation: draw var(--duration-slow) var(--ease-out) backwards;
 }
 
 /* A vertical line from the selected commit to the time axis. */
@@ -58,11 +62,14 @@
   fill: transparent;
 }
 
+/* A commit grows in when it comes into view. The commits enter from the left. */
 .dot {
   fill: var(--tone);
   transform-box: fill-box;
   transform-origin: center;
   transition: transform var(--duration-fast);
+  animation: grow var(--duration-base) var(--ease-out) backwards;
+  animation-delay: calc(var(--order, 0) * 12ms);
 }
 
 .node[data-merge] .dot {
@@ -103,6 +110,32 @@
   stroke: var(--color-bg);
   stroke-width: 4px;
   stroke-linejoin: round;
+}
+
+/* The track of a network operation, from HEAD to the right edge. */
+.syncTrack {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  opacity: 0.6;
+}
+
+.syncDot {
+  fill: var(--color-active-strong);
+  filter: drop-shadow(0 0 4px var(--color-active));
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scale(0);
+  }
 }
 
 @keyframes pulse {

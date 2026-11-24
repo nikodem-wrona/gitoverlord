@@ -252,6 +252,19 @@ impl GitBackend for Git2Backend {
     fn publish(&self, progress: &mut dyn FnMut(Progress)) -> Result<String, GitError> {
         sync::publish(&self.repo, &self.dir, self.token.as_ref(), progress)
     }
+
+    fn force_push(&self, progress: &mut dyn FnMut(Progress)) -> Result<String, GitError> {
+        sync::force_push(&self.repo, &self.dir, self.token.as_ref(), progress)
+    }
+
+    fn undo_force_push(
+        &self,
+        previous: &str,
+        progress: &mut dyn FnMut(Progress),
+    ) -> Result<(), GitError> {
+        let token = self.token.as_ref();
+        sync::undo_force_push(&self.repo, &self.dir, previous, token, progress)
+    }
 }
 
 fn unix_now() -> i64 {

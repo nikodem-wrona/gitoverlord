@@ -4,7 +4,7 @@ import { useRegisterActions } from "@/actions";
 import { CloneFromGitHubButton, GitHubProvider } from "@/features/github";
 import { RepoDock, useRepoSession } from "@/features/repository";
 import { CloneControl } from "@/features/sync";
-import { Tabs, useMotion } from "@/hud";
+import { Tabs, useMotion, useSound, useTheme } from "@/hud";
 
 import { appActions } from "./appActions";
 import styles from "./AppShell.module.css";
@@ -27,21 +27,28 @@ export function AppShell() {
   const session = useRepoSession();
   const [moduleId, setModuleId] = useState<ModuleId>("history");
   const motion = useMotion();
-  useRegisterActions(appActions({ session, motion, showModule: setModuleId }));
+  const theme = useTheme();
+  const sound = useSound();
+  useRegisterActions(
+    appActions({ session, motion, theme, sound, showModule: setModuleId }),
+  );
 
   return (
     <GitHubProvider onCloned={session.open}>
       <div className={styles.shell}>
         <TopBar repoPath={session.path} onShowRepositories={session.close} />
-        <div className={styles.modules}>
-          <Tabs
-            label="Modules"
-            idPrefix={MODULE_TABS_ID}
-            tabs={MODULE_LIST}
-            activeId={moduleId}
-            onChange={(id) => isModuleId(id) && setModuleId(id)}
-          />
-        </div>
+        {session.path !== null && (
+          // The tabs control the panels of an open repository.
+          <nav className={styles.modules} aria-label="Modules">
+            <Tabs
+              label="Modules"
+              idPrefix={MODULE_TABS_ID}
+              tabs={MODULE_LIST}
+              activeId={moduleId}
+              onChange={(id) => isModuleId(id) && setModuleId(id)}
+            />
+          </nav>
+        )}
         {session.path === null ? (
           <main className={styles.dock}>
             <RepoDock session={session}>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { ActionStatus } from "@/actions";
 import { GitReadout } from "@/features/system";
-import { useMotion } from "@/hud";
+import { SoundToggle, ThemePicker, useMotion } from "@/hud";
 import { isDemoBackend } from "@/ipc";
 
 import styles from "./StatusBar.module.css";
@@ -19,9 +19,11 @@ export function StatusBar() {
         {demo ? "Demo data" : "Live data"}
       </span>
       <span>Motion: {calm ? "calm" : "full"}</span>
+      <ThemePicker />
+      <SoundToggle />
       <ActionStatus />
       <span className={styles.spacer} />
-      <span>Phase 6 · History surgery</span>
+      <span>Phase 7 · Showpieces</span>
       <Clock />
     </footer>
   );

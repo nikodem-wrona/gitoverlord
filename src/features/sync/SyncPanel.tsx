@@ -68,7 +68,7 @@ export function SyncPanel({ repoPath, delay }: SyncPanelProps) {
   );
 }
 
-/** Merge and rebase buttons when the branch and its upstream both have new commits. */
+/** Merge, rebase, and force push buttons when the branch and its upstream both have new commits. */
 function DivergedTools({
   repo,
   branch,
@@ -77,8 +77,8 @@ function DivergedTools({
   branch?: Branch;
 }) {
   const state = useHistoryState(repo.path);
-  const [merge, rebase] = upstreamActions(repo, state, branch);
-  if (!merge || !rebase) return null;
+  const [merge, rebase, force] = upstreamActions(repo, state, branch);
+  if (!merge || !rebase || !force) return null;
   return (
     <div className={styles.diverged}>
       <p className={styles.status} data-tone="warn">
@@ -87,6 +87,12 @@ function DivergedTools({
       <div className={styles.tools}>
         <ActionButton action={merge} compact text="Merge upstream" />
         <ActionButton action={rebase} compact text="Rebase…" />
+        <ActionButton
+          action={force}
+          variant="danger"
+          compact
+          text="Force push…"
+        />
       </div>
     </div>
   );

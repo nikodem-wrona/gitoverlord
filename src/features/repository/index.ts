@@ -1,5 +1,6 @@
 export { ChangeKindTag } from "./ChangeKindTag";
 export { formatDay, formatTime, shortHash } from "./format";
+export { lineCountColumns, type LineTotals, lineTotals } from "./lineCounts";
 export {
   type CommitLog,
   useActivity,

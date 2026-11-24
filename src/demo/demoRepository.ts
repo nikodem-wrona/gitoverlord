@@ -52,6 +52,8 @@ export interface DemoRepository {
   stopped: DemoStop | null;
   /** The conflicts that a resolution removed, so that an undo can put them back. */
   resolved: FileDelta[];
+  /** The counts of a branch before each force push, for the undo. */
+  forced: Record<string, { ahead: number; behind: number }>;
 }
 
 const SAMPLE_BRANCH_NAMES = new Set(SAMPLE_BRANCHES.map(({ name }) => name));
@@ -69,6 +71,7 @@ export function createDemoRepository(): DemoRepository {
     made: 0,
     stopped: null,
     resolved: [],
+    forced: {},
   });
 }
 

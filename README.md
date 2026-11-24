@@ -6,11 +6,11 @@
 
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
-**Status:** Phase 6, history surgery. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, its stash, and its pull requests.
+**Status:** Phase 7, showpieces and 1.0, in progress. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, its stash, and its pull requests.
 
-You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. You can merge, rebase, cherry-pick, revert, and reset, and resolve conflicts in the application. The panels refresh when the repository changes on the disk.
+You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. You can merge, rebase, cherry-pick, revert, and reset, and resolve conflicts in the application. The panels refresh when the repository changes on the disk. You can select a theme and turn on sound.
 
-Phase 7 adds the animated commit graph, themes, and the signed 1.0 release. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
+The rest of Phase 7 is the signed 1.0 release: code signing, automatic updates, and installers. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
 
 ## Prerequisites
 
@@ -36,6 +36,7 @@ pnpm install
 | `pnpm check:rust`        | Run the rustfmt check, Clippy, and the Rust tests                                          |
 | `pnpm test`              | Run the frontend tests                                                                     |
 | `cargo test --workspace` | Run the Rust tests                                                                         |
+| `pnpm bench`             | Measure the read operations on a repository with 50 000 commits                            |
 | `pnpm format`            | Format TypeScript, CSS, JSON, and Markdown                                                 |
 | `cargo fmt --all`        | Format Rust                                                                                |
 | `pnpm bindings`          | Write `src/ipc/bindings.ts` again from the Rust commands                                   |
@@ -62,6 +63,8 @@ On the timeline, the left and right arrow keys select an older or a newer commit
 
 Select **Amend the last commit** to replace the last commit. If the fields are empty, they then show the message of the last commit.
 
+The **+** and **−** columns show the added and the removed lines of each file. A change of more than 1 000 files shows the line counts of the first 1 000 files only, so that a large change stays fast.
+
 ## Branches and stash
 
 Use the toolbar on the **Branches** tab to create, switch, rename, and delete branches. A new branch starts at `HEAD` and becomes the current branch.
@@ -73,11 +76,14 @@ Use the toolbar on the **Stash** tab to stash all changes, or to apply, pop, or 
 Use the **Fetch**, **Pull**, and **Push** buttons in the top bar. The buttons show the number of commits to pull and to push. The **Sync status** panel shows the progress of the operation and the time of the last fetch.
 
 - **Fetch** gets the new commits of each remote. The local branches do not change.
-- **Pull** gets the new commits of the upstream and fast-forwards the current branch. A pull does not merge or rebase. If the branch and its upstream both have new commits, the **Sync status** panel shows **Merge upstream** and **Rebase**.
+- **Pull** gets the new commits of the upstream and fast-forwards the current branch. A pull does not merge or rebase. If the branch and its upstream both have new commits, the **Sync status** panel shows **Merge upstream**, **Rebase**, and **Force push**.
+- **Force push** replaces the upstream with the current branch, for example after a rebase. The remote loses the commits that the branch does not have. The push fails if the remote changed after the last fetch.
 - **Push** sends the commits of the current branch to its upstream.
 - **Publish** shows in place of **Push** when the branch has no upstream. It pushes the branch to `origin`, or to the first remote, and makes that branch the upstream.
 
 The application fetches in the background when the last fetch is older than five minutes. A failed background fetch shows only in the **Sync status** panel.
+
+While a fetch, a pull, or a push runs, a pulse moves on the timeline between `HEAD` and the right edge, where the remote is.
 
 The **Remotes** tab lists the remotes. If the repository has no remote, select **Add origin** and type the URL of the remote repository.
 
@@ -153,7 +159,7 @@ To create a pull request, publish the current branch. Then select **Create…** 
 
 ## Undo a destructive action
 
-The application asks before it discards changes, deletes a branch, drops a stash entry, rebases, or resets. After the action, the notification shows an **Undo** button.
+The application asks before it discards changes, deletes a branch, drops a stash entry, rebases, resets, or force-pushes. After the action, the notification shows an **Undo** button.
 
 A discard keeps a copy of the changes in the stash. When the notification closes, the copy stays on the **Stash** tab. Drop the entry to delete the copy.
 
@@ -193,6 +199,18 @@ The gallery shows each HUD component with its variants. Start the frontend with 
 
 Select **Calm mode** in the top bar to stop all animations. Calm mode is always on when your operating system asks for reduced motion.
 
+## Accessibility
+
+You can use each function with the keyboard and with a screen reader. The arrow keys select a commit on the timeline, and the screen reader reads the selected commit. A dialog keeps the focus until it closes. A notification stops its timer while the pointer or the focus is on it, so that you have time to select **Undo**.
+
+The tests check each screen with the WCAG 2.1 AA rules of [axe](https://github.com/dequelabs/axe-core). Another test checks that the text of each theme has a contrast of 4.5:1 or more.
+
+## Themes and sound
+
+Select **Theme** in the status bar to change the colors. **Overlord** is the default theme: black and grey with one green. **Amber** is a warm terminal, and **Mono** has no color for active items.
+
+Select **Sound** in the status bar to play a short sound for each result: success, a stop that needs you, or a failure. The sound is off by default. The command palette also has the themes and the sound.
+
 ## Structure
 
 ```
@@ -226,6 +244,7 @@ docs/ROADMAP.md    stack, phases, practices, risks
 
 - Run `pnpm check` before you open a pull request. CI runs the same checks on macOS, Windows, and Linux.
 - Keep files and functions small. The linters enforce the limits.
+- Each screen must pass the accessibility test in `src/app/accessibility.test.tsx`. Add a new screen or dialog to the test.
 - Import a feature only through its index file, for example `@/features/system`.
 - Use conventional commit messages.
 

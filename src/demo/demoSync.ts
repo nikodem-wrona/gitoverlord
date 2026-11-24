@@ -3,6 +3,7 @@ import { type Branch, events, type SyncOperation } from "@/ipc";
 import {
   currentBranch,
   type DemoRepository,
+  newHash,
   now,
   reject,
 } from "./demoRepository";
@@ -55,6 +56,29 @@ export async function push(repo: DemoRepository): Promise<null> {
   const branch = await tracked(repo);
   await simulate(repo.summary.path, "push");
   branch.ahead = 0;
+  return null;
+}
+
+/** Replaces the upstream. The returned "commit" keeps the old counts for the undo. */
+export async function forcePush(repo: DemoRepository): Promise<string> {
+  const branch = await tracked(repo);
+  await simulate(repo.summary.path, "push");
+  const previous = newHash(repo);
+  repo.forced[previous] = { ahead: branch.ahead, behind: branch.behind };
+  branch.ahead = 0;
+  branch.behind = 0;
+  return previous;
+}
+
+export async function undoForcePush(
+  repo: DemoRepository,
+  previous: string,
+): Promise<null> {
+  const branch = await tracked(repo);
+  const counts = repo.forced[previous];
+  if (!counts) return reject(`bad object ${previous}`);
+  await simulate(repo.summary.path, "push");
+  Object.assign(branch, counts);
   return null;
 }
 

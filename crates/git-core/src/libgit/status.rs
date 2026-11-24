@@ -65,8 +65,8 @@ mod tests {
                 (
                     file.path.as_str(),
                     file.kind,
-                    file.additions,
-                    file.deletions,
+                    file.additions.unwrap(),
+                    file.deletions.unwrap(),
                 )
             })
             .collect()

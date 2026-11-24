@@ -1,5 +1,9 @@
-import { ChangeKindTag, type RepoWriter } from "@/features/repository";
-import { type Column, PathText, textColumn } from "@/hud";
+import {
+  ChangeKindTag,
+  lineCountColumns,
+  type RepoWriter,
+} from "@/features/repository";
+import { type Column, PathText } from "@/hud";
 
 import type { ChangeRow } from "./changeRows";
 import styles from "./ChangesPanel.module.css";
@@ -10,7 +14,8 @@ export function changeColumns(repo: RepoWriter): Column<ChangeRow>[] {
   return [
     {
       id: "move",
-      header: "",
+      header: "Stage or unstage",
+      shortHeader: "",
       width: "5.5rem",
       render: (row) => <MoveButton repo={repo} row={row} />,
     },
@@ -41,7 +46,6 @@ export function changeColumns(repo: RepoWriter): Column<ChangeRow>[] {
           <PathText path={row.path} />
         ),
     },
-    textColumn<ChangeRow>("additions", "+", { width: "3rem", align: "end" }),
-    textColumn<ChangeRow>("deletions", "−", { width: "3rem", align: "end" }),
+    ...lineCountColumns<ChangeRow>(),
   ];
 }

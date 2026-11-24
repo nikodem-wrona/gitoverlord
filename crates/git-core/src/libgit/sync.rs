@@ -6,7 +6,7 @@ use git2::Repository;
 
 use super::remotes::{self, Upstream};
 use crate::GitError;
-use crate::cli::remote;
+use crate::cli::remote::{self, ForcePush};
 use crate::model::{HostToken, Progress};
 
 pub(super) fn fetch(
@@ -47,14 +47,64 @@ pub(super) fn push(
     token: Option<&HostToken>,
     progress: &mut dyn FnMut(Progress),
 ) -> Result<(), GitError> {
+    let (branch, upstream) = remote_branch(repo)?;
+    let refspec = format!("refs/heads/{branch}:{}", upstream.merge);
+    remote::push(dir, &upstream.remote, &refspec, false, token, progress)
+}
+
+/// Replaces the upstream of the current branch with the branch, for example after a rebase.
+///
+/// Returns the commit that the upstream had, for the undo. `git` refuses the push
+/// when the remote changed after the last fetch.
+pub(super) fn force_push(
+    repo: &Repository,
+    dir: &Path,
+    token: Option<&HostToken>,
+    progress: &mut dyn FnMut(Progress),
+) -> Result<String, GitError> {
+    let (branch, upstream) = remote_branch(repo)?;
+    let previous = remotes::upstream_tip(repo, &branch)?;
+    let change = ForcePush {
+        remote: &upstream.remote,
+        source: &format!("refs/heads/{branch}"),
+        target: &upstream.merge,
+        expected: &previous,
+    };
+    remote::force_push(dir, &change, token, progress)?;
+    Ok(previous)
+}
+
+/// Puts the commit `previous` back on the upstream after a force push.
+pub(super) fn undo_force_push(
+    repo: &Repository,
+    dir: &Path,
+    previous: &str,
+    token: Option<&HostToken>,
+    progress: &mut dyn FnMut(Progress),
+) -> Result<(), GitError> {
+    let (branch, upstream) = remote_branch(repo)?;
+    let source = repo
+        .find_commit(git2::Oid::from_str(previous)?)?
+        .id()
+        .to_string();
+    let change = ForcePush {
+        remote: &upstream.remote,
+        source: &source,
+        target: &upstream.merge,
+        expected: &remotes::upstream_tip(repo, &branch)?,
+    };
+    remote::force_push(dir, &change, token, progress)
+}
+
+/// Returns the current branch and its upstream on a remote. Rejects a local upstream.
+fn remote_branch(repo: &Repository) -> Result<(String, Upstream), GitError> {
     let (branch, upstream) = tracked_branch(repo)?;
     if upstream.remote == "." {
         return Err(GitError::Rejected(format!(
             "The upstream of {branch} is a local branch. Push it to a remote."
         )));
     }
-    let refspec = format!("refs/heads/{branch}:{}", upstream.merge);
-    remote::push(dir, &upstream.remote, &refspec, false, token, progress)
+    Ok((branch, upstream))
 }
 
 /// Pushes the current branch to `origin`, or to the first remote, and makes it the upstream.
@@ -165,6 +215,37 @@ mod tests {
 
         assert!(matches!(error, GitError::Rejected(_)), "error: {error:?}");
         assert_eq!(fixture.git(&["log", "-1", "--format=%s"]), "d");
+    }
+
+    #[test]
+    fn force_pushes_a_rewritten_branch_and_the_undo_puts_the_old_commit_back() {
+        let fixture = published().commit("b");
+        fixture.backend().push(&mut ignore).unwrap();
+        let old = fixture.git(&["rev-parse", "HEAD"]);
+        fixture.git(&["commit", "--amend", "--quiet", "--message", "b2"]);
+        let backend = fixture.backend();
+        assert_eq!(current_counts(backend.as_ref()), (1, 1));
+
+        let previous = backend.force_push(&mut ignore).unwrap();
+
+        assert_eq!(previous, old);
+        assert_eq!(current_counts(backend.as_ref()), (0, 0));
+        backend.undo_force_push(&previous, &mut ignore).unwrap();
+        let remote_tip = fixture.git(&["ls-remote", "origin", "refs/heads/main"]);
+        assert!(remote_tip.starts_with(&old), "remote: {remote_tip}");
+    }
+
+    #[test]
+    fn refuses_a_force_push_over_commits_that_were_not_fetched() {
+        let fixture = published();
+        push_elsewhere(&fixture, "c");
+        let fixture = fixture.commit("d");
+
+        let result = fixture.backend().force_push(&mut ignore);
+
+        assert!(result.is_err());
+        let remote_log = fixture.git(&["log", "-1", "--format=%s", "origin/main"]);
+        assert_eq!(remote_log, "a");
     }
 
     #[test]

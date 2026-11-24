@@ -1,26 +1,26 @@
 import { type Action, defineAction } from "@/actions";
 import type { RepoSession } from "@/features/repository";
 import { cloneAction } from "@/features/sync";
-import type { Motion } from "@/hud";
+import { type Motion, type Sound, type Theme, THEMES } from "@/hud";
 
 import { MODULE_LIST, type ModuleId } from "./modules";
 
 interface AppState {
   session: RepoSession;
   motion: Motion;
+  theme: Theme;
+  sound: Sound;
   showModule(id: ModuleId): void;
 }
 
-/** The actions of the application: the modules, the repositories, and calm mode. */
-export function appActions({
-  session,
-  motion,
-  showModule,
-}: AppState): Action[] {
+/** The actions of the application: the modules, the repositories, calm mode, the themes, and the sound. */
+export function appActions(state: AppState): Action[] {
   return [
-    ...moduleActions(showModule),
-    ...repositoryActions(session),
-    calmAction(motion),
+    ...moduleActions(state.showModule),
+    ...repositoryActions(state.session),
+    calmAction(state.motion),
+    ...themeActions(state.theme),
+    soundAction(state.sound),
   ];
 }
 
@@ -55,6 +55,28 @@ function repositoryActions(session: RepoSession): Action[] {
       run: () => session.close(),
     }),
   ];
+}
+
+/** One action for each theme that is not in use. */
+function themeActions({ theme, setTheme }: Theme): Action[] {
+  const others = THEMES.filter((item) => item.id !== theme);
+  return others.map((item) =>
+    defineAction({
+      id: `view.theme:${item.id}`,
+      label: `Use the ${item.label} theme`,
+      group: "View",
+      run: () => setTheme(item.id),
+    }),
+  );
+}
+
+function soundAction({ enabled, setEnabled }: Sound): Action {
+  return defineAction({
+    id: "view.sound",
+    label: enabled ? "Turn off the sound" : "Turn on the sound",
+    group: "View",
+    run: () => setEnabled(!enabled),
+  });
 }
 
 function calmAction(motion: Motion): Action {

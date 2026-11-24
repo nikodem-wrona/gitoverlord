@@ -22,8 +22,9 @@ interface DialogProps {
 /**
  * A modal window over the application.
  *
- * The first field or button gets the focus. When the dialog closes, the focus
- * goes back to the element that had it before.
+ * The first field or button gets the focus, and the Tab key keeps the focus in
+ * the dialog. When the dialog closes, the focus goes back to the element that
+ * had it before.
  */
 export function Dialog({ title, onClose, children, footer }: DialogProps) {
   const titleId = useId();
@@ -31,6 +32,7 @@ export function Dialog({ title, onClose, children, footer }: DialogProps) {
   useFocusInside(ref);
 
   const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Tab" && ref.current) keepFocusInside(event, ref.current);
     if (event.key !== "Escape") return;
     // The Escape key must not also close the panel under the dialog.
     event.stopPropagation();
@@ -61,6 +63,17 @@ export function Dialog({ title, onClose, children, footer }: DialogProps) {
 }
 
 const FOCUSABLE = "input, textarea, button:not(:disabled), [tabindex='0']";
+
+/** Moves the focus from the last element to the first, and back with Shift+Tab. */
+function keepFocusInside(event: KeyboardEvent, dialog: HTMLElement): void {
+  const items = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)];
+  const first = items[0];
+  const last = items.at(-1);
+  const edge = event.shiftKey ? first : last;
+  if (!first || !last || document.activeElement !== edge) return;
+  event.preventDefault();
+  (event.shiftKey ? last : first).focus();
+}
 
 function useFocusInside(ref: RefObject<HTMLDivElement | null>): void {
   useEffect(() => {

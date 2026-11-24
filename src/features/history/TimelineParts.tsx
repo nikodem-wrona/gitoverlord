@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { shortHash } from "@/features/repository";
 import type { MenuPoint } from "@/hud";
 
@@ -74,6 +76,8 @@ export function RefLabel({ label }: { label: TimelineLabel }) {
 
 interface CommitMarkProps {
   node: TimelineNode;
+  /** The position of the commit in the drawing. It delays its entry animation. */
+  order: number;
   selected: boolean;
   onSelect(hash: string): void;
   /** Opens the commands of the commit at the mouse position. */
@@ -82,10 +86,11 @@ interface CommitMarkProps {
 
 /** One commit. A merge commit is hollow, HEAD has a ring, and the selected commit has a larger ring. */
 export function CommitMark(props: CommitMarkProps) {
-  const { node, selected, onSelect, onMenu } = props;
+  const { node, order, selected, onSelect, onMenu } = props;
   return (
     <g
       transform={`translate(${node.x} ${node.y})`}
+      style={{ "--order": order } as CSSProperties}
       className={styles.node}
       data-tone={node.tone}
       data-merge={node.merge || undefined}

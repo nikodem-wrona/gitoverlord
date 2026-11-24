@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-import { type ToastAction, type ToastApi, useToast } from "@/hud";
+import { type ToastAction, type ToastApi, useSound, useToast } from "@/hud";
 import { errorMessage } from "@/ipc";
 
 import type { LastOutcome } from "./actionContext";
@@ -12,35 +12,30 @@ const PROGRESS_DELAY = 400;
 /** Runs actions one at a time, with their question, progress, and result. */
 export function useActionRunner() {
   const toast = useToast();
+  const results = useResults();
   const [asking, setAsking] = useState<Action | null>(null);
   const [busy, setBusy] = useState<Action | null>(null);
-  const [last, setLast] = useState<LastOutcome | null>(null);
   // The state changes after the next render. This ref stops a second run before it.
   const running = useRef(false);
+  const { succeed, fail } = results;
 
   const execute = useCallback(
     async (action: Action, text: string) => {
       running.current = true;
       setBusy(action);
       const stopProgress = showProgress(toast, action);
-      const report = (title: string, tone: LastOutcome["tone"]) =>
-        setLast((old) => ({ id: (old?.id ?? 0) + 1, title, tone }));
       try {
         const outcome = await action.run(text);
-        if (outcome) {
-          showOutcome(toast, outcome);
-          report(outcome.title, outcome.tone ?? "ok");
-        }
+        if (outcome) succeed(outcome);
       } catch (error) {
-        toast.fail(`${action.label} failed`, errorMessage(error));
-        report(`${action.label} failed`, "fail");
+        fail(action, error);
       } finally {
         stopProgress();
         running.current = false;
         setBusy(null);
       }
     },
-    [toast],
+    [toast, succeed, fail],
   );
 
   const run = useCallback(
@@ -63,7 +58,36 @@ export function useActionRunner() {
   };
   const cancel = () => setAsking(null);
 
-  return { run, busy, last, asking, answer, cancel };
+  return { run, busy, last: results.last, asking, answer, cancel };
+}
+
+/** Shows the result of an action: the notification, the status bar, and the sound. */
+function useResults() {
+  const toast = useToast();
+  const sound = useSound();
+  const [last, setLast] = useState<LastOutcome | null>(null);
+  const report = useCallback(
+    (title: string, tone: LastOutcome["tone"]) => {
+      setLast((old) => ({ id: (old?.id ?? 0) + 1, title, tone }));
+      sound.play(tone);
+    },
+    [sound],
+  );
+  const succeed = useCallback(
+    (outcome: Outcome) => {
+      showOutcome(toast, outcome);
+      report(outcome.title, outcome.tone ?? "ok");
+    },
+    [toast, report],
+  );
+  const fail = useCallback(
+    (action: Action, error: unknown) => {
+      toast.fail(`${action.label} failed`, errorMessage(error));
+      report(`${action.label} failed`, "fail");
+    },
+    [toast, report],
+  );
+  return { last, succeed, fail };
 }
 
 /** Shows a notification if the action takes some time. Returns a function that removes it. */

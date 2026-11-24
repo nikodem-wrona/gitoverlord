@@ -15,6 +15,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `pnpm check:rust`: run the rustfmt check, Clippy with `-D warnings`, and `cargo test --workspace`.
 - `pnpm vitest run src/path/to/file.test.tsx`: run one frontend test file.
 - `cargo test -p git-core <test name>`: run one Rust test.
+- `pnpm bench`: measure each read operation of `git-core` on a repository with 50 000 commits. The test is slow and is not part of `pnpm check`. Run it after a change to a read operation.
 - `pnpm bindings`: write `src/ipc/bindings.ts` again. Run it after each change to a command or to a type that a command uses.
 - `pnpm format` and `cargo fmt --all`: format the code.
 - `pnpm icons`: build the icons in `src-tauri/icons/` again from `assets/logo-source.png`. Run it only when the logo changes. It needs ImageMagick 7.
@@ -30,6 +31,8 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `model/`: the types of the data. `recent.rs`: the list of recent repositories. `watch.rs`: `RepoWatcher`, which reports changes on the disk.
   - `cli/`: starts each `git` process through `git_command()`, which sets `GIT_EDITOR=true`. `stage.rs`, `commit.rs`, `branch.rs`, `stash.rs`, `remote.rs`, `sequence.rs`, `reset.rs`, and `resolve.rs` hold the write operations. `run_git_on_paths` sends a list of paths on the standard input.
   - `cli/network.rs`: `run_network` runs fetch, pull, push, and clone. It sets `GIT_TERMINAL_PROMPT=0` and, if the user selected no SSH program, `ssh -o BatchMode=yes`. Then `git` fails and does not wait for a password. `progress.rs` reads the progress lines of `git`.
+  - `libgit/delta.rs` reads the changed files of a diff. Only the first 1 000 files get line counts, so `FileDelta.additions` and `deletions` can be `None`.
+  - `perf_tests.rs`: the benchmark of `pnpm bench`. It builds the large repository with `git fast-import`.
   - `fixture.rs`: `RepoFixture`, which builds real repositories for tests. The configuration of each repository replaces the user, the signing, and the hooks path of the machine. `RepoFixture::diverged()` gives two branches that change one file, for conflict tests.
 - `crates/github/`: GitHub access without Tauri. Each failure is a `GitError`.
   - `client.rs`: `GitHub`, the HTTP client. A 401 answer gives `GitError::SignInExpired`. Tests send the requests to `test_server.rs`.
@@ -42,29 +45,33 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - The runner asks the `confirm` or `prompt` question of the action. Then it shows the progress, the result notification, and the Undo button of an `Outcome`.
   - `useRegisterActions` puts actions in the command palette and turns on their shortcuts. `ActionStatus` shows the last result in the status bar.
   - `ActionMenu` shows actions in a `Menu`, for example the context menu of a commit. `ActionMenuButton` opens an `ActionMenu` under a button.
-  - An `Outcome` with `tone: "warn"` shows a result that needs the user, for example a merge that stopped.
+  - An `Outcome` with `tone: "warn"` shows a result that needs the user, for example a merge that stopped. The runner also plays the sound of the tone of each result.
 - `src/hud/`: the design system. Components are presentational and do not call the backend.
   - `global.css` imports the fonts, `tokens.css`, and `base.css`. Each entry point imports it once.
-  - Primitives: `Panel`, `Table` with `textColumn`, `Tree`, `Tabs` with `TabPanel`, `Button`, `Checkbox`, `TextField`, `Dialog`, `Menu`, `ToolLayout`, `Readout`, `Meter`, `EmptyState`, `PathText`, `LogoMark`, `useEscapeKey`, and `useToast` with `ToastProvider`.
+  - Primitives: `Panel`, `Table` with `textColumn` (a column with `shortHeader` shows a short text, for example `+`, and a screen reader reads `header`), `Tree`, `Tabs` with `TabPanel`, `Button`, `Checkbox`, `TextField`, `Dialog`, `Menu`, `ToolLayout`, `Readout`, `Meter`, `EmptyState`, `PathText`, `LogoMark`, `useEscapeKey`, and `useToast` with `ToastProvider`.
   - `Menu` is a pop-up list in a portal. The arrow keys move the focus. Escape, Tab, or a press outside closes it.
-  - `useToast` returns the id of each notification. A notification can have an `action` button, and a `sticky` notification stays until `dismiss`.
+  - `useToast` returns the id of each notification. A notification can have an `action` button, and a `sticky` notification stays until `dismiss`. The timer of a notification stops while the pointer or the focus is on it.
+  - `Dialog` keeps the focus inside until it closes.
   - `rows/`: `useRowWindow` renders only the rows in view. `Table` and the diff viewer use it. Each row must have the height `--row-height`.
   - `motion/`: `MotionProvider` and `useMotion` decide calm mode. `DecodeText`, `PulseDot`, and `CalmToggle` use it.
+  - `theme/`: `ThemeProvider` sets `data-theme` on the root element, and `useTheme` gives the theme. `themes.ts` lists the themes, and `themes.css` gives the tokens of each theme that is not the default. `ThemePicker` is in the status bar.
+  - `sound/`: `SoundProvider` and `useSound` hold the sound setting. `sounds.ts` synthesizes the sounds with Web Audio. `SoundToggle` is in the status bar.
+  - `settings.ts`: `readSetting` and `writeSetting` keep the settings of the user in local storage. `StatusButton` is a text button for the status bar.
 - `src/features/<name>/`: one folder for each feature. `index.ts` is its only public entry.
-  - `repository`: the data layer. `queries.ts` holds one TanStack Query hook for each read command, and `keys.ts` holds the cache keys. `useRepoWriter` runs a write command, then refreshes the queries. `useRepoSession` holds the open repository. `useRepoWatcher` refreshes the queries after a `RepoChanged` event. `QueryPanel` shows the state of a query. `RepoDock` is the start screen.
-  - `history`: the commit timeline, the commit log, and the commit inspector. `assignLanes` and `layoutTimeline` are pure functions. The timeline draws in pixels without a view box, so its text keeps one size. `useTimelineControls` gives the arrow keys and the context menu of the timeline. The inspector shows the `tools` that it gets, under the author.
+  - `repository`: the data layer. `lineCountColumns` and `lineTotals` show the line counts of the changed files. `queries.ts` holds one TanStack Query hook for each read command, and `keys.ts` holds the cache keys. `useRepoWriter` runs a write command, then refreshes the queries. `useRepoSession` holds the open repository. `useRepoWatcher` refreshes the queries after a `RepoChanged` event. `QueryPanel` shows the state of a query. `RepoDock` is the start screen.
+  - `history`: the commit timeline, the commit log, and the commit inspector. `assignLanes` and `layoutTimeline` are pure functions. The timeline draws in pixels without a view box, so its text keeps one size. `useTimelineControls` gives the arrow keys and the context menu of the timeline. `TimelineDrawing` draws the timeline: commits and links animate in when they come into view. `SelectionStatus` tells a screen reader the selected commit while the timeline has the focus. `SyncPulse` shows a network operation between `HEAD` and the right edge. The inspector shows the `tools` that it gets, under the author.
   - `surgery`: the history operations. `historyActions.ts`, `resetActions.ts`, and `stepActions.ts` make the actions. `operationOutcome` makes the notification of an `OperationResult`. `OperationBanner` shows the operation that stopped. `CommitTools` is the toolbar of the commit inspector. `commitActions` and `useCommitMenu` give the context menu of a commit.
   - `conflicts`: `ConflictPanel`, the conflict resolver. The user chooses the lines of each conflict, then the file is resolved and staged in one command.
   - `changes`, `branches`, `stash`: the tables with their toolbars. Each one has a file that makes its actions, for example `branchActions.ts`.
   - `commit`: the commit console. `telemetry`: the activity panel.
   - `github`: `GitHubProvider` holds the sign-in dialog and the clone dialog, and puts the GitHub actions in the palette. `AccountButton` is in the top bar. `PullRequestPanel` is the Pull requests tab. `queries.ts` has its own `githubKeys`, so a change on the disk does not ask GitHub again.
-  - `sync`: `SyncButtons` in the top bar, `SyncPanel` with the counts and the progress, `RemotePanel` on the Remotes tab, and `CloneControl` on the start screen. `useSyncProgress` reads the `SyncProgress` events. `useBackgroundFetch` fetches when the last fetch is older than five minutes. `upstreamActions` merges the upstream into a diverged branch, or rebases the branch on it.
+  - `sync`: `SyncButtons` in the top bar, `SyncPanel` with the counts and the progress, `RemotePanel` on the Remotes tab, and `CloneControl` on the start screen. `useSyncProgress` reads the `SyncProgress` events. `useBackgroundFetch` fetches when the last fetch is older than five minutes. `upstreamActions` merges the upstream into a diverged branch, rebases the branch on it, or force-pushes the branch. `useSyncPulse` gives the operation for the sync pulse, and keeps a short operation for 1.2 seconds. It reads `useSyncOperation`, so that each progress step does not render the timeline again.
   - `diff`: the diff viewer, with the stage and unstage buttons of each hunk.
   - `system`: the git status readout and the alert when git fails. `boot`: the start-up sequence.
 - `src/app/`: `AppProviders`, `Root` (boot sequence, then shell), `AppShell` (the layout), `RepoDeck` (the three columns of an open repository), `TopBar`, `StatusBar`, `Workspace`, and the module list in `modules.ts`. `appActions` and `useRepoActions` put the actions in the command palette. `useDeckSelection` holds the selected commit and the open file. `CenterView` shows the conflict resolver, the diff viewer, or the timeline.
 - `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`.
 - `src/gallery/`: the component gallery. Vite serves it in development only.
-- `src/test/`: helpers for frontend tests.
+- `src/test/`: helpers for frontend tests. `expectAccessible` checks the page with axe. `contrast.ts` reads the color tokens and computes WCAG contrast ratios.
 
 ## Rules
 
@@ -73,8 +80,13 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - Put git logic in `git-core`, not in a Tauri command and not in TypeScript.
 - Use the tokens in `src/hud/tokens.css` for colors, spacing, and type. Do not put literal values in component CSS.
 - For a signal color, set `data-tone` to a `Tone` value and use `var(--tone)` in the CSS.
-- The palette is black, white, and neutral greys, with one green. `--color-accent` is white, for titles, borders, and focus. Use `--color-active` (green) or the `active` tone only for an active or primary state, for example the current tab, a primary button, or a selection marker. Do not add blue.
-- Each animation must stop in calm mode. The rule in `base.css` stops CSS animations. A JavaScript animation must check `useMotion().calm`. Write CSS animations so that their end state is correct when they stop at once.
+- The default theme, Overlord, is black, white, and neutral greys, with one green. `--color-accent` is white, for titles, borders, and focus. Use `--color-active` (green) or the `active` tone only for an active or primary state, for example the current tab, a primary button, or a selection marker. Do not add blue.
+- Each other theme in `themes.css` changes only tokens, and has one accent color. Use the tokens in components, so that each theme applies. Overlord must stay one of the themes.
+- Each screen and each dialog must pass `expectAccessible` in `src/app/accessibility.test.tsx`. Add a new screen to that test.
+- Each text color must have a contrast of 4.5:1 on each surface of each theme, and `--color-control-line` 3:1. `themeContrast.test.ts` checks it.
+- A component that only needs to know which network operation runs uses `useSyncOperation`, not `useSyncProgress`.
+- Each animation must stop in calm mode. The rule in `base.css` stops CSS animations. A JavaScript or SMIL animation must check `useMotion().calm`. Write CSS animations so that their end state is correct when they stop at once.
+- The sound is off by default. Only the action runner plays sounds.
 - Use a factory only where it removes repeated code.
 - Frontend tests mock the backend with `mockRepository` from `@/test/mockRepository` and render with `renderWithProviders`. `mockRepository` gives the sample repository, and its argument replaces the handlers that a test changes. `git-core` tests use the real `git` through `RepoFixture`.
 - A read operation in `git-core` must not write to the repository. A write operation runs the system `git` through `cli`.

@@ -1,4 +1,10 @@
-import { type CSSProperties, useEffect } from "react";
+import {
+  type CSSProperties,
+  type FocusEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type { Tone } from "../tone";
 import type { ToastItem, ToastKind } from "./toastContext";
@@ -48,13 +54,27 @@ interface ToastProps {
   onDismiss(id: number): void;
 }
 
+/** One notification. The time stops while the pointer or the focus is on it. */
 function Toast({ toast, duration, onDismiss }: ToastProps) {
-  useAutoDismiss(toast, duration, onDismiss);
+  const [paused, setPaused] = useState(false);
+  useAutoDismiss(toast, duration, paused, onDismiss);
   const style = { "--toast-duration": `${duration}ms` } as CSSProperties;
   const { action } = toast;
+  const onBlur = (event: FocusEvent) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+  };
 
   return (
-    <li className={styles.toast} data-tone={TONES[toast.kind]} style={style}>
+    <li
+      className={styles.toast}
+      data-tone={TONES[toast.kind]}
+      data-paused={paused || undefined}
+      style={style}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={onBlur}
+    >
       <div className={styles.text}>
         <p className={styles.title}>{toast.title}</p>
         {toast.message && <p className={styles.message}>{toast.message}</p>}
@@ -84,16 +104,25 @@ function Toast({ toast, duration, onDismiss }: ToastProps) {
   );
 }
 
-/** Closes the notification after `duration`. A sticky notification stays. */
+/**
+ * Closes the notification after `duration`. A pause keeps the time that is left.
+ * A sticky notification stays.
+ */
 function useAutoDismiss(
   toast: ToastItem,
   duration: number,
+  paused: boolean,
   onDismiss: (id: number) => void,
 ): void {
   const { id, sticky } = toast;
+  const left = useRef(duration);
   useEffect(() => {
-    if (sticky) return undefined;
-    const timer = setTimeout(() => onDismiss(id), duration);
-    return () => clearTimeout(timer);
-  }, [id, sticky, duration, onDismiss]);
+    if (sticky || paused) return undefined;
+    const start = Date.now();
+    const timer = setTimeout(() => onDismiss(id), left.current);
+    return () => {
+      clearTimeout(timer);
+      left.current -= Date.now() - start;
+    };
+  }, [id, sticky, paused, onDismiss]);
 }

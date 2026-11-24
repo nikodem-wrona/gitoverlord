@@ -4,7 +4,11 @@ use super::count;
 use crate::GitError;
 use crate::model::{ChangeKind, FileDelta};
 
-/// Reads each changed file of `diff` with its line counts.
+/// The line counts read the content of each file. A change of more files
+/// gets line counts for its first files only, so a large change stays fast.
+const COUNTED_FILES: usize = 1000;
+
+/// Reads each changed file of `diff`, with the line counts of the first files.
 pub(super) fn list(diff: &Diff<'_>) -> Result<Vec<FileDelta>, GitError> {
     (0..diff.deltas().len())
         .filter_map(|index| read(diff, index).transpose())
@@ -25,7 +29,12 @@ fn read(diff: &Diff<'_>, index: usize) -> Result<Option<FileDelta>, GitError> {
         return Ok(None);
     };
     let old_path = path_of(&delta.old_file()).filter(|old| *old != path);
-    let (additions, deletions) = line_counts(diff, index)?;
+    let (additions, deletions) = if index < COUNTED_FILES {
+        let (additions, deletions) = line_counts(diff, index)?;
+        (Some(additions), Some(deletions))
+    } else {
+        (None, None)
+    };
 
     Ok(Some(FileDelta {
         path,
@@ -58,5 +67,26 @@ fn kind_of(status: Delta) -> ChangeKind {
         Delta::Untracked => ChangeKind::Untracked,
         Delta::Conflicted => ChangeKind::Conflicted,
         _ => ChangeKind::Modified,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::COUNTED_FILES;
+    use crate::fixture::RepoFixture;
+
+    #[test]
+    fn counts_the_lines_of_the_first_files_only() {
+        let mut fixture = RepoFixture::new();
+        for file in 0..=COUNTED_FILES {
+            fixture = fixture.write(&format!("f{file:04}.txt"), "a\nb\n");
+        }
+
+        let status = fixture.backend().status().unwrap();
+
+        let first = &status.unstaged[0];
+        assert_eq!((first.additions, first.deletions), (Some(2), Some(0)));
+        let last = &status.unstaged[COUNTED_FILES];
+        assert_eq!((last.additions, last.deletions), (None, None));
     }
 }

@@ -73,6 +73,8 @@ fn commands() -> Commands<tauri::Wry> {
         sync::pull_branch,
         sync::push_branch,
         sync::publish_branch,
+        sync::force_push_branch,
+        sync::undo_force_push,
         sync::clone_repository,
         github::github_account,
         github::github_start_sign_in,

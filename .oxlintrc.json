@@ -51,7 +51,11 @@
     {
       "files": ["**/*.test.ts", "**/*.test.tsx"],
       "rules": {
-        "max-lines-per-function": "off"
+        "max-lines-per-function": "off",
+        "vitest/expect-expect": [
+          "error",
+          { "assertFunctionNames": ["expect", "expectAccessible"] }
+        ]
       }
     }
   ]

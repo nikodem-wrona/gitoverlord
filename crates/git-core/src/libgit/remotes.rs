@@ -75,6 +75,14 @@ pub(super) fn diverged(repo: &Repository, branch: &str) -> Result<bool, GitError
     Ok(ahead > 0 && behind > 0)
 }
 
+/// Returns the commit of the upstream of `branch`, from the last fetch.
+pub(super) fn upstream_tip(repo: &Repository, branch: &str) -> Result<String, GitError> {
+    let local = repo.find_branch(branch, BranchType::Local)?;
+    let tip = local.upstream()?.get().target();
+    tip.map(|id| id.to_string())
+        .ok_or_else(|| GitError::Rejected(format!("The upstream of {branch} has no commit.")))
+}
+
 /// The time of the last fetch, in Unix seconds. Each fetch writes `FETCH_HEAD`.
 pub(super) fn last_fetch(repo: &Repository) -> Option<i64> {
     let modified = fs::metadata(repo.path().join("FETCH_HEAD"))

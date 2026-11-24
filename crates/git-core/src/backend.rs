@@ -109,6 +109,16 @@ pub trait GitBackend {
     /// Pushes the current branch to `origin`, or to the first remote, and makes
     /// that branch its upstream. Returns the name of the upstream.
     fn publish(&self, progress: &mut dyn FnMut(Progress)) -> Result<String, GitError>;
+    /// Replaces the upstream with the current branch, for example after a rebase.
+    /// Returns the commit that the upstream had. `git` refuses the push when the
+    /// remote has commits that the last fetch did not get.
+    fn force_push(&self, progress: &mut dyn FnMut(Progress)) -> Result<String, GitError>;
+    /// Puts the commit `previous` back on the upstream. This is the undo of `force_push`.
+    fn undo_force_push(
+        &self,
+        previous: &str,
+        progress: &mut dyn FnMut(Progress),
+    ) -> Result<(), GitError>;
 }
 
 /// Opens the repository that contains `path`.

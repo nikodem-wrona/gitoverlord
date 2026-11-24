@@ -22,8 +22,11 @@ pub struct FileDelta {
     /// The path before a rename.
     pub old_path: Option<String>,
     pub kind: ChangeKind,
-    pub additions: u32,
-    pub deletions: u32,
+    /// The added lines. `None` when the change has too many files: only the
+    /// first files get line counts.
+    pub additions: Option<u32>,
+    /// The removed lines. `None` when `additions` is `None`.
+    pub deletions: Option<u32>,
 }
 
 /// The changes that are not committed.

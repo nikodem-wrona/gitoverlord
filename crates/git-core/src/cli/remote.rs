@@ -47,6 +47,31 @@ pub(crate) fn push(
     run_network(dir, &args, token, progress)
 }
 
+/// The change of a force push: the commit `source` replaces the branch `target` on the remote.
+pub(crate) struct ForcePush<'a> {
+    pub(crate) remote: &'a str,
+    /// A local branch or a commit.
+    pub(crate) source: &'a str,
+    /// The branch on the remote, for example `refs/heads/main`.
+    pub(crate) target: &'a str,
+    /// The commit that the remote must have now. Else `git` refuses the push,
+    /// so no commit that the user did not fetch is lost.
+    pub(crate) expected: &'a str,
+}
+
+/// Replaces a branch on the remote, also when the remote has commits that `source` does not have.
+pub(crate) fn force_push(
+    dir: &Path,
+    change: &ForcePush<'_>,
+    token: Option<&HostToken>,
+    progress: &mut dyn FnMut(Progress),
+) -> Result<(), GitError> {
+    let lease = format!("--force-with-lease={}:{}", change.target, change.expected);
+    let refspec = format!("{}:{}", change.source, change.target);
+    let args = ["push", "--progress", &lease, "--", change.remote, &refspec];
+    run_network(dir, &args, token, progress)
+}
+
 pub(crate) fn add(dir: &Path, name: &str, url: &str) -> Result<(), GitError> {
     run_git_in(dir, &["remote", "add", "--", name, url]).map(drop)
 }

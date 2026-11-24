@@ -19,11 +19,22 @@ export function TableHead<Row>({
         <tr>
           {columns.map((column) => (
             <th key={column.id} scope="col" data-align={column.align}>
-              {column.header}
+              <HeaderText column={column} />
             </th>
           ))}
         </tr>
       </thead>
+    </>
+  );
+}
+
+/** The header, or its short text on the screen and the full name for a screen reader. */
+function HeaderText<Row>({ column }: { column: Column<Row> }) {
+  if (column.shortHeader === undefined) return column.header;
+  return (
+    <>
+      <span aria-hidden="true">{column.shortHeader}</span>
+      <span className="visually-hidden">{column.header}</span>
     </>
   );
 }

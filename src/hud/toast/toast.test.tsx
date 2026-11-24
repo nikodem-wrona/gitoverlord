@@ -55,6 +55,23 @@ describe("toasts", () => {
     expect(screen.queryByText("Saved")).not.toBeInTheDocument();
   });
 
+  it("stops the time while the pointer is on a notification", () => {
+    vi.useFakeTimers();
+    fireEvent.click(renderToasts(1000));
+    const toast = screen.getByText("Saved").closest("li") as HTMLElement;
+
+    act(() => vi.advanceTimersByTime(600));
+    fireEvent.mouseEnter(toast);
+    act(() => vi.advanceTimersByTime(5000));
+    expect(screen.getByText("Saved")).toBeInTheDocument();
+
+    fireEvent.mouseLeave(toast);
+    act(() => vi.advanceTimersByTime(399));
+    expect(screen.getByText("Saved")).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByText("Saved")).not.toBeInTheDocument();
+  });
+
   it("closes a notification with the dismiss button", () => {
     fireEvent.click(renderToasts());
 

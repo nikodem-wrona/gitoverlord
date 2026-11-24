@@ -33,6 +33,11 @@
   color: var(--color-accent-strong);
 }
 
+.item[aria-checked="true"] {
+  border-left-color: var(--color-active);
+  color: var(--color-active);
+}
+
 .item[data-danger] {
   color: var(--color-fail);
 }

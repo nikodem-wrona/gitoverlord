@@ -12,6 +12,8 @@ mod fixture;
 mod libgit;
 mod markers;
 mod model;
+#[cfg(test)]
+mod perf_tests;
 mod recent;
 mod version;
 mod watch;
