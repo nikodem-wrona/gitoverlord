@@ -1,50 +1,96 @@
+<div align="center">
+
+<img src="src-tauri/icons/128x128@2x.png" alt="The gitoverlord logo" width="112" />
+
 # gitoverlord
 
-<p align="center">
-  <img src="src-tauri/icons/128x128@2x.png" alt="The gitoverlord logo" width="128" />
-</p>
+_An open-source desktop Git client that looks like a futuristic control panel_
+
+[![CI status](https://img.shields.io/github/actions/workflow/status/nikodem-wrona/gitoverlord/ci.yml?branch=master&style=flat-square&label=CI)](https://github.com/nikodem-wrona/gitoverlord/actions/workflows/ci.yml)
+![Rust 1.100](https://img.shields.io/badge/Rust-1.100-333333?style=flat-square&logo=rust&logoColor=white)
+![Tauri 2](https://img.shields.io/badge/Tauri-2-333333?style=flat-square&logo=tauri&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-333333?style=flat-square&logo=react&logoColor=white)
+![TypeScript 7](https://img.shields.io/badge/TypeScript-7-333333?style=flat-square&logo=typescript&logoColor=white)
+[![MIT license](https://img.shields.io/badge/License-MIT-74f8b2?style=flat-square)](LICENSE)
+
+⭐ If you like this project, star it on GitHub!
+
+[Features](#features) • [Screenshots](#screenshots) • [Get started](#get-started) • [User guide](#user-guide) • [Development](#development)
+
+![The History tab of gitoverlord, with the commit timeline, the commit log, and the commit details](docs/images/history.png)
+
+</div>
 
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
-**Status:** Phase 7, showpieces and 1.0, in progress. The application opens or clones a repository and shows its history, its changes, its branches, its remotes, its stash, and its pull requests.
+> [!NOTE]
+> gitoverlord is in development. Phase 7, showpieces and 1.0, is in progress. The release workflow builds the installers for macOS, Windows, and Linux. The rest of Phase 7 is the signed 1.0 release. Until that release, [build the application from the source](#get-started). The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
 
-You can stage files and hunks, commit, amend, and discard changes. You can create, switch, rename, and delete branches, and use the stash. You can fetch, pull, push, and publish a branch. You can sign in to GitHub, clone your repositories, and create pull requests. You can merge, rebase, cherry-pick, revert, and reset, and resolve conflicts in the application. The panels refresh when the repository changes on the disk. You can select a theme and turn on sound. The application updates itself from the GitHub releases.
+## Features
 
-The release workflow builds the installers for macOS, Windows, and Linux. The rest of Phase 7 is the signed 1.0 release. The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
+- **Commit timeline**: The timeline shows the commits of each branch. Select a commit to see its details, its files, and their diffs.
+- **Changes**: Stage files or hunks, then commit, amend, or discard. The diff viewer shows the added and the removed lines.
+- **Branches and stash**: Create, switch, rename, and delete branches. Stash your changes, then apply, pop, or drop an entry.
+- **Sync**: Fetch, pull, push, and publish a branch, and see the progress of each operation. The application also fetches in the background.
+- **History operations**: Merge, rebase, cherry-pick, revert, and reset. The notification of each operation has an **Undo** button.
+- **Conflict resolver**: For each conflict, select the current lines, the incoming lines, or both. The application then writes the file and stages it.
+- **GitHub**: Sign in, clone your repositories, and create pull requests. The **Pull requests** tab shows the state of the checks.
+- **Command palette**: Press ⌘K, or Ctrl+K on Windows and Linux, to find a command. Many commands also have a shortcut.
+- **Themes, sound, and calm mode**: Select one of three themes, turn on a sound for each result, or stop all animations.
+- **Accessibility**: You can use each function with the keyboard and with a screen reader.
+- **Updates**: The application updates itself from the GitHub releases. The updater installs only an update with a correct signature.
 
-## Prerequisites
+The application asks before a destructive action. The panels refresh when the repository changes on the disk.
+
+## Screenshots
+
+The screenshots show the sample repository of the [demo backend](#demo-backend).
+
+|                                            Changes and diff                                             |                                                     Conflict resolver                                                      |
+| :-----------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
+|   ![The Changes tab, with the diff of a staged file and the commit console](docs/images/changes.png)    | ![The conflict resolver during a merge, with the incoming lines of the first conflict selected](docs/images/conflicts.png) |
+|                                           **Command palette**                                           |                                                     **Pull requests**                                                      |
+| ![The command palette, with the commands that match the word "branch"](docs/images/command-palette.png) |      ![The Pull requests tab, with three pull requests and the state of their checks](docs/images/pull-requests.png)       |
+
+<details>
+<summary>More screenshots: the themes, the boot sequence, and the start screen</summary>
+
+<br />
+
+|                                   Amber theme                                   |                                                           Mono theme                                                           |
+| :-----------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: |
+|       ![The History tab in the Amber theme](docs/images/theme-amber.png)        |                                ![The History tab in the Mono theme](docs/images/theme-mono.png)                                |
+|                                **Boot sequence**                                |                                                        **Start screen**                                                        |
+| ![The boot sequence, with the logo and four status lines](docs/images/boot.png) | ![The start screen, with the buttons to open or clone a repository and the list of recent repositories](docs/images/start.png) |
+
+</details>
+
+## Get started
+
+### Prerequisites
 
 - [Rust](https://rustup.rs). rustup installs the version that `rust-toolchain.toml` gives.
 - Node.js 26 and pnpm 10.
 - Git 2.26 or later.
 - The [Tauri system dependencies](https://tauri.app/start/prerequisites/) for your operating system.
 
-## Setup
+### Build and start
 
 ```bash
+git clone https://github.com/nikodem-wrona/gitoverlord.git
+cd gitoverlord
 pnpm install
+pnpm tauri dev
 ```
 
-## Commands
+`pnpm tauri dev` starts the application in development mode. `pnpm tauri build` builds the release bundle.
 
-| Command                       | Function                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `pnpm tauri dev`              | Start the application in development mode                                                  |
-| `pnpm dev`                    | Start only the frontend at `http://localhost:1420`, with a sample repository               |
-| `pnpm check`                  | Run each check for TypeScript and Rust                                                     |
-| `pnpm check:ui`               | Run the Prettier check, oxlint, the type check, and the frontend tests                     |
-| `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
-| `pnpm test`                   | Run the frontend tests                                                                     |
-| `cargo test --workspace`      | Run the Rust tests                                                                         |
-| `pnpm bench`                  | Measure the read operations on a repository with 50 000 commits                            |
-| `pnpm format`                 | Format TypeScript, CSS, JSON, and Markdown                                                 |
-| `cargo fmt --all`             | Format Rust                                                                                |
-| `pnpm bindings`               | Write `src/ipc/bindings.ts` again from the Rust commands                                   |
-| `pnpm icons`                  | Build the application icons again from `assets/logo-source.png`. This needs ImageMagick 7. |
-| `pnpm tauri build`            | Build the release bundle                                                                   |
-| `gh workflow run release.yml` | Build the installers on GitHub, without a release                                          |
+> [!TIP]
+> To see the user interface without the Rust core, run `pnpm dev`. Then open `http://localhost:1420` in a browser. The [demo backend](#demo-backend) shows a sample repository.
 
-## Open a repository
+## User guide
+
+### Open a repository
 
 Select **Open a folder** on the start screen, then select a folder in a git repository. The start screen also lists the repositories that you opened before.
 
@@ -54,7 +100,7 @@ Select a commit on the timeline or in the commit log to see its details. Select 
 
 On the timeline, the left and right arrow keys select an older or a newer commit. Right-click a commit, or press Shift+F10, to see its commands.
 
-## Commit changes
+### Commit changes
 
 1. Select the **Changes** tab.
 2. Select **Stage** on the row of a file, or select **Stage all**.
@@ -66,13 +112,13 @@ Select **Amend the last commit** to replace the last commit. If the fields are e
 
 The **+** and **−** columns show the added and the removed lines of each file. A change of more than 1 000 files shows the line counts of the first 1 000 files only, so that a large change stays fast.
 
-## Branches and stash
+### Branches and stash
 
 Use the toolbar on the **Branches** tab to create, switch, rename, and delete branches. A new branch starts at `HEAD` and becomes the current branch.
 
 Use the toolbar on the **Stash** tab to stash all changes, or to apply, pop, or drop an entry. Select an entry to see its files in the inspector.
 
-## Sync with a remote
+### Sync with a remote
 
 Use the **Fetch**, **Pull**, and **Push** buttons in the top bar. The buttons show the number of commits to pull and to push. The **Sync status** panel shows the progress of the operation and the time of the last fetch.
 
@@ -88,7 +134,7 @@ While a fetch, a pull, or a push runs, a pulse moves on the timeline between `HE
 
 The **Remotes** tab lists the remotes. If the repository has no remote, select **Add origin** and type the URL of the remote repository.
 
-## Merge, rebase, and other history operations
+### Merge, rebase, and other history operations
 
 - To merge a branch into the current branch, select the branch on the **Branches** tab. Then select **Merge**.
 - To rebase the current branch, select the other branch on the **Branches** tab. Then select **Rebase onto…**.
@@ -100,7 +146,7 @@ A reset has three modes. **Keep the changes staged** is a soft reset. **Keep the
 
 After a merge, a rebase, a cherry-pick, a revert, or a reset, the notification shows an **Undo** button. The undo moves the branch back to its last commit before the operation.
 
-## Resolve conflicts
+### Resolve conflicts
 
 When an operation stops at conflicts, a banner shows above the timeline. It gives the operation and the number of files with conflicts.
 
@@ -112,9 +158,18 @@ When an operation stops at conflicts, a banner shows above the timeline. It give
 
 **All current** and **All incoming** select one side for each conflict. **Whole file** keeps the full file of one side. Use it for a binary file or a deleted file. If you edit the file in an editor, select **Mark as resolved** when no markers are left.
 
-The undo of a resolution puts the conflicts back in the file. **Skip** drops the commit that a rebase, a cherry-pick, or a revert applies. **Abort** puts back the state from before the operation. Skip and Abort have no undo, because git keeps no copy of your resolutions.
+The undo of a resolution puts the conflicts back in the file. **Skip** drops the commit that a rebase, a cherry-pick, or a revert applies. **Abort** puts back the state from before the operation.
 
-## Sign in to a remote
+> [!CAUTION]
+> Skip and Abort have no undo, because git keeps no copy of your resolutions.
+
+### Undo a destructive action
+
+The application asks before it discards changes, deletes a branch, drops a stash entry, rebases, resets, or force-pushes. After the action, the notification shows an **Undo** button.
+
+A discard keeps a copy of the changes in the stash. When the notification closes, the copy stays on the **Stash** tab. Drop the entry to delete the copy.
+
+### Sign in to a remote
 
 The application does not ask for passwords. Git gets the credentials from your system:
 
@@ -123,9 +178,9 @@ The application does not ask for passwords. Git gets the credentials from your s
 
 If the remote refuses the sign-in, the notification tells you which part to set up.
 
-## GitHub
+### GitHub
 
-### Use your own OAuth app
+#### Use your own OAuth app
 
 The GitHub sign-in needs a GitHub OAuth app. gitoverlord has the client ID of its OAuth app, so the sign-in needs no setup.
 
@@ -144,7 +199,7 @@ GITOVERLORD_GITHUB_CLIENT_ID=<client ID> pnpm tauri dev
 
 The variable replaces the built-in client ID.
 
-### Sign in
+#### Sign in
 
 1. Select **Sign in** in the top bar.
 2. Select **Copy the code and open GitHub**.
@@ -154,7 +209,7 @@ The dialog closes when GitHub accepts the code. The token goes to the keychain o
 
 To sign out, select your user name in the top bar.
 
-### Clone and pull requests
+#### Clone and pull requests
 
 Select **Clone from GitHub** on the start screen to see your repositories. Type a part of a name to filter the list, then select a repository and a folder.
 
@@ -162,17 +217,12 @@ The **Pull requests** tab shows the open pull requests of the GitHub remote, wit
 
 To create a pull request, publish the current branch. Then select **Create…** on the **Pull requests** tab and type a title. The pull request goes into the default branch of the repository.
 
-## Undo a destructive action
-
-The application asks before it discards changes, deletes a branch, drops a stash entry, rebases, resets, or force-pushes. After the action, the notification shows an **Undo** button.
-
-A discard keeps a copy of the changes in the stash. When the notification closes, the copy stays on the **Stash** tab. Drop the entry to delete the copy.
-
-## Command palette and shortcuts
+### Command palette and shortcuts
 
 Press ⌘K to open the command palette. Type a part of the name of a command, then press Enter.
 
-On Windows and Linux, use Ctrl in place of ⌘.
+> [!NOTE]
+> On Windows and Linux, use Ctrl in place of ⌘.
 
 | Shortcut | Command                                                                   |
 | -------- | ------------------------------------------------------------------------- |
@@ -192,7 +242,23 @@ On Windows and Linux, use Ctrl in place of ⌘.
 | ⇧F10     | Show the commands of the selected commit, on the timeline                 |
 | Escape   | Close the diff, the conflict resolver, the menu, or the dialog            |
 
-## Updates
+### Themes and sound
+
+Select **Theme** in the status bar to change the colors. **Overlord** is the default theme: black and grey with one green. **Amber** is a warm terminal, and **Mono** has no color for active items.
+
+Select **Sound** in the status bar to play a short sound for each result: success, a stop that needs you, or a failure. The sound is off by default. The command palette also has the themes and the sound.
+
+### Calm mode
+
+Select **Calm mode** in the top bar to stop all animations. Calm mode is always on when your operating system asks for reduced motion.
+
+### Accessibility
+
+You can use each function with the keyboard and with a screen reader. The arrow keys select a commit on the timeline, and the screen reader reads the selected commit. A dialog keeps the focus until it closes. A notification stops its timer while the pointer or the focus is on it, so that you have time to select **Undo**.
+
+The tests check each screen with the WCAG 2.1 AA rules of [axe](https://github.com/dequelabs/axe-core). Another test checks that the text of each theme has a contrast of 4.5:1 or more.
+
+### Updates
 
 The application looks for a new release when it starts, and then one time each six hours. The status bar shows the version. When a new version is available, the status bar shows **Update to** and the version. Select it to download the update, install it, and start the new version. Your repositories and your changes stay as they are.
 
@@ -200,31 +266,38 @@ To look for a new release now, select **Check for updates** in the command palet
 
 The updater installs an update only when its signature matches the public key in the application. [RELEASING.md](docs/RELEASING.md) tells you how to make a release.
 
-## Demo backend
+## Development
+
+[CONTRIBUTING.md](CONTRIBUTING.md) gives the rules for contributions and the steps to add a command.
+
+### Commands
+
+| Command                       | Function                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `pnpm tauri dev`              | Start the application in development mode                                                  |
+| `pnpm dev`                    | Start only the frontend at `http://localhost:1420`, with a sample repository               |
+| `pnpm check`                  | Run each check for TypeScript and Rust                                                     |
+| `pnpm check:ui`               | Run the Prettier check, oxlint, the type check, and the frontend tests                     |
+| `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
+| `pnpm test`                   | Run the frontend tests                                                                     |
+| `cargo test --workspace`      | Run the Rust tests                                                                         |
+| `pnpm bench`                  | Measure the read operations on a repository with 50 000 commits                            |
+| `pnpm format`                 | Format TypeScript, CSS, JSON, and Markdown                                                 |
+| `cargo fmt --all`             | Format Rust                                                                                |
+| `pnpm bindings`               | Write `src/ipc/bindings.ts` again from the Rust commands                                   |
+| `pnpm icons`                  | Build the application icons again from `assets/logo-source.png`. This needs ImageMagick 7. |
+| `pnpm tauri build`            | Build the release bundle                                                                   |
+| `gh workflow run release.yml` | Build the installers on GitHub, without a release                                          |
+
+### Demo backend
 
 `pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. A merge or a rebase of `spike/radar` stops at a conflict, so that you can try the conflict resolver. The demo backend always offers one update. The release bundle does not contain the demo backend.
 
-## Component gallery
+### Component gallery
 
 The gallery shows each HUD component with its variants. Start the frontend with `pnpm dev`, then open `http://localhost:1420/gallery.html` in a browser. The gallery is not part of the release bundle.
 
-## Calm mode
-
-Select **Calm mode** in the top bar to stop all animations. Calm mode is always on when your operating system asks for reduced motion.
-
-## Accessibility
-
-You can use each function with the keyboard and with a screen reader. The arrow keys select a commit on the timeline, and the screen reader reads the selected commit. A dialog keeps the focus until it closes. A notification stops its timer while the pointer or the focus is on it, so that you have time to select **Undo**.
-
-The tests check each screen with the WCAG 2.1 AA rules of [axe](https://github.com/dequelabs/axe-core). Another test checks that the text of each theme has a contrast of 4.5:1 or more.
-
-## Themes and sound
-
-Select **Theme** in the status bar to change the colors. **Overlord** is the default theme: black and grey with one green. **Amber** is a warm terminal, and **Mono** has no color for active items.
-
-Select **Sound** in the status bar to play a short sound for each result: success, a stop that needs you, or a failure. The sound is off by default. The command palette also has the themes and the sound.
-
-## Structure
+### Structure
 
 ```
 crates/git-core/   Rust library without Tauri: domain types, git access, tests
@@ -242,28 +315,5 @@ assets/            source image of the logo
 scripts/           maintenance scripts, and the release scripts in scripts/release/
 docs/ROADMAP.md    stack, phases, practices, risks
 docs/RELEASING.md  release workflow, signing secrets, updater key
+docs/images/       screenshots for this file
 ```
-
-## Add a command
-
-1. Add the logic and its tests to `crates/git-core`. Each read operation and each write operation is a method of the `GitBackend` trait.
-2. Add a `#[tauri::command]` function to a file in `src-tauri/src/commands/`.
-3. Add the function to the list in `src-tauri/src/ipc.rs`.
-4. Run `pnpm bindings`.
-5. Add a handler for the command to `src/demo/demoHandlers.ts`. The type check fails until the handler is there.
-6. Call a read command from a query hook in `src/features/repository`.
-7. Run a write command in an action from `defineAction`. Use `useRepoWriter`, so that the panels refresh after the command.
-
-## Rules for contributions
-
-- Run `pnpm check` before you open a pull request. CI runs the same checks on macOS, Windows, and Linux.
-- Keep files and functions small. The linters enforce the limits.
-- Each screen must pass the accessibility test in `src/app/accessibility.test.tsx`. Add a new screen or dialog to the test.
-- Import a feature only through its index file, for example `@/features/system`.
-- Use conventional commit messages.
-
-The [roadmap](docs/ROADMAP.md) gives the full list of practices.
-
-## License
-
-[MIT](LICENSE)
