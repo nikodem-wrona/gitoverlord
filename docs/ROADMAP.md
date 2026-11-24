@@ -33,6 +33,7 @@ src/ipc/           generated bindings and IPC helpers
 src/gallery/       component gallery, for development only
 src/demo/          sample repository for the browser and for tests
 src/actions/       action factory, command palette, and shortcuts
+site/              landing page, which GitHub Pages serves
 assets/            source image of the logo
 scripts/           maintenance scripts
 ```
@@ -149,6 +150,7 @@ Done when a signed 1.0 release runs on macOS, Windows, and Linux.
 - [x] Automatic updates with signed update files
 - [x] Install script for macOS and Linux, with a check of the release signature
 - [x] Code signing in the release workflow, when the certificates are in the secrets
+- [x] Landing page on GitHub Pages
 - [ ] Updater key, Apple certificate, and Windows signing account in the release secrets
 - [ ] Signed 1.0 release
 

@@ -1,0 +1,15 @@
+/* Tokens that only the landing page needs. Each other token comes from the application. */
+:root {
+  --page-width: 80rem;
+  --measure: 64ch;
+  --text-hero: clamp(2.25rem, 1rem + 4.4vw, 4.25rem);
+
+  /* The height of the status bar at the bottom of the window. */
+  --bar-height: 1.75rem;
+
+  /* The smallest height of a control that a finger can press. */
+  --target-size: 2.75rem;
+
+  /* The delay between two lines of the system check. */
+  --step-delay: 160ms;
+}

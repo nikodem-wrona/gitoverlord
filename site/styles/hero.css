@@ -1,0 +1,109 @@
+/* The first screen: the statement, the system check, and the History tab of the application. */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+  gap: var(--space-8);
+  align-items: end;
+  padding-top: var(--space-8);
+}
+
+.hero h1 {
+  max-width: 16ch;
+  color: var(--color-accent-strong);
+  font-family: var(--font-display);
+  font-size: var(--text-hero);
+  font-weight: 700;
+  letter-spacing: var(--tracking-normal);
+  line-height: 0.95;
+  text-shadow: var(--text-glow-accent);
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: var(--measure);
+  margin-top: var(--space-5);
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  line-height: 1.55;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.hero-screen {
+  grid-column: 1 / -1;
+  animation: reveal var(--duration-slow) var(--ease-out) both;
+  animation-delay: calc(3 * var(--step-delay));
+}
+
+/* The lines of the system check come one after the other, as in the boot sequence of the application. */
+.hero-check .status-line {
+  animation: type-in var(--duration-base) var(--ease-out) both;
+}
+
+.hero-check .status-line:nth-child(2) {
+  animation-delay: var(--step-delay);
+}
+
+.hero-check .status-line:nth-child(3) {
+  animation-delay: calc(2 * var(--step-delay));
+}
+
+.hero-check .status-line:nth-child(4) {
+  animation-delay: calc(3 * var(--step-delay));
+}
+
+.hero-check .status-line:nth-child(5) {
+  animation-delay: calc(4 * var(--step-delay));
+}
+
+.hero-check .status-line:nth-child(6) {
+  animation-delay: calc(5 * var(--step-delay));
+}
+
+@keyframes type-in {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(-4px -4px 100% -4px);
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(-4px);
+  }
+}
+
+@media (width < 62rem) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    padding-top: var(--space-5);
+  }
+}
+
+@media (width < 36rem) {
+  .lead {
+    font-size: var(--text-md);
+  }
+}

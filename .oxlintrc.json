@@ -5,7 +5,13 @@
     "correctness": "error",
     "suspicious": "error"
   },
-  "ignorePatterns": ["dist", "target", "src-tauri", "src/ipc/bindings.ts"],
+  "ignorePatterns": [
+    "dist",
+    "dist-site",
+    "target",
+    "src-tauri",
+    "src/ipc/bindings.ts"
+  ],
   "rules": {
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",
