@@ -15,7 +15,7 @@ _An open-source desktop Git client that looks like a futuristic control panel_
 
 ⭐ If you like this project, star it on GitHub!
 
-[Features](#features) • [Screenshots](#screenshots) • [Get started](#get-started) • [User guide](#user-guide) • [Development](#development)
+[Website](https://nikodem-wrona.github.io/gitoverlord/) • [Features](#features) • [Screenshots](#screenshots) • [Get started](#get-started) • [User guide](#user-guide) • [Development](#development)
 
 ![The History tab of gitoverlord, with the commit timeline, the commit log, and the commit details](docs/images/history.png)
 
@@ -276,6 +276,8 @@ The updater installs an update only when its signature matches the public key in
 | ----------------------------- | ------------------------------------------------------------------------------------------ |
 | `pnpm tauri dev`              | Start the application in development mode                                                  |
 | `pnpm dev`                    | Start only the frontend at `http://localhost:1420`, with a sample repository               |
+| `pnpm dev:site`               | Start the landing page at `http://localhost:1430`                                          |
+| `pnpm build:site`             | Build the landing page into `dist-site/`                                                   |
 | `pnpm check`                  | Run each check for TypeScript and Rust                                                     |
 | `pnpm check:ui`               | Run the Prettier check, oxlint, the type check, and the frontend tests                     |
 | `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
@@ -297,6 +299,12 @@ The updater installs an update only when its signature matches the public key in
 
 The gallery shows each HUD component with its variants. Start the frontend with `pnpm dev`, then open `http://localhost:1420/gallery.html` in a browser. The gallery is not part of the release bundle.
 
+### Landing page
+
+The landing page is in `site/`. It uses the fonts, the tokens, and the themes of the application, and it shows the screenshots in `docs/images/`. Start it with `pnpm dev:site`, then open `http://localhost:1430` in a browser.
+
+The Pages workflow publishes the page at <https://nikodem-wrona.github.io/gitoverlord/> after each push to `master` that changes it.
+
 ### Structure
 
 ```
@@ -311,9 +319,10 @@ src/actions/       action factory, command palette, and shortcuts
 src/gallery/       component gallery, for development only
 src/demo/          sample repository for the browser and for tests
 src/test/          helpers for frontend tests
+site/              landing page, which GitHub Pages serves
 assets/            source image of the logo
 scripts/           maintenance scripts, and the release scripts in scripts/release/
 docs/ROADMAP.md    stack, phases, practices, risks
 docs/RELEASING.md  release workflow, signing secrets, updater key
-docs/images/       screenshots for this file
+docs/images/       screenshots for this file and for the landing page
 ```

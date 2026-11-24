@@ -10,6 +10,8 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `pnpm tauri dev`: start the application.
 - `GITOVERLORD_GITHUB_CLIENT_ID=<id> pnpm tauri dev`: start the application with a different GitHub OAuth app. The ID is the client ID of an OAuth app with the device flow. Without the variable, the sign-in uses the built-in client ID.
 - `pnpm dev`: start only the frontend at `http://localhost:1420`. There is no Rust core in this mode. The demo backend in `src/demo` answers each command with a sample repository, and the status bar shows "Demo data". The component gallery is at `http://localhost:1420/gallery.html`.
+- `pnpm dev:site`: start the landing page at `http://localhost:1430`.
+- `pnpm build:site`: build the landing page into `dist-site/`.
 - `pnpm check`: run each check for TypeScript and Rust. Run it before you report that work is complete.
 - `pnpm check:ui`: run the Prettier check, oxlint, `tsc -b`, and Vitest.
 - `pnpm check:rust`: run the rustfmt check, Clippy with `-D warnings`, and `cargo test --workspace`.
@@ -73,6 +75,12 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `src/app/`: `AppProviders`, `Root` (boot sequence, then shell), `AppShell` (the layout), `RepoDeck` (the three columns of an open repository), `TopBar`, `StatusBar`, `Workspace`, and the module list in `modules.ts`. `appActions` and `useRepoActions` put the actions in the command palette. `useDeckSelection` holds the selected commit and the open file. `CenterView` shows the conflict resolver, the diff viewer, or the timeline.
 - `src/demo/`: the sample repository and `createDemoHandlers`. The handlers keep a copy of the sample repository, and the write commands change it. `main.tsx` loads the demo backend only in development and only outside Tauri. A merge or a rebase of `spike/radar` stops at a conflict. Each conflict shows `sampleConflict`. The demo always offers one update.
 - `src/gallery/`: the component gallery. Vite serves it in development only.
+- `site/`: the landing page. It is one static page with small scripts and no React. `vite.site.config.ts` builds it into `dist-site/`.
+  - `styles/site.css` imports the fonts, `src/hud/tokens.css`, and `src/hud/themes.css`, so the page has the tokens and the themes of the application. `styles/controls.css` and `styles/panel.css` copy the look of the HUD components.
+  - `index.html` shows the screenshots in `docs/images/` with a path such as `../docs/images/history.png`. The build reads the file from the disk. The plugin in `vite.site.config.ts` gives the file to the development server.
+  - `scripts/` adds calm mode, the theme switch, the tabs of the tour, and the copy button. `site.test.ts` starts the scripts and checks the page with axe.
+  - `public/og.png` is the image that a link to the page shows. It is a screenshot of the top of the page at 1200×630.
+- `.github/workflows/pages.yml`: a push to `master` that changes the landing page builds it and publishes it on GitHub Pages.
 - `.github/workflows/release.yml`: a tag such as `v1.0.0` builds the installers and attaches them to a draft release. `scripts/release/` checks the version, and exports only the signing secrets that have a value.
 - `src/test/`: helpers for frontend tests. `expectAccessible` checks the page with axe. `contrast.ts` reads the color tokens and computes WCAG contrast ratios.
 
@@ -111,4 +119,6 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - The versions of `specta`, `tauri-specta`, and `specta-typescript` are pinned. Change them together.
 - Keep the version in `Cargo.toml` and in `package.json` the same. The release workflow stops when they are not the version of the tag.
 - The private key of the updater stays out of the repository. Only the release workflow reads it, from the secret `TAURI_SIGNING_PRIVATE_KEY`.
+- The landing page must work without its scripts. A control that needs a script has `data-needs-script` and `hidden`, and `startPage` shows it.
+- The landing page has no copy of a token. When the look of a HUD component changes, change its copy in `site/styles/` too.
 - When you add a tool or a command, update `README.md` and this file.

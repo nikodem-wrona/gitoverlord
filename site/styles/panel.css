@@ -1,0 +1,236 @@
+/* The panel of the application, and the data views that a panel holds. */
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel);
+}
+
+/* Corner brackets. */
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 0 solid var(--color-accent);
+  pointer-events: none;
+}
+
+.panel::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.panel::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-panel-header);
+}
+
+.panel-title {
+  flex: none;
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-shadow: var(--text-glow-accent);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.panel-meta {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.panel-body {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-4);
+}
+
+.panel-body[data-flush] {
+  padding: 0;
+}
+
+.readouts {
+  display: flex;
+  gap: var(--space-6);
+}
+
+.readout dt {
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.readout dd {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+/* Readouts with sentences, not short values. */
+.readouts-prose {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-5) var(--space-8);
+}
+
+.readouts-prose dt {
+  font-size: var(--text-md);
+}
+
+.readouts-prose dd {
+  max-width: var(--measure);
+  font-size: var(--text-md);
+}
+
+.status-list {
+  display: grid;
+  gap: var(--space-1);
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.status-line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  text-transform: uppercase;
+}
+
+.status-line[data-state="pending"] {
+  --state-color: var(--color-text-dim);
+}
+
+.status-line[data-state="ok"] {
+  --state-color: var(--color-ok);
+}
+
+.status-badge {
+  color: var(--state-color);
+  white-space: pre;
+}
+
+.status-line[data-state="pending"] .status-badge {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+.status-label {
+  color: var(--color-text-dim);
+  white-space: nowrap;
+}
+
+.status-leader {
+  flex: 1;
+  min-width: var(--space-4);
+  border-bottom: 1px dotted var(--color-line-strong);
+}
+
+.status-value {
+  color: var(--state-color);
+  text-align: end;
+}
+
+/* The feature list has the look of a table of the application: a header row, then striped rows. */
+.feature-head,
+.feature {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) 3fr minmax(8rem, auto);
+  gap: var(--space-1) var(--space-6);
+  padding: var(--space-2) var(--space-4);
+}
+
+.feature-head {
+  padding-block: var(--space-1);
+  border-bottom: 1px solid var(--color-line-strong);
+  background: var(--color-panel-header);
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.feature-list {
+  padding: 0;
+  list-style: none;
+}
+
+.feature {
+  align-items: baseline;
+  transition: background var(--duration-fast);
+}
+
+.feature:nth-child(even) {
+  background: var(--color-row-stripe);
+}
+
+.feature:hover {
+  background: var(--color-row-hover);
+}
+
+.feature h3 {
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.feature-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+/* On a narrow screen, each feature is a block: the name and the shortcut, then the function. */
+@media (width < 48rem) {
+  .feature-head {
+    display: none;
+  }
+
+  .feature {
+    grid-template-columns: 1fr auto;
+    padding-block: var(--space-3);
+  }
+
+  .feature > p:not(.feature-keys) {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+}

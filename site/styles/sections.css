@@ -1,0 +1,171 @@
+/* The sections after the first screen: the tour, the theme switch, and the build steps. */
+
+/* Two panels in one row, as the columns of the application. */
+.deck {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-3);
+}
+
+.tour {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Without the script, the screens are in a column. With it, the tour shows one screen. */
+.screen {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.screen + .screen {
+  margin-top: var(--space-6);
+}
+
+.tour[data-ready] .screen + .screen {
+  margin-top: 0;
+}
+
+.screen-text {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) 3fr;
+  gap: var(--space-1) var(--space-6);
+  align-items: baseline;
+}
+
+.screen-text h3,
+.prose h3 {
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.screen-text p {
+  max-width: var(--measure);
+}
+
+.shot {
+  width: 100%;
+  border: 1px solid var(--color-line);
+}
+
+.panel-body[data-flush] > .shot {
+  border: 0;
+}
+
+.prose {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.prose p,
+.prose li {
+  max-width: var(--measure);
+}
+
+.prose h3 {
+  margin-top: var(--space-2);
+}
+
+.prose ul {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  list-style: square;
+}
+
+.prose li::marker {
+  color: var(--color-text-dim);
+}
+
+.prose .link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  padding: 0;
+  list-style: none;
+}
+
+.prose code {
+  color: var(--color-accent);
+}
+
+.theme-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.theme-option {
+  display: grid;
+  gap: 0 var(--space-3);
+  min-height: var(--target-size);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line-strong);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast),
+    border-color var(--duration-fast);
+}
+
+.theme-option:hover {
+  background: var(--color-row-hover);
+}
+
+.theme-option[aria-pressed="true"] {
+  border-color: var(--color-active);
+  background: var(--color-active-soft);
+  box-shadow: inset 2px 0 0 var(--color-active);
+}
+
+.theme-name {
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.theme-option[aria-pressed="true"] .theme-name {
+  color: var(--color-active);
+  text-shadow: var(--text-glow-active);
+}
+
+.theme-detail {
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+}
+
+/* The dim text does not have a contrast of 4.5:1 on the selected option of each theme. */
+.theme-option[aria-pressed="true"] .theme-detail {
+  color: var(--color-text);
+}
+
+.terminal {
+  overflow-x: auto;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-line);
+  background: var(--color-bg);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+}
+
+@media (width < 62rem) {
+  .deck {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (width < 48rem) {
+  .screen-text {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

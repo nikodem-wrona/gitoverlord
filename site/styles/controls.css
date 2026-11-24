@@ -1,0 +1,221 @@
+/* The controls of the application: the button, the tab, the checkbox, and the key. */
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--button-line);
+  background: transparent;
+  color: var(--button-text);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast),
+    border-color var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.button[data-variant="ghost"] {
+  --button-line: var(--color-line-strong);
+  --button-text: var(--color-text);
+  --button-hover: var(--color-accent);
+}
+
+.button[data-variant="primary"] {
+  --button-line: var(--color-active);
+  --button-text: var(--color-active);
+  --button-hover: var(--color-active-strong);
+}
+
+.button[data-size="large"] {
+  min-height: var(--target-size);
+  padding: var(--space-2) var(--space-6);
+  font-size: var(--text-md);
+}
+
+.button[data-compact] {
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+/* The light that sweeps over the button. */
+.button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgb(255 255 255 / 18%) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.button:hover {
+  border-color: var(--button-hover);
+  color: var(--button-hover);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--button-hover) 40%, transparent);
+}
+
+.button:hover::after {
+  animation: sweep 600ms var(--ease-out);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel);
+  color: var(--color-text-dim);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast),
+    border-color var(--duration-fast);
+}
+
+/* The lamp of a tab. It is on when the tab is the current one. */
+.tab::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0.6;
+}
+
+.tab:hover {
+  background: var(--color-row-hover);
+  color: var(--color-text);
+}
+
+.tab[aria-selected="true"],
+.tab[aria-current] {
+  border-color: var(--color-active);
+  background: var(--color-active-soft);
+  color: var(--color-active);
+  box-shadow: inset 0 -2px 0 var(--color-active);
+  text-shadow: var(--text-glow-active);
+}
+
+.tab[aria-selected="true"]::after,
+.tab[aria-current]::after {
+  opacity: 1;
+  box-shadow: var(--glow-active);
+}
+
+.checkbox {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.checkbox:hover {
+  color: var(--color-text);
+}
+
+/* The native input stays in the page for keyboards and assistive technology. */
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkbox-box {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--color-text-dim);
+}
+
+.checkbox-input:checked + .checkbox-box {
+  border-color: var(--color-active);
+  box-shadow: var(--glow-active);
+}
+
+.checkbox-input:checked + .checkbox-box::before,
+.checkbox-input:checked + .checkbox-box::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 1px;
+  background: var(--color-active);
+}
+
+.checkbox-input:checked + .checkbox-box::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.checkbox-input:checked + .checkbox-box::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.checkbox-input:focus-visible + .checkbox-box {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.checkbox-input:disabled + .checkbox-box {
+  opacity: 0.6;
+}
+
+kbd {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+@keyframes sweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* A finger needs a larger target than a pointer. */
+@media (pointer: coarse) {
+  .button:not([data-compact]),
+  .tab {
+    min-height: var(--target-size);
+  }
+}

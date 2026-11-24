@@ -1,0 +1,13 @@
+/* The styles of the landing page. The page uses the fonts, the tokens, and the themes of the application. */
+@import "@fontsource/rajdhani/latin-600.css";
+@import "@fontsource/rajdhani/latin-700.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+@import "../../src/hud/tokens.css";
+@import "../../src/hud/themes.css";
+@import "./tokens.css";
+@import "./base.css";
+@import "./controls.css";
+@import "./panel.css";
+@import "./shell.css";
+@import "./hero.css";
+@import "./sections.css";

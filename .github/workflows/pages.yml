@@ -1,0 +1,66 @@
+name: Pages
+
+# A push to master that changes the landing page builds it and publishes it on GitHub Pages.
+# A manual run publishes the page again from master.
+on:
+  push:
+    branches: [master]
+    paths:
+      - site/**
+      - docs/images/**
+      - src/hud/tokens.css
+      - src/hud/themes.css
+      - src/assets/**
+      - src-tauri/icons/**
+      - vite.site.config.ts
+      - package.json
+      - pnpm-lock.yaml
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+# One deployment at a time. A deployment that runs is not cancelled.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build the landing page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the landing page
+        run: pnpm build:site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist-site
+
+  deploy:
+    name: Publish on GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    # The deployment needs these two permissions. The token of the build job cannot write.
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

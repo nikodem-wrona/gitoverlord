@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>gitoverlord: a Git client that looks like a control panel</title>
+    <meta
+      name="description"
+      content="gitoverlord is an open-source desktop Git client for macOS, Windows, and Linux. It has a Rust core, an Undo button for each history operation, and an interface that looks like a control panel."
+    />
+    <link rel="canonical" href="https://nikodem-wrona.github.io/gitoverlord/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="gitoverlord" />
+    <meta
+      property="og:description"
+      content="An open-source desktop Git client that looks like a control panel."
+    />
+    <meta
+      property="og:url"
+      content="https://nikodem-wrona.github.io/gitoverlord/"
+    />
+    <meta
+      property="og:image"
+      content="https://nikodem-wrona.github.io/gitoverlord/og.png"
+    />
+    <meta
+      property="og:image:alt"
+      content="The gitoverlord page, with the system check and the History tab of the application"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/png" href="../src-tauri/icons/32x32.png" />
+    <link rel="apple-touch-icon" href="../src-tauri/icons/128x128@2x.png" />
+    <link rel="stylesheet" href="./styles/site.css" />
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the content</a>
+
+    <div class="page">
+      <header class="topbar">
+        <a class="brand" href="#overview">
+          <span class="logo" aria-hidden="true"></span>
+          <span class="brand-name">gitoverlord</span>
+        </a>
+        <dl class="readouts topbar-readouts">
+          <div class="readout">
+            <dt>Repository</dt>
+            <dd>nikodem-wrona/gitoverlord</dd>
+          </div>
+          <div class="readout">
+            <dt>Version</dt>
+            <dd>%APP_VERSION%</dd>
+          </div>
+          <div class="readout">
+            <dt>License</dt>
+            <dd>MIT</dd>
+          </div>
+        </dl>
+        <div class="topbar-actions">
+          <a
+            class="button"
+            data-variant="ghost"
+            href="https://github.com/nikodem-wrona/gitoverlord"
+            >Source on GitHub</a
+          >
+          <a class="button" data-variant="primary" href="#get-started"
+            >Get started</a
+          >
+          <label class="checkbox" data-needs-script hidden>
+            <input class="checkbox-input" type="checkbox" id="calm-mode" />
+            <span class="checkbox-box" aria-hidden="true"></span>
+            Calm mode
+          </label>
+        </div>
+      </header>
+
+      <nav class="tabs section-nav" aria-label="Sections">
+        <a class="tab" href="#overview" aria-current="location">Overview</a>
+        <a class="tab" href="#tour">Tour</a>
+        <a class="tab" href="#features">Features</a>
+        <a class="tab" href="#safeguards">Safeguards</a>
+        <a class="tab" href="#get-started">Get started</a>
+      </nav>
+
+      <main id="main">
+        <section class="hero" id="overview" aria-labelledby="overview-title">
+          <div class="hero-copy">
+            <h1 id="overview-title">
+              A Git client that looks like a control panel
+            </h1>
+            <p class="lead">
+              gitoverlord is an open-source desktop Git client, and an
+              alternative to GitHub Desktop. A Rust core does the git work. Each
+              operation that changes your history has an Undo button.
+            </p>
+            <p class="hero-actions">
+              <a
+                class="button"
+                data-variant="primary"
+                data-size="large"
+                href="#get-started"
+                >Get started</a
+              >
+              <a
+                class="button"
+                data-variant="ghost"
+                data-size="large"
+                href="https://github.com/nikodem-wrona/gitoverlord"
+                >Star on GitHub</a
+              >
+            </p>
+          </div>
+
+          <section class="panel hero-check" aria-labelledby="check-title">
+            <header class="panel-header">
+              <h2 class="panel-title" id="check-title">System check</h2>
+              <p class="panel-meta">Phase 7 of 7</p>
+            </header>
+            <ul class="panel-body status-list">
+              <li class="status-line" data-state="ok">
+                <span class="status-badge">[ OK ]</span>
+                <span class="status-label">Git core</span>
+                <span class="status-leader" aria-hidden="true"></span>
+                <span class="status-value">Rust</span>
+              </li>
+              <li class="status-line" data-state="ok">
+                <span class="status-badge">[ OK ]</span>
+                <span class="status-label">Shell</span>
+                <span class="status-leader" aria-hidden="true"></span>
+                <span class="status-value">Tauri 2</span>
+              </li>
+              <li class="status-line" data-state="ok">
+                <span class="status-badge">[ OK ]</span>
+                <span class="status-label">Interface</span>
+                <span class="status-leader" aria-hidden="true"></span>
+                <span class="status-value">React 19</span>
+              </li>
+              <li class="status-line" data-state="ok">
+                <span class="status-badge">[ OK ]</span>
+                <span class="status-label">Systems</span>
+                <span class="status-leader" aria-hidden="true"></span>
+                <span class="status-value">macOS, Windows, Linux</span>
+              </li>
+              <li class="status-line" data-state="ok">
+                <span class="status-badge">[ OK ]</span>
+                <span class="status-label">License</span>
+                <span class="status-leader" aria-hidden="true"></span>
+                <span class="status-value">MIT</span>
+              </li>
+              <li class="status-line" data-state="pending">
+                <span class="status-badge">[ .. ]</span>
+                <span class="status-label">Release 1.0</span>
+                <span class="status-leader" aria-hidden="true"></span>
+                <span class="status-value">In progress</span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="panel hero-screen" aria-labelledby="history-title">
+            <header class="panel-header">
+              <h2 class="panel-title" id="history-title">History</h2>
+              <p class="panel-meta">Sample repository</p>
+            </header>
+            <div class="panel-body" data-flush>
+              <img
+                class="shot"
+                data-theme-shot="overlord"
+                src="../docs/images/history.png"
+                width="2880"
+                height="1800"
+                alt="The History tab of gitoverlord, with the commit timeline, the commit log, and the commit details"
+              />
+              <img
+                class="shot"
+                data-theme-shot="amber"
+                src="../docs/images/theme-amber.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                alt="The History tab of gitoverlord in the Amber theme"
+                hidden
+              />
+              <img
+                class="shot"
+                data-theme-shot="mono"
+                src="../docs/images/theme-mono.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                alt="The History tab of gitoverlord in the Mono theme"
+                hidden
+              />
+            </div>
+          </section>
+        </section>
+
+        <section class="panel" id="tour" aria-labelledby="tour-title">
+          <header class="panel-header">
+            <h2 class="panel-title" id="tour-title">Tour</h2>
+            <p class="panel-meta">4 screens</p>
+          </header>
+          <div class="panel-body tour" data-tour>
+            <div class="screen" id="screen-changes" data-screen="Changes">
+              <div class="screen-text">
+                <h3>Changes and diff</h3>
+                <p>
+                  Stage files or hunks, then commit, amend, or discard. The diff
+                  viewer shows the added and the removed lines.
+                </p>
+              </div>
+              <img
+                class="shot"
+                src="../docs/images/changes.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                alt="The Changes tab, with the diff of a staged file and the commit console"
+              />
+            </div>
+            <div class="screen" id="screen-conflicts" data-screen="Conflicts">
+              <div class="screen-text">
+                <h3>Conflict resolver</h3>
+                <p>
+                  For each conflict, select the current lines, the incoming
+                  lines, or both. gitoverlord then writes the file and stages
+                  it.
+                </p>
+              </div>
+              <img
+                class="shot"
+                src="../docs/images/conflicts.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                alt="The conflict resolver during a merge, with the incoming lines of the first conflict selected"
+              />
+            </div>
+            <div class="screen" id="screen-palette" data-screen="Commands">
+              <div class="screen-text">
+                <h3>Command palette</h3>
+                <p>
+                  Press <kbd>⌘K</kbd>, or <kbd>Ctrl+K</kbd> on Windows and
+                  Linux, to find a command. Many commands also have a shortcut.
+                </p>
+              </div>
+              <img
+                class="shot"
+                src="../docs/images/command-palette.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                alt="The command palette, with the commands that match the word branch"
+              />
+            </div>
+            <div class="screen" id="screen-pulls" data-screen="Pull requests">
+              <div class="screen-text">
+                <h3>Pull requests</h3>
+                <p>
+                  Sign in to GitHub, clone your repositories, and create pull
+                  requests. The tab shows the state of the checks.
+                </p>
+              </div>
+              <img
+                class="shot"
+                src="../docs/images/pull-requests.png"
+                width="2880"
+                height="1800"
+                loading="lazy"
+                alt="The Pull requests tab, with three pull requests and the state of their checks"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="features" aria-labelledby="features-title">
+          <header class="panel-header">
+            <h2 class="panel-title" id="features-title">Features</h2>
+            <p class="panel-meta">⌘ is Ctrl on Windows and Linux</p>
+          </header>
+          <div class="panel-body" data-flush>
+            <div class="feature-head" aria-hidden="true">
+              <span>Feature</span><span>Function</span><span>Shortcut</span>
+            </div>
+            <ul class="feature-list">
+              <li class="feature">
+                <h3>Commit timeline</h3>
+                <p>
+                  Shows the commits of each branch. Select a commit to see its
+                  details, its files, and their diffs.
+                </p>
+                <p class="feature-keys">
+                  <span class="visually-hidden">Shortcut: </span><kbd>⌘2</kbd>
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Changes</h3>
+                <p>Stage files or hunks, then commit, amend, or discard.</p>
+                <p class="feature-keys">
+                  <span class="visually-hidden">Shortcuts: </span><kbd>⌘1</kbd>
+                  <kbd>⌘↩</kbd>
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Branches</h3>
+                <p>Create, switch, rename, and delete branches.</p>
+                <p class="feature-keys">
+                  <span class="visually-hidden">Shortcuts: </span><kbd>⌘3</kbd>
+                  <kbd>⇧⌘N</kbd>
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Stash</h3>
+                <p>Stash your changes, then apply, pop, or drop an entry.</p>
+                <p class="feature-keys">
+                  <span class="visually-hidden">Shortcuts: </span><kbd>⌘5</kbd>
+                  <kbd>⇧⌘S</kbd>
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Sync</h3>
+                <p>
+                  Fetch, pull, push, and publish a branch, and see the progress
+                  of each operation. The application also fetches in the
+                  background.
+                </p>
+                <p class="feature-keys">
+                  <span class="visually-hidden">Shortcuts: </span><kbd>⇧⌘T</kbd>
+                  <kbd>⇧⌘P</kbd> <kbd>⌘P</kbd>
+                </p>
+              </li>
+              <li class="feature">
+                <h3>History operations</h3>
+                <p>
+                  Merge, rebase, cherry-pick, revert, and reset. The
+                  notification of each operation has an Undo button.
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Conflict resolver</h3>
+                <p>
+                  For each conflict, select the current lines, the incoming
+                  lines, or both.
+                </p>
+              </li>
+              <li class="feature">
+                <h3>GitHub</h3>
+                <p>
+                  Sign in, clone your repositories, and create pull requests,
+                  with the state of their checks.
+                </p>
+                <p class="feature-keys">
+                  <span class="visually-hidden">Shortcut: </span><kbd>⌘6</kbd>
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Command palette</h3>
+                <p>Find each command by a part of its name.</p>
+                <p class="feature-keys">
+                  <span class="visually-hidden">Shortcut: </span><kbd>⌘K</kbd>
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Themes, sound, calm mode</h3>
+                <p>
+                  Select one of three themes, turn on a sound for each result,
+                  or stop all animations.
+                </p>
+              </li>
+              <li class="feature">
+                <h3>Updates</h3>
+                <p>
+                  The application updates itself from the GitHub releases. It
+                  installs only an update with a correct signature.
+                </p>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <div class="deck">
+          <section
+            class="panel"
+            id="safeguards"
+            aria-labelledby="safeguards-title"
+          >
+            <header class="panel-header">
+              <h2 class="panel-title" id="safeguards-title">Safeguards</h2>
+              <p class="panel-meta">Your work stays safe</p>
+            </header>
+            <dl class="panel-body readouts readouts-prose">
+              <div class="readout">
+                <dt>Confirm</dt>
+                <dd>
+                  The application asks before it discards changes, deletes a
+                  branch, drops a stash entry, rebases, resets, or force-pushes.
+                </dd>
+              </div>
+              <div class="readout">
+                <dt>Undo</dt>
+                <dd>
+                  After a merge, a rebase, a cherry-pick, a revert, or a reset,
+                  the notification shows an Undo button. A discard keeps a copy
+                  of your changes in the stash.
+                </dd>
+              </div>
+              <div class="readout">
+                <dt>Credentials</dt>
+                <dd>
+                  The application does not ask for passwords. Git uses the
+                  credential helper or the SSH agent of your system. The GitHub
+                  token stays in the keychain.
+                </dd>
+              </div>
+              <div class="readout">
+                <dt>Accessibility</dt>
+                <dd>
+                  You can use each function with the keyboard and with a screen
+                  reader. Tests check each screen with the WCAG 2.1 AA rules,
+                  and each theme for a text contrast of 4.5:1.
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="panel" aria-labelledby="theme-title">
+            <header class="panel-header">
+              <h2 class="panel-title" id="theme-title">Theme</h2>
+              <p class="panel-meta">Changes this page</p>
+            </header>
+            <div class="panel-body">
+              <p>
+                The application has three themes. Each one changes only the
+                color tokens.
+              </p>
+              <div
+                class="theme-list"
+                role="group"
+                aria-labelledby="theme-title"
+                data-needs-script
+                hidden
+              >
+                <button
+                  class="theme-option"
+                  type="button"
+                  data-theme-option="overlord"
+                  aria-pressed="true"
+                >
+                  <span class="theme-name">Overlord</span>
+                  <span class="theme-detail"
+                    >Black and grey with one green</span
+                  >
+                </button>
+                <button
+                  class="theme-option"
+                  type="button"
+                  data-theme-option="amber"
+                  aria-pressed="false"
+                >
+                  <span class="theme-name">Amber</span>
+                  <span class="theme-detail">A warm amber terminal</span>
+                </button>
+                <button
+                  class="theme-option"
+                  type="button"
+                  data-theme-option="mono"
+                  aria-pressed="false"
+                >
+                  <span class="theme-name">Mono</span>
+                  <span class="theme-detail">Black, white, and grey only</span>
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="deck">
+          <section
+            class="panel"
+            id="get-started"
+            aria-labelledby="get-started-title"
+          >
+            <header class="panel-header">
+              <h2 class="panel-title" id="get-started-title">Get started</h2>
+              <p class="panel-meta">Build from the source</p>
+            </header>
+            <div class="panel-body prose">
+              <p>
+                gitoverlord is in development. The signed installers for macOS,
+                Windows, and Linux come with the 1.0 release. Until that
+                release, build the application from the source.
+              </p>
+              <h3>Prerequisites</h3>
+              <ul>
+                <li>
+                  <a href="https://rustup.rs">Rust</a>. rustup installs the
+                  version that the repository gives.
+                </li>
+                <li>Node.js 26 and pnpm 10</li>
+                <li>Git 2.26 or later</li>
+                <li>
+                  The
+                  <a href="https://tauri.app/start/prerequisites/"
+                    >Tauri system dependencies</a
+                  >
+                  for your operating system
+                </li>
+              </ul>
+              <h3>Documents</h3>
+              <ul class="link-list">
+                <li>
+                  <a
+                    href="https://github.com/nikodem-wrona/gitoverlord#user-guide"
+                    >User guide</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/nikodem-wrona/gitoverlord/blob/master/docs/ROADMAP.md"
+                    >Roadmap</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/nikodem-wrona/gitoverlord/blob/master/CONTRIBUTING.md"
+                    >Contribute</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/nikodem-wrona/gitoverlord/releases"
+                    >Releases</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="terminal-title">
+            <header class="panel-header">
+              <h2 class="panel-title" id="terminal-title">Terminal</h2>
+              <div class="panel-meta">
+                <button
+                  class="button"
+                  type="button"
+                  data-variant="ghost"
+                  data-compact
+                  data-copy="#build-commands"
+                  data-needs-script
+                  hidden
+                >
+                  Copy
+                </button>
+              </div>
+            </header>
+            <div class="panel-body prose">
+              <pre
+                class="terminal"
+                tabindex="0"
+              ><code id="build-commands">git clone https://github.com/nikodem-wrona/gitoverlord.git
+cd gitoverlord
+pnpm install
+pnpm tauri dev</code></pre>
+              <p>
+                To see the interface in a browser, without the Rust core, run
+                <code>pnpm dev</code>. Then open
+                <code>http://localhost:1420</code>. A demo backend shows a
+                sample repository.
+              </p>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <footer class="statusbar">
+      <span class="status-item" data-tone="ok">
+        <span class="status-dot" aria-hidden="true"></span>Open source
+      </span>
+      <button
+        class="status-button"
+        type="button"
+        data-theme-cycle
+        data-needs-script
+        hidden
+      >
+        Theme: <span data-theme-label>Overlord</span>
+      </button>
+      <span class="status-item status-motion" data-needs-script hidden>
+        Motion: <span data-motion-label>Full</span>
+      </span>
+      <span class="status-spacer"></span>
+      <a
+        class="status-link"
+        href="https://github.com/nikodem-wrona/gitoverlord/blob/master/LICENSE"
+        >MIT license</a
+      >
+      <a class="status-link" href="https://github.com/nikodem-wrona/gitoverlord"
+        >GitHub</a
+      >
+      <span class="status-version">v%APP_VERSION%</span>
+    </footer>
+  </body>
+</html>
