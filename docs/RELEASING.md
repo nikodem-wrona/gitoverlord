@@ -59,7 +59,21 @@ If you lose the private key, the installed copies cannot verify a new release. T
 
 ### The GitHub sign-in
 
-The application has the client ID of the gitoverlord OAuth app, so a release needs no variable for the sign-in. To use a different OAuth app in a release, add its client ID as the variable `GITOVERLORD_GITHUB_CLIENT_ID`. It is not a secret. The [README](../README.md#use-your-own-oauth-app) tells you how to make the OAuth app.
+The application has the client ID of the gitoverlord OAuth app, so a release needs no variable for the sign-in. To use a different OAuth app in a release, add its client ID as the variable `GITOVERLORD_GITHUB_CLIENT_ID`. It is not a secret.
+
+A fork can make its own OAuth app:
+
+1. On GitHub, open **Settings**, then **Developer settings**, then **OAuth Apps**.
+2. Select **New OAuth App**, and type a name and a homepage URL. The sign-in does not use the redirect URI. If GitHub asks for one, type `http://127.0.0.1`.
+3. Select **Enable Device Flow**.
+4. Clear **Expire user access tokens**. gitoverlord does not refresh a token.
+5. Register the app.
+
+For a local build, set the variable when you build or start the application. The variable replaces the built-in client ID.
+
+```bash
+GITOVERLORD_GITHUB_CLIENT_ID=<client ID> pnpm tauri dev
+```
 
 ### macOS signing and notarization
 

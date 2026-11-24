@@ -23,9 +23,6 @@ _An open-source desktop Git client that looks like a futuristic control panel_
 
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
-> [!NOTE]
-> gitoverlord is in development. Phase 7, showpieces and 1.0, is in progress. The release workflow builds the installers for macOS, Windows, and Linux. The rest of Phase 7 is the signed 1.0 release. Until that release, [build the application from the source](#build-from-the-source). The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
-
 ## Features
 
 - **Commit timeline**: The timeline shows the commits of each branch. Select a commit to see its details, its files, and their diffs.
@@ -43,8 +40,6 @@ gitoverlord is an open-source desktop Git client. It is an alternative to GitHub
 The application asks before a destructive action. The panels refresh when the repository changes on the disk.
 
 ## Screenshots
-
-The screenshots show the sample repository of the [demo backend](#demo-backend).
 
 |                                            Changes and diff                                             |                                                     Conflict resolver                                                      |
 | :-----------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
@@ -131,9 +126,6 @@ pnpm tauri dev
 ```
 
 `pnpm tauri dev` starts the application in development mode. `pnpm tauri build` builds the release bundle.
-
-> [!TIP]
-> To see the user interface without the Rust core, run `pnpm dev`. Then open `http://localhost:1420` in a browser. The [demo backend](#demo-backend) shows a sample repository.
 
 ## User guide
 
@@ -227,25 +219,6 @@ If the remote refuses the sign-in, the notification tells you which part to set 
 
 ### GitHub
 
-#### Use your own OAuth app
-
-The GitHub sign-in needs a GitHub OAuth app. gitoverlord has the client ID of its OAuth app, so the sign-in needs no setup.
-
-A fork can use its own OAuth app:
-
-1. On GitHub, open **Settings**, then **Developer settings**, then **OAuth Apps**.
-2. Select **New OAuth App**, and type a name and a homepage URL. The sign-in does not use the redirect URI. If GitHub asks for one, type `http://127.0.0.1`.
-3. Select **Enable Device Flow**.
-4. Clear **Expire user access tokens**. gitoverlord does not refresh a token.
-5. Register the app.
-6. Set `GITOVERLORD_GITHUB_CLIENT_ID` to the client ID when you build or start the application.
-
-```bash
-GITOVERLORD_GITHUB_CLIENT_ID=<client ID> pnpm tauri dev
-```
-
-The variable replaces the built-in client ID.
-
 #### Sign in
 
 1. Select **Sign in** in the top bar.
@@ -336,10 +309,6 @@ The updater installs an update only when its signature matches the public key in
 | `pnpm icons`                  | Build the application icons again from `assets/logo-source.png`. This needs ImageMagick 7. |
 | `pnpm tauri build`            | Build the release bundle                                                                   |
 | `gh workflow run release.yml` | Build the installers on GitHub, without a release                                          |
-
-### Demo backend
-
-`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. A merge or a rebase of `spike/radar` stops at a conflict, so that you can try the conflict resolver. The demo backend always offers one update. The release bundle does not contain the demo backend.
 
 ### Component gallery
 
