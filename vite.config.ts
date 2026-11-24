@@ -19,5 +19,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    // A `?raw` import of a CSS file gives its text. The theme contrast test reads the tokens.
+    css: { include: [/\.css\?raw$/] },
   },
 });

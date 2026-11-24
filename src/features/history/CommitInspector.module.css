@@ -36,6 +36,17 @@
   letter-spacing: var(--tracking-wide);
 }
 
+/* A long message scrolls, so the file list keeps its place. */
+.body {
+  flex: none;
+  max-height: 6rem;
+  margin: 0;
+  overflow: auto;
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+}
+
 .files {
   flex: 1;
   min-height: 4rem;

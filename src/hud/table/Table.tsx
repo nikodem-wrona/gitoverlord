@@ -1,11 +1,13 @@
-import { type KeyboardEvent, useId } from "react";
+import { type KeyboardEvent, useEffect, useId } from "react";
 
 import { nextKey } from "../keys";
+import { useRowWindow } from "../rows/useRowWindow";
 import type { Column } from "./columns";
 import styles from "./Table.module.css";
+import { type RowTone, TableHead, TableRow, TableSpacer } from "./TableParts";
 
-/** `alert` marks a row that needs attention. `highlight` marks a special row. */
-export type RowTone = "alert" | "highlight";
+/** The table asks for more rows when this number of rows, or fewer, is left below the view. */
+const END_MARGIN = 20;
 
 interface TableProps<Row> {
   /** The accessible name of the table. */
@@ -16,107 +18,89 @@ interface TableProps<Row> {
   selectedKey?: string;
   onSelect?(key: string): void;
   getRowTone?(row: Row): RowTone | undefined;
+  /**
+   * A CSS width, for example `40rem`. A narrower table scrolls to the side, so the
+   * columns without a width keep some space.
+   */
+  minWidth?: string;
+  /** Runs when the user comes near the last row. Use it to load more rows. */
+  onEndReached?(): void;
 }
 
-/** A dense data table. A click or the arrow keys select a row. */
+/**
+ * A dense data table. A click or the arrow keys select a row.
+ *
+ * The table renders only the rows that are in view, so it stays fast with many rows.
+ */
 export function Table<Row>(props: TableProps<Row>) {
-  const { label, columns, rows, getRowKey, selectedKey, onSelect, getRowTone } =
-    props;
+  const { label, columns, rows, getRowKey, selectedKey, onSelect } = props;
   const baseId = useId();
   const rowId = (key: string) => `${baseId}-${key}`;
-
-  const onKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
-    const next = nextKey(
-      rows.map(getRowKey),
-      selectedKey,
-      event.key,
-      "vertical",
-    );
-    if (next === undefined || !onSelect) return;
-    event.preventDefault();
-    onSelect(next);
-    document
-      .getElementById(rowId(next))
-      ?.scrollIntoView?.({ block: "nearest" });
-  };
+  const { scrollRef, onScroll, window, scrollToIndex } = useRowWindow(
+    rows.length,
+  );
+  useEndReached(rows.length, rows.length - window.end, props.onEndReached);
+  const onKeyDown = keyHandler(props, scrollToIndex);
 
   return (
-    <div className={styles.scroll}>
+    <div ref={scrollRef} className={styles.scroll} onScroll={onScroll}>
       <table
         role="grid"
         aria-label={label}
+        aria-rowcount={rows.length}
         aria-activedescendant={selectedKey ? rowId(selectedKey) : undefined}
         tabIndex={0}
         className={styles.table}
+        style={{ minWidth: props.minWidth }}
         onKeyDown={onKeyDown}
       >
         <TableHead columns={columns} />
         <tbody>
-          {rows.map((row) => {
+          <TableSpacer height={window.before} span={columns.length} />
+          {rows.slice(window.start, window.end).map((row, offset) => {
             const key = getRowKey(row);
             return (
               <TableRow
                 key={key}
                 id={rowId(key)}
+                index={window.start + offset}
                 row={row}
                 columns={columns}
                 selected={key === selectedKey}
-                tone={getRowTone?.(row)}
+                tone={props.getRowTone?.(row)}
                 onSelect={onSelect && (() => onSelect(key))}
               />
             );
           })}
+          <TableSpacer height={window.after} span={columns.length} />
         </tbody>
       </table>
     </div>
   );
 }
 
-function TableHead<Row>({ columns }: { columns: readonly Column<Row>[] }) {
-  return (
-    <>
-      <colgroup>
-        {columns.map((column) => (
-          <col key={column.id} style={{ width: column.width }} />
-        ))}
-      </colgroup>
-      <thead>
-        <tr>
-          {columns.map((column) => (
-            <th key={column.id} scope="col" data-align={column.align}>
-              {column.header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-    </>
-  );
+/** Makes the key handler: the arrow keys, Home, and End select a row and scroll to it. */
+function keyHandler<Row>(
+  { rows, getRowKey, selectedKey, onSelect }: TableProps<Row>,
+  scrollToIndex: (index: number) => void,
+) {
+  return (event: KeyboardEvent<HTMLTableElement>) => {
+    const keys = rows.map(getRowKey);
+    const next = nextKey(keys, selectedKey, event.key, "vertical");
+    if (next === undefined || !onSelect) return;
+    event.preventDefault();
+    onSelect(next);
+    scrollToIndex(keys.indexOf(next));
+  };
 }
 
-interface TableRowProps<Row> {
-  id: string;
-  row: Row;
-  columns: readonly Column<Row>[];
-  selected: boolean;
-  tone?: RowTone;
-  onSelect?(): void;
-}
-
-function TableRow<Row>({
-  id,
-  row,
-  columns,
-  selected,
-  tone,
-  onSelect,
-}: TableRowProps<Row>) {
-  return (
-    <tr id={id} aria-selected={selected} data-tone={tone} onClick={onSelect}>
-      {columns.map((column) => (
-        <td key={column.id} data-align={column.align}>
-          {column.render(row)}
-        </td>
-      ))}
-    </tr>
-  );
+/** Calls `onEndReached` while only a few rows are left below the view. */
+function useEndReached(
+  count: number,
+  remaining: number,
+  onEndReached?: () => void,
+): void {
+  useEffect(() => {
+    if (count > 0 && remaining <= END_MARGIN) onEndReached?.();
+  }, [count, remaining, onEndReached]);
 }

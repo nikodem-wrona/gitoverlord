@@ -1,7 +1,13 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
-import { MotionProvider, ToastProvider } from "@/hud";
+import { ActionProvider } from "@/actions";
+import {
+  MotionProvider,
+  SoundProvider,
+  ThemeProvider,
+  ToastProvider,
+} from "@/hud";
 
 interface AppProvidersProps {
   queryClient: QueryClient;
@@ -12,9 +18,15 @@ interface AppProvidersProps {
 export function AppProviders({ queryClient, children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <MotionProvider>
-        <ToastProvider>{children}</ToastProvider>
-      </MotionProvider>
+      <ThemeProvider>
+        <MotionProvider>
+          <SoundProvider>
+            <ToastProvider>
+              <ActionProvider>{children}</ActionProvider>
+            </ToastProvider>
+          </SoundProvider>
+        </MotionProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

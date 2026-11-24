@@ -6,7 +6,7 @@
 }
 
 .area {
-  fill: rgb(47 212 255 / 8%);
+  fill: var(--color-accent-soft);
 }
 
 /* The line draws itself from left to right. */

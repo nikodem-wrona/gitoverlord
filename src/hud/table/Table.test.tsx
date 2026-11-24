@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { textColumn } from "./columns";
 import { Table } from "./Table";
@@ -76,5 +76,56 @@ describe("Table", () => {
 
     expect(rowOf("Bravo")).toHaveAttribute("data-tone", "alert");
     expect(rowOf("Alpha")).not.toHaveAttribute("data-tone");
+  });
+});
+
+describe("Table with many rows", () => {
+  const MANY: Row[] = Array.from({ length: 500 }, (_, index) => ({
+    id: `row-${index}`,
+    name: `Row ${index}`,
+  }));
+
+  function renderMany(onEndReached?: () => void) {
+    return render(
+      <Table
+        label="Long table"
+        columns={COLUMNS}
+        rows={MANY}
+        getRowKey={(row) => row.id}
+        onEndReached={onEndReached}
+      />,
+    );
+  }
+
+  it("renders only a part of the rows and gives the full row count", () => {
+    renderMany();
+
+    expect(screen.getByText("Row 0")).toBeInTheDocument();
+    expect(screen.queryByText("Row 499")).not.toBeInTheDocument();
+    expect(screen.getByRole("grid")).toHaveAttribute("aria-rowcount", "500");
+  });
+
+  it("does not ask for more rows when the end is far away", () => {
+    const onEndReached = vi.fn<() => void>();
+
+    renderMany(onEndReached);
+
+    expect(onEndReached).not.toHaveBeenCalled();
+  });
+
+  it("asks for more rows when the last rows are in view", () => {
+    const onEndReached = vi.fn<() => void>();
+
+    render(
+      <Table
+        label="Short table"
+        columns={COLUMNS}
+        rows={ROWS}
+        getRowKey={(row) => row.id}
+        onEndReached={onEndReached}
+      />,
+    );
+
+    expect(onEndReached).toHaveBeenCalled();
   });
 });

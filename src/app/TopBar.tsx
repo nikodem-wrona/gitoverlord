@@ -1,20 +1,22 @@
-import type { Repository } from "@/features/repository";
-import {
-  Button,
-  CalmToggle,
-  DecodeText,
-  LogoMark,
-  Readout,
-  useToast,
-} from "@/hud";
+import { formatShortcut, isMac, PALETTE_SHORTCUT, useActions } from "@/actions";
+import { AccountButton } from "@/features/github";
+import { shortHash, useRepoSummary } from "@/features/repository";
+import { SyncButtons } from "@/features/sync";
+import { Button, CalmToggle, DecodeText, LogoMark, Readout } from "@/hud";
+import type { RepoSummary } from "@/ipc";
 
 import styles from "./TopBar.module.css";
 
-/** The brand, the repository readouts, the sync commands, and calm mode. */
-export function TopBar({ repository }: { repository: Repository }) {
-  const toast = useToast();
-  const syncOffline = () =>
-    toast.info("Sync is offline", "Fetch, pull, and push arrive in phase 4.");
+interface TopBarProps {
+  /** The path of the open repository. `null` when no repository is open. */
+  repoPath: string | null;
+  /** Goes to the list of repositories. */
+  onShowRepositories(): void;
+}
+
+/** The brand, the repository readouts, the commands, the sync buttons, and calm mode. */
+export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
+  const { openPalette } = useActions();
 
   return (
     <header className={styles.bar}>
@@ -25,21 +27,49 @@ export function TopBar({ repository }: { repository: Repository }) {
         </span>
       </div>
       <dl className={styles.readouts}>
-        <Readout label="Repository" value={repository.name} />
-        <Readout label="Branch" value={repository.head} />
-        <Readout
-          label="Sync"
-          value={`↑${repository.ahead}  ↓${repository.behind}`}
-        />
+        {repoPath === null ? (
+          <Readout label="Repository" value="No link" />
+        ) : (
+          <RepoReadouts repoPath={repoPath} />
+        )}
       </dl>
       <div className={styles.actions}>
-        <Button onClick={syncOffline}>Fetch</Button>
-        <Button onClick={syncOffline}>Pull</Button>
-        <Button variant="primary" onClick={syncOffline}>
-          Push
+        <Button onClick={openPalette} title="Find a command">
+          Commands {formatShortcut(PALETTE_SHORTCUT, isMac())}
         </Button>
+        <Button onClick={onShowRepositories} disabled={repoPath === null}>
+          Repositories
+        </Button>
+        <AccountButton />
+        {repoPath !== null && <SyncButtons repoPath={repoPath} />}
         <CalmToggle />
       </div>
     </header>
   );
+}
+
+/** The pull and push buttons show the counts of the commits, so there is no sync readout. */
+function RepoReadouts({ repoPath }: { repoPath: string }) {
+  const summary = useRepoSummary(repoPath).data;
+
+  return (
+    <>
+      <Readout label="Repository" value={summary?.name ?? "Scanning"} />
+      <Readout
+        label="Branch"
+        value={summary ? headLabel(summary) : "Scanning"}
+      />
+    </>
+  );
+}
+
+/** A rebase detaches `HEAD`, so the label names the branch that the rebase changes. */
+function headLabel({ head, operation }: RepoSummary): string {
+  if (head.branch !== null) return head.branch;
+  if (operation?.kind === "rebase" && operation.branch) {
+    return `${operation.branch} (rebase)`;
+  }
+  return head.hash === null
+    ? "No commits"
+    : `Detached at ${shortHash(head.hash)}`;
 }

@@ -1,0 +1,107 @@
+.viewer {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* The path keeps some width. The buttons go to a new line when there is no space. */
+.path {
+  flex: 1 1 10rem;
+  min-width: 10rem;
+  overflow: hidden;
+  color: var(--color-accent-strong);
+  font-size: var(--text-sm);
+}
+
+.lines {
+  min-height: 0;
+}
+
+.frame {
+  position: relative;
+  height: 100%;
+}
+
+/* The jump button floats over the lines, at the bottom right. */
+.next {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-3);
+  z-index: 1;
+  background: var(--color-panel-header);
+}
+
+.scroll {
+  height: 100%;
+  overflow: auto;
+  font-size: var(--text-xs);
+}
+
+/* A long line makes each row wider, so the row colors go to the end of the line. */
+.rows {
+  width: max-content;
+  min-width: 100%;
+}
+
+/* Each row has one height. The resolver renders only the rows in view. */
+.row {
+  display: flex;
+  align-items: center;
+  height: var(--row-height);
+  padding: 0 var(--space-3);
+  border-left: 2px solid transparent;
+  line-height: var(--row-height);
+  white-space: pre;
+  tab-size: 4;
+}
+
+.row[data-kind="clean"] {
+  color: var(--color-text-dim);
+}
+
+.row[data-kind="header"] {
+  gap: var(--space-2);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.row[data-kind="side"] {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.row[data-side="ours"] {
+  border-left-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.row[data-side="theirs"] {
+  border-left-color: var(--color-warn);
+  color: var(--color-warn);
+}
+
+.row[data-kind="code"] {
+  color: var(--color-text);
+}
+
+.row[data-kept="true"] {
+  border-left-color: var(--color-active);
+  background: var(--color-active-soft);
+}
+
+.row[data-kept="false"] {
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}

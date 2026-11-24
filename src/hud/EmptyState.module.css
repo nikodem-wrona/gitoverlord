@@ -23,8 +23,16 @@
   text-transform: uppercase;
 }
 
+/* A long word, such as a hash, must not make the message wider than its area. */
 .message {
   margin: 0;
+  overflow-wrap: anywhere;
   color: var(--color-text-dim);
   font-size: var(--text-sm);
+}
+
+.action {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-2);
 }

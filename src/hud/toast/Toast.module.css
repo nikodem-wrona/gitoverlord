@@ -52,6 +52,24 @@
   font-size: var(--text-sm);
 }
 
+.action {
+  align-self: center;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--tone);
+  background: transparent;
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.action:hover {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tone) 40%, transparent);
+}
+
 .dismiss {
   padding: 0 var(--space-1);
   border: 0;
@@ -76,6 +94,11 @@
   background: var(--tone);
   transform-origin: left;
   animation: drain var(--toast-duration) linear forwards;
+}
+
+/* The time stops while the pointer or the focus is on the notification. */
+.toast[data-paused] .timer {
+  animation-play-state: paused;
 }
 
 @keyframes enter {

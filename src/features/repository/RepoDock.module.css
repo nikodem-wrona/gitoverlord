@@ -1,0 +1,45 @@
+.dock {
+  height: 100%;
+}
+
+.content {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-6);
+  max-width: 48rem;
+  height: 100%;
+  margin: 0 auto;
+  padding: var(--space-8) 0 var(--space-4);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-wide);
+  text-shadow: var(--text-glow-accent);
+  text-transform: uppercase;
+}
+
+.hint {
+  max-width: 30rem;
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+}
+
+.recent {
+  min-height: 0;
+  border: 1px solid var(--color-line);
+}

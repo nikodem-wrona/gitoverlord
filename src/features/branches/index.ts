@@ -1,1 +1,2 @@
-export { BranchTable } from "./BranchTable";
+export { branchActions } from "./branchActions";
+export { BranchPanel } from "./BranchPanel";

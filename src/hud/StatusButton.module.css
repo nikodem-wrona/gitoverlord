@@ -1,0 +1,19 @@
+.button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.button:hover,
+.button[aria-expanded="true"] {
+  color: var(--color-accent);
+}
+
+.button[aria-pressed="true"] {
+  color: var(--color-active);
+}

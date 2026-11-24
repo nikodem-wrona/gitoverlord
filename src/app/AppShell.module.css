@@ -17,6 +17,13 @@
   min-width: 0;
 }
 
+/* The dock takes the place of the three columns. */
+.dock {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
 .left,
 .right {
   display: flex;
@@ -49,4 +56,9 @@
   gap: var(--space-2);
   min-width: 0;
   min-height: 0;
+}
+
+/* The operation banner takes a row above the timeline. */
+.center[data-operation] {
+  grid-template-rows: auto minmax(0, 1.15fr) minmax(0, 1fr);
 }

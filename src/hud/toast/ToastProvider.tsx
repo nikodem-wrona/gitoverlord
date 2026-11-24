@@ -1,12 +1,6 @@
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 
-import {
-  createToastApi,
-  ToastContext,
-  type ToastInput,
-  type ToastItem,
-  type ToastKind,
-} from "./toastContext";
+import { createToastApi, ToastContext, type ToastItem } from "./toastContext";
 import { ToastViewport } from "./ToastViewport";
 
 const MAX_TOASTS = 4;
@@ -24,17 +18,18 @@ export function ToastProvider({
 }: ToastProviderProps) {
   const [toasts, setToasts] = useState<readonly ToastItem[]>([]);
 
-  const api = useMemo(
-    () =>
-      createToastApi((kind, input) => {
-        setToasts((current) => withToast(current, kind, input));
-      }),
-    [],
-  );
-
   const dismiss = useCallback((id: number) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
+
+  const api = useMemo(
+    () =>
+      createToastApi((toast) => {
+        // Only the newest notifications stay.
+        setToasts((current) => [...current, toast].slice(-MAX_TOASTS));
+      }, dismiss),
+    [dismiss],
+  );
 
   return (
     <ToastContext value={api}>
@@ -42,14 +37,4 @@ export function ToastProvider({
       <ToastViewport toasts={toasts} duration={duration} onDismiss={dismiss} />
     </ToastContext>
   );
-}
-
-/** Adds a notification and keeps only the newest ones. */
-function withToast(
-  current: readonly ToastItem[],
-  kind: ToastKind,
-  input: ToastInput,
-): ToastItem[] {
-  const id = Math.max(0, ...current.map((toast) => toast.id)) + 1;
-  return [...current, { ...input, kind, id }].slice(-MAX_TOASTS);
 }

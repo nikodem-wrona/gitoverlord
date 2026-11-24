@@ -1,0 +1,46 @@
+/*
+ * The themes. `tokens.css` gives the default theme, Overlord: black and grey
+ * with one green. Each theme here replaces only the tokens that it changes.
+ * Each theme has one accent color for what is active.
+ */
+
+/* Amber: a warm terminal. The text and the lines are warm, and amber marks what is active. */
+:root[data-theme="amber"] {
+  --color-bg: #070604;
+  --color-panel: rgb(14 11 7 / 92%);
+  --color-panel-header: rgb(22 18 12 / 96%);
+  --color-line: #241e15;
+  --color-line-strong: #45392a;
+  --color-control-line: #715e46;
+  --color-text: #ddd0bb;
+  --color-text-dim: #988b74;
+  --color-text-faint: #887b66;
+  --color-accent: #f2d3a2;
+  --color-accent-strong: #fff1da;
+  --color-accent-soft: rgb(255 196 112 / 8%);
+  --color-glow: rgb(255 190 100 / 35%);
+  --color-active: #ffb000;
+  --color-active-strong: #ffd36b;
+  --color-active-soft: rgb(255 176 0 / 12%);
+  --color-ok: #9be37a;
+  --color-ok-soft: rgb(155 227 122 / 12%);
+  --color-warn: #ff7a3d;
+  --glow-accent: 0 0 12px rgb(255 190 100 / 14%);
+  --text-glow-accent: 0 0 8px rgb(255 190 100 / 28%);
+  --glow-active: 0 0 12px rgb(255 176 0 / 35%);
+  --text-glow-active: 0 0 8px rgb(255 176 0 / 55%);
+  --grid-line: rgb(255 190 100 / 3%);
+}
+
+/* Mono: black, white, and grey only. White marks what is active. Red and amber stay for signals. */
+:root[data-theme="mono"] {
+  --color-accent: #cfcfcf;
+  --color-accent-strong: #ededed;
+  --color-active: #fff;
+  --color-active-strong: #fff;
+  --color-active-soft: rgb(255 255 255 / 12%);
+  --color-ok: #fff;
+  --color-ok-soft: rgb(255 255 255 / 10%);
+  --glow-active: 0 0 12px rgb(255 255 255 / 30%);
+  --text-glow-active: 0 0 8px rgb(255 255 255 / 45%);
+}

@@ -1,5 +1,10 @@
 import type { StatusState } from "@/hud";
-import { CommandError, type GitError, type GitVersion } from "@/ipc";
+import {
+  CommandError,
+  type GitError,
+  gitErrorText,
+  type GitVersion,
+} from "@/ipc";
 
 export interface GitStatus {
   state: StatusState;
@@ -41,13 +46,13 @@ function describeGitError(error: GitError): GitStatus {
         value: "Not found",
         hint: "Install Git, then restart gitoverlord.",
       };
-    case "commandFailed":
-      return { state: "fail", value: "Failed", hint: error.message };
     case "unexpectedOutput":
       return {
         state: "fail",
         value: "Unknown version",
         hint: `Git printed: ${error.message}`,
       };
+    default:
+      return { state: "fail", value: "Failed", hint: gitErrorText(error) };
   }
 }

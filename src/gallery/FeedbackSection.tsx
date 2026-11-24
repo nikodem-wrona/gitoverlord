@@ -12,7 +12,7 @@ export function FeedbackSection() {
         <div className={styles.row}>
           <Button
             onClick={() =>
-              toast.info("Uplink stable", "Sync arrives in phase 4.")
+              toast.info("Uplink stable", "The remotes are current.")
             }
           >
             Info
@@ -31,6 +31,15 @@ export function FeedbackSection() {
             }
           >
             Fail
+          </Button>
+          <Button
+            onClick={() =>
+              toast.ok("Branch deleted", "spike/radar was at 6c02f8e.", {
+                action: { label: "Undo", run: () => toast.ok("Undone") },
+              })
+            }
+          >
+            With undo
           </Button>
         </div>
       </Panel>

@@ -21,10 +21,10 @@ describe("BootScreen", () => {
 
     advanceInSteps(STEP_MS, 1);
     expect(screen.getByText("HUD kit")).toBeInTheDocument();
-    expect(screen.queryByText("Star map")).not.toBeInTheDocument();
+    expect(screen.queryByText("Timeline")).not.toBeInTheDocument();
 
     advanceInSteps(STEP_MS, 3);
-    expect(screen.getByText("Star map")).toBeInTheDocument();
+    expect(screen.getByText("Timeline")).toBeInTheDocument();
     expect(onFinish).not.toHaveBeenCalled();
 
     advanceInSteps(HOLD_MS, 1);

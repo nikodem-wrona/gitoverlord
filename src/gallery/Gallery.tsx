@@ -3,6 +3,7 @@ import { CalmToggle, LogoMark } from "@/hud";
 import { ControlsSection } from "./ControlsSection";
 import { DataSection } from "./DataSection";
 import { FeedbackSection } from "./FeedbackSection";
+import { FormsSection } from "./FormsSection";
 import styles from "./Gallery.module.css";
 import { MotionSection } from "./MotionSection";
 
@@ -17,6 +18,7 @@ export function Gallery() {
       </header>
       <div className={styles.grid}>
         <ControlsSection />
+        <FormsSection />
         <DataSection />
         <MotionSection />
         <FeedbackSection />

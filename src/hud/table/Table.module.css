@@ -34,7 +34,7 @@
 
 .table td {
   overflow: hidden;
-  padding: 1px var(--space-2);
+  padding: 0 var(--space-2);
   color: var(--color-text);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -44,16 +44,18 @@
   text-align: end;
 }
 
-.table tbody tr {
+/* Each row has one height. The table uses it to render only the rows in view. */
+.table tbody tr[data-row] {
+  height: var(--row-height);
   cursor: default;
   transition: background var(--duration-fast);
 }
 
-.table tbody tr:nth-child(even) {
-  background: rgb(255 255 255 / 1.5%);
+.table tbody tr[data-row="odd"] {
+  background: var(--color-row-stripe);
 }
 
-.table tbody tr:hover {
+.table tbody tr[data-row]:hover {
   background: var(--color-row-hover);
 }
 
@@ -71,7 +73,7 @@
 
 .table tbody tr[aria-selected="true"] {
   background: var(--color-row-selected);
-  box-shadow: inset 2px 0 0 var(--color-accent);
+  box-shadow: inset 2px 0 0 var(--color-active);
 }
 
 .table tbody tr[aria-selected="true"] td {

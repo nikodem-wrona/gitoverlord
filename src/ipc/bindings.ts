@@ -2,15 +2,307 @@
 
 import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 import type { InvokeOptions } from "@tauri-apps/api/core";
+import * as __TAURI_EVENT from "@tauri-apps/api/event";
 import { mockIPC as __TAURI_MOCK_IPC } from "@tauri-apps/api/mocks";
 
 /** Commands */
 export const commands = {
 	/**  Reports the version of the system `git`. */
 	detectGit: (options?: InvokeOptions) => typedError<GitVersion, GitError>(__TAURI_INVOKE("detect_git", undefined, options)),
+	/**  Asks the user for a folder. `title` is the title of the dialog. Returns `None` if the user cancels. */
+	pickFolder: (title: string, options?: InvokeOptions) => typedError<string | null, GitError>(__TAURI_INVOKE("pick_folder", { title }, options)),
+	/**  Opens the repository that contains `path`, and starts to watch it. */
+	openRepository: (path: string, options?: InvokeOptions) => typedError<RepoSummary, GitError>(__TAURI_INVOKE("open_repository", { path }, options)),
+	/**  Lists the repositories that the user opened. The newest is first. */
+	recentRepositories: (options?: InvokeOptions) => typedError<RecentRepo[], GitError>(__TAURI_INVOKE("recent_repositories", undefined, options)),
+	/**  Reads the name, the path, `HEAD`, the remotes, and the tags of a repository. */
+	repoSummary: (path: string, options?: InvokeOptions) => typedError<RepoSummary, GitError>(__TAURI_INVOKE("repo_summary", { path }, options)),
+	/**  Counts the commits on each of the last `days` days. The oldest day is first. */
+	repoActivity: (path: string, days: number, options?: InvokeOptions) => typedError<number[], GitError>(__TAURI_INVOKE("repo_activity", { path, days }, options)),
+	/**  Reads `limit` commits after the first `skip` commits. The newest commit is first. */
+	repoLog: (path: string, skip: number, limit: number, options?: InvokeOptions) => typedError<LogPage, GitError>(__TAURI_INVOKE("repo_log", { path, skip, limit }, options)),
+	/**  Reads one commit with its message and its changed files. */
+	commitDetail: (path: string, hash: string, options?: InvokeOptions) => typedError<CommitDetail, GitError>(__TAURI_INVOKE("commit_detail", { path, hash }, options)),
+	/**  Reads the staged and the unstaged changes. */
+	repoStatus: (path: string, options?: InvokeOptions) => typedError<WorkingTree, GitError>(__TAURI_INVOKE("repo_status", { path }, options)),
+	/**  Reads the changed lines of one file. */
+	fileDiff: (path: string, target: DiffTarget, options?: InvokeOptions) => typedError<FileDiff, GitError>(__TAURI_INVOKE("file_diff", { path, target }, options)),
+	/**  Adds the changes of `files` to the index. */
+	stageFiles: (path: string, files: string[], options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("stage_files", { path, files }, options)),
+	/**  Removes the changes of `files` from the index. The working tree keeps them. */
+	unstageFiles: (path: string, files: string[], options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("unstage_files", { path, files }, options)),
+	/**  Adds one hunk of the unstaged changes to the index. */
+	stageHunk: (path: string, hunk: HunkTarget, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("stage_hunk", { path, hunk }, options)),
+	/**  Removes one hunk of the staged changes from the index. */
+	unstageHunk: (path: string, hunk: HunkTarget, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("unstage_hunk", { path, hunk }, options)),
+	/**  Removes the unstaged changes of `files`. Returns the hash of the stash entry that keeps a copy. */
+	discardChanges: (path: string, files: string[], options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("discard_changes", { path, files }, options)),
+	/**  Writes the changes of a discard back to the working tree, then drops its stash entry. */
+	restoreDiscarded: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_discarded", { path, hash }, options)),
+	/**  Commits the staged changes and returns the new hash. `amend` replaces the last commit. */
+	commitChanges: (path: string, message: string, amend: boolean, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("commit_changes", { path, message, amend }, options)),
+	/**  Lists the local branches. The current branch is first. */
+	repoBranches: (path: string, options?: InvokeOptions) => typedError<Branch[], GitError>(__TAURI_INVOKE("repo_branches", { path }, options)),
+	/**  Creates a branch at `start`, or at `HEAD`, and switches to it. */
+	createBranch: (path: string, name: string, start: string | null, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("create_branch", { path, name, start }, options)),
+	/**  Makes a deleted branch again at its last commit. The current branch does not change. */
+	restoreBranch: (path: string, name: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_branch", { path, name, hash }, options)),
+	/**  Makes `name` the current branch. */
+	switchBranch: (path: string, name: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("switch_branch", { path, name }, options)),
+	renameBranch: (path: string, name: string, newName: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("rename_branch", { path, name, newName }, options)),
+	/**  Deletes a branch, also if it is not merged. Returns the hash of its last commit. */
+	deleteBranch: (path: string, name: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("delete_branch", { path, name }, options)),
+	/**  Lists the stash entries. The newest entry is first. */
+	repoStashes: (path: string, options?: InvokeOptions) => typedError<StashEntry[], GitError>(__TAURI_INVOKE("repo_stashes", { path }, options)),
+	/**  Moves each change to a new stash entry, with the untracked files. Returns its hash. */
+	stashChanges: (path: string, message: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("stash_changes", { path, message }, options)),
+	/**  Applies a stash entry. The entry stays in the list. */
+	applyStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("apply_stash", { path, hash }, options)),
+	/**  Applies a stash entry and removes it from the list. */
+	popStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("pop_stash", { path, hash }, options)),
+	dropStash: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("drop_stash", { path, hash }, options)),
+	/**  Puts a dropped entry back in the stash list. */
+	restoreStash: (path: string, hash: string, message: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_stash", { path, hash, message }, options)),
+	/**  Merges `target`, a branch or a commit, into the current branch. */
+	mergeBranch: (path: string, target: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("merge_branch", { path, target }, options)),
+	/**  Replays the commits of the current branch on top of `onto`. */
+	rebaseBranch: (path: string, onto: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("rebase_branch", { path, onto }, options)),
+	/**  Applies the changes of a commit as a new commit on the current branch. */
+	cherryPick: (path: string, hash: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("cherry_pick", { path, hash }, options)),
+	/**  Makes a new commit that removes the changes of a commit. */
+	revertCommit: (path: string, hash: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("revert_commit", { path, hash }, options)),
+	/**  Commits the resolved changes of the operation that stopped, and goes on. */
+	continueOperation: (path: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("continue_operation", { path }, options)),
+	/**  Drops the commit that the stopped operation applies, and goes on. */
+	skipOperation: (path: string, options?: InvokeOptions) => typedError<OperationResult, GitError>(__TAURI_INVOKE("skip_operation", { path }, options)),
+	/**  Stops the operation and puts back the state from before it. */
+	abortOperation: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("abort_operation", { path }, options)),
+	/**  Moves the current branch to a commit. Returns the data for the undo. */
+	resetBranch: (path: string, hash: string, mode: ResetMode, options?: InvokeOptions) => typedError<ResetReceipt, GitError>(__TAURI_INVOKE("reset_branch", { path, hash, mode }, options)),
+	/**  Moves the branch back to the commit from before a reset, with the uncommitted changes. */
+	undoReset: (path: string, receipt: ResetReceipt, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("undo_reset", { path, receipt }, options)),
+	/**  Moves the current branch back to a commit and keeps the uncommitted changes. */
+	restoreHead: (path: string, hash: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_head", { path, hash }, options)),
+	/**  Reads one file with conflicts. */
+	conflictFile: (path: string, file: string, options?: InvokeOptions) => typedError<ConflictFile, GitError>(__TAURI_INVOKE("conflict_file", { path, file }, options)),
+	/**  Resolves the conflicts of one file and stages the file. */
+	resolveConflict: (path: string, file: string, resolution: Resolution, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("resolve_conflict", { path, file, resolution }, options)),
+	/**  Puts the conflicts of a resolved file back. */
+	restoreConflict: (path: string, file: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("restore_conflict", { path, file }, options)),
+	/**  Lists the remotes with their remote branches. */
+	repoRemotes: (path: string, options?: InvokeOptions) => typedError<Remote[], GitError>(__TAURI_INVOKE("repo_remotes", { path }, options)),
+	addRemote: (path: string, name: string, url: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("add_remote", { path, name, url }, options)),
+	/**  Fetches each remote. */
+	fetchRemotes: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("fetch_remotes", { path }, options)),
+	/**  Fast-forwards the current branch to its upstream. */
+	pullBranch: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("pull_branch", { path }, options)),
+	/**  Sends the commits of the current branch to its upstream. */
+	pushBranch: (path: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("push_branch", { path }, options)),
+	/**  Pushes the current branch and makes the remote branch its upstream. Returns the upstream. */
+	publishBranch: (path: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("publish_branch", { path }, options)),
+	/**  Replaces the upstream with the current branch. Returns the commit that the upstream had. */
+	forcePushBranch: (path: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("force_push_branch", { path }, options)),
+	/**  Puts the commit `previous` back on the upstream after a force push. */
+	undoForcePush: (path: string, previous: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("undo_force_push", { path, previous }, options)),
+	/**  Clones `url` into a new folder in `parent`. Returns the path of the new working tree. */
+	cloneRepository: (url: string, parent: string, options?: InvokeOptions) => typedError<string, GitError>(__TAURI_INVOKE("clone_repository", { url, parent }, options)),
+	/**
+	 *  The account of the saved token. `None` when the user did not sign in, or when
+	 *  GitHub refuses the token. A refused token is removed.
+	 */
+	githubAccount: (options?: InvokeOptions) => typedError<Account | null, GitError>(__TAURI_INVOKE("github_account", undefined, options)),
+	/**  Starts a sign-in. The user types the code of the answer on GitHub. */
+	githubStartSignIn: (options?: InvokeOptions) => typedError<DeviceCode, GitError>(__TAURI_INVOKE("github_start_sign_in", undefined, options)),
+	/**
+	 *  Asks GitHub one time if the user typed the code. When the sign-in is done,
+	 *  the token goes to the keychain.
+	 */
+	githubPollSignIn: (deviceCode: string, options?: InvokeOptions) => typedError<SignInStep, GitError>(__TAURI_INVOKE("github_poll_sign_in", { deviceCode }, options)),
+	/**  Removes the token from the keychain. */
+	githubSignOut: (options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("github_sign_out", undefined, options)),
+	/**  Lists the repositories that the user pushed to most recently. */
+	githubRepositories: (options?: InvokeOptions) => typedError<HubRepository[], GitError>(__TAURI_INVOKE("github_repositories", undefined, options)),
+	/**
+	 *  Reads the open pull requests of the GitHub remote of the repository at
+	 *  `path`. `None` when the repository has no remote on GitHub.
+	 */
+	githubPullRequests: (path: string, options?: InvokeOptions) => typedError<PullList | null, GitError>(__TAURI_INVOKE("github_pull_requests", { path }, options)),
+	/**  Opens a pull request from the upstream of the current branch into `base`. */
+	githubCreatePullRequest: (path: string, title: string, base: string, options?: InvokeOptions) => typedError<CreatedPull, GitError>(__TAURI_INVOKE("github_create_pull_request", { path, title, base }, options)),
+	/**  Opens a GitHub page in the browser of the user. Other addresses are refused. */
+	openGithubPage: (url: string, options?: InvokeOptions) => typedError<null, GitError>(__TAURI_INVOKE("open_github_page", { url }, options)),
+};
+
+/** Events */
+export const events = {
+	repoChanged: makeEvent<RepoChanged, RepoChanged>("repo-changed"),
+	syncProgress: makeEvent<SyncProgress, SyncProgress>("sync-progress"),
 };
 
 /* Types */
+/**  The GitHub account of the user. */
+export type Account = {
+	login: string,
+	/**  The display name. `None` when the user did not set one. */
+	name: string | null,
+};
+
+/**  A local branch. */
+export type Branch = {
+	name: string,
+	/**  `true` for the branch that `HEAD` points to. */
+	current: boolean,
+	/**  The remote branch that this branch follows, for example `origin/main`. */
+	upstream: string | null,
+	/**  The number of commits that the upstream does not have. */
+	ahead: number,
+	/**  The number of upstream commits that this branch does not have. */
+	behind: number,
+	/**  The hash of the newest commit. */
+	tip: string,
+	/**  The time of the newest commit, in Unix seconds. */
+	updated: number,
+};
+
+/**  How a file changed. */
+export type ChangeKind = "added" | "modified" | "deleted" | "renamed" | "typeChanged" | "untracked" | "conflicted";
+
+/**  The combined state of the checks and the statuses of the newest commit. */
+export type Checks = "passing" | "failing" | "pending" | 
+/**  The commit has no checks. */
+"none";
+
+/**  One commit in the history. */
+export type Commit = {
+	hash: string,
+	/**  The first line of the message. */
+	subject: string,
+	author: string,
+	/**  The commit time, in Unix seconds. */
+	time: number,
+	parents: string[],
+	/**  The branches and tags that point to this commit, for example `main` or `tag: v1.0`. */
+	refs: string[],
+};
+
+/**  A commit with its full message and its changed files. */
+export type CommitDetail = {
+	commit: Commit,
+	/**  The message after the subject line. */
+	body: string,
+	email: string,
+	/**  The changes against the first parent. */
+	files: FileDelta[],
+};
+
+/**  A part of a file with conflict markers. */
+export type ConflictBlock = 
+/**  Lines without a conflict. */
+{ kind: "clean"; lines: string[] } | 
+/**  One conflict: the lines of each side. */
+{ kind: "conflict"; 
+/**  The line of the `<<<<<<<` marker, from 1. */
+line: number; ours: string[]; theirs: string[]; 
+/**  The name after the `<<<<<<<` marker, for example `HEAD`. */
+oursLabel: string; 
+/**  The name after the `>>>>>>>` marker, for example `feature`. */
+theirsLabel: string };
+
+/**  The lines that replace one conflict. */
+export type ConflictChoice = "ours" | "theirs" | 
+/**  The lines of ours, then the lines of theirs. */
+"both";
+
+/**  A file with conflicts, as the working tree has it. */
+export type ConflictFile = {
+	path: string,
+	/**
+	 *  `false` when the file is binary, is not UTF-8, or is not in the working
+	 *  tree. Then only a full side can resolve it.
+	 */
+	text: boolean,
+	/**  `true` when `HEAD` deleted the file. */
+	oursDeleted: boolean,
+	/**  `true` when the incoming commit deleted the file. */
+	theirsDeleted: boolean,
+	/**  The file in parts. Empty when the file is not text. */
+	blocks: ConflictBlock[],
+};
+
+/**  One version of a file with conflicts. "Ours" is `HEAD`, "theirs" is the incoming commit. */
+export type ConflictSide = "ours" | "theirs";
+
+/**  A pull request that the application opened. */
+export type CreatedPull = {
+	number: number,
+	/**  The page of the pull request on GitHub. */
+	url: string,
+};
+
+/**  The codes of a sign-in that started. */
+export type DeviceCode = {
+	/**  The code that the user types on GitHub, for example `WDJB-MJHT`. */
+	userCode: string,
+	/**  The page where the user types the code. */
+	verificationUri: string,
+	/**  Identifies this sign-in when the application polls. */
+	deviceCode: string,
+	/**  The seconds between two polls. */
+	interval: number,
+	/**  The seconds until the codes expire. */
+	expiresIn: number,
+};
+
+/**  One block of changed lines with its context. */
+export type DiffHunk = {
+	/**  The hunk header, for example `@@ -1,4 +1,6 @@`. */
+	header: string,
+	lines: DiffLine[],
+};
+
+export type DiffLine = {
+	kind: LineKind,
+	/**  The line number in the old version. `None` for an added line. */
+	oldLine: number | null,
+	/**  The line number in the new version. `None` for a removed line. */
+	newLine: number | null,
+	/**  The text without the line ending. */
+	text: string,
+};
+
+/**  Selects the two versions of one file to compare. */
+export type DiffTarget = 
+/**  A commit against its first parent. */
+{ kind: "commit"; hash: string; path: string } | 
+/**  The index against `HEAD`. */
+{ kind: "staged"; path: string } | 
+/**  The working tree against the index. */
+{ kind: "unstaged"; path: string };
+
+/**  One changed file with its line counts. */
+export type FileDelta = {
+	path: string,
+	/**  The path before a rename. */
+	oldPath: string | null,
+	kind: ChangeKind,
+	/**
+	 *  The added lines. `None` when the change has too many files: only the
+	 *  first files get line counts.
+	 */
+	additions: number | null,
+	/**  The removed lines. `None` when `additions` is `None`. */
+	deletions: number | null,
+};
+
+/**  The changed lines of one file. */
+export type FileDiff = {
+	/**  `true` for a file that has no text lines to show. */
+	binary: boolean,
+	/**  `true` when the diff has more lines than the limit. */
+	truncated: boolean,
+	hunks: DiffHunk[],
+};
+
 /**
  *  A failure of a git operation.
  * 
@@ -22,13 +314,256 @@ export type GitError =
 /**  The `git` process did not start, or it exited with a failure status. */
 { kind: "commandFailed"; message: string } | 
 /**  The output of `git` did not have the expected format. */
-{ kind: "unexpectedOutput"; message: string };
+{ kind: "unexpectedOutput"; message: string } | 
+/**  The folder is not in a git repository that has a working tree. */
+{ kind: "notARepository"; message: string } | 
+/**  The git library could not read the repository. */
+{ kind: "readFailed"; message: string } | 
+/**
+ *  The operation is not possible in the current state of the repository.
+ *  The message tells the user what to do.
+ */
+{ kind: "rejected"; message: string } | 
+/**
+ *  The remote did not accept the credentials, or `git` had none to give.
+ *  `git` does not ask for a password, so a credential helper or the SSH agent must give it.
+ */
+{ kind: "authFailed"; message: string } | 
+/**  GitHub refused the saved token. The user must sign in again. */
+{ kind: "signInExpired" } | 
+/**  A request to a web service, for example GitHub, did not get an answer. */
+{ kind: "service"; message: string } | 
+/**  A file of the application could not be read or written. */
+{ kind: "io"; message: string };
 
 /**  The version of a `git` executable. */
 export type GitVersion = {
 	major: number,
 	minor: number,
 	patch: number,
+};
+
+/**  The commit and the branch that `HEAD` points to. */
+export type Head = {
+	/**  The current branch. `None` when `HEAD` is detached. */
+	branch: string | null,
+	/**  The commit at `HEAD`. `None` when the repository has no commits. */
+	hash: string | null,
+};
+
+/**  A repository that the user can clone. */
+export type HubRepository = {
+	/**  For example `owner/name`. */
+	fullName: string,
+	/**  The HTTPS URL for a clone. */
+	cloneUrl: string,
+	private: boolean,
+	description: string | null,
+};
+
+/**  Selects one hunk in the diff of the index or of the working tree. */
+export type HunkTarget = {
+	path: string,
+	/**  The position of the hunk in the diff of the file. The first hunk is 0. */
+	index: number,
+	/**
+	 *  The header of the hunk, as `DiffHunk` gives it. A different header shows
+	 *  that the file changed after the user saw the diff.
+	 */
+	header: string,
+};
+
+export type LineKind = "context" | "added" | "removed";
+
+/**  One page of the history. The newest commit is first. */
+export type LogPage = {
+	commits: Commit[],
+	/**  The `skip` value of the next page. `None` on the last page. */
+	next: number | null,
+};
+
+/**  An operation that stopped. The user continues it, skips a commit, or aborts it. */
+export type Operation = {
+	kind: OperationKind,
+	/**  The commit that `git` applies now. `None` when `git` does not say. */
+	commit: string | null,
+	/**  The branch that a rebase changes. `HEAD` is detached while a rebase runs. */
+	branch: string | null,
+	/**  The step of a rebase, from 1. `None` for the other operations. */
+	step: number | null,
+	/**  The count of the steps of a rebase. */
+	steps: number | null,
+};
+
+/**  A git operation that can stop and wait for the user, for example at a conflict. */
+export type OperationKind = "merge" | "rebase" | "cherryPick" | "revert";
+
+/**  The result of a merge, rebase, cherry-pick, or revert. */
+export type OperationResult = 
+/**
+ *  The operation is complete. `previous` is the commit of `HEAD` before it,
+ *  for the undo. `head` is the commit of `HEAD` now.
+ */
+{ kind: "done"; previous: string; head: string } | 
+/**
+ *  `git` stopped at conflicts in these files. The user resolves them, then
+ *  continues or aborts the operation.
+ */
+{ kind: "stopped"; conflicts: string[] };
+
+/**  One step of a network operation, from the progress output of `git`. */
+export type Progress = {
+	/**  What `git` does now, for example `Receiving objects`. */
+	phase: string,
+	/**  The part of the phase that is done, from 0 to 100. `None` when `git` gives no total. */
+	percent: number | null,
+};
+
+/**  The open pull requests of one repository. The most recently changed is first. */
+export type PullList = {
+	repository: RepoId,
+	/**  The branch that a new pull request goes into, for example `main`. */
+	defaultBranch: string,
+	pulls: PullRequest[],
+};
+
+export type PullRequest = {
+	number: number,
+	title: string,
+	/**  The page of the pull request on GitHub. */
+	url: string,
+	author: string,
+	/**  The branch with the changes. */
+	head: string,
+	/**  The branch that the changes go into. */
+	base: string,
+	draft: boolean,
+	/**  The time of the last change, in the ISO 8601 format. */
+	updatedAt: string,
+	checks: Checks,
+};
+
+/**  A repository that the user opened before. */
+export type RecentRepo = {
+	name: string,
+	path: string,
+};
+
+/**  A remote repository. */
+export type Remote = {
+	name: string,
+	/**
+	 *  The fetch URL. An HTTP URL has no user name and no password here.
+	 *  `None` when the remote has no URL.
+	 */
+	url: string | null,
+	/**  The remote branches from the last fetch, for example `origin/main`. */
+	branches: string[],
+};
+
+/**  The parts of a repository that changed on the disk. */
+export type RepoChange = {
+	/**  `HEAD`, a branch, or a tag moved. The history and the branch list are old. */
+	refs: boolean,
+	/**  The working tree or the index changed. The status is old. */
+	files: boolean,
+};
+
+/**  The open repository changed on the disk. The user interface reads it again. */
+export type RepoChanged = {
+	/**  The path of the repository, as `RepoSummary` gives it. */
+	path: string,
+	change: RepoChange,
+};
+
+/**  The owner and the name of a repository on GitHub. */
+export type RepoId = {
+	owner: string,
+	name: string,
+};
+
+/**  The identity of a repository and its named references. */
+export type RepoSummary = {
+	/**  The name of the working tree folder. */
+	name: string,
+	/**  The path of the working tree. Each other command takes this value. */
+	path: string,
+	head: Head,
+	remotes: string[],
+	/**  The newest name is first. */
+	tags: string[],
+	/**  The time of the last fetch, in Unix seconds. `None` before the first fetch. */
+	fetched: number | null,
+	/**  The merge, rebase, cherry-pick, or revert that stopped. `None` when no operation runs. */
+	operation: Operation | null,
+};
+
+/**  What a reset does with the changes of the commits that the branch drops. */
+export type ResetMode = 
+/**  The changes stay in the index. */
+"soft" | 
+/**  The changes stay in the working tree. */
+"mixed" | 
+/**  The changes go. A stash entry keeps the uncommitted changes. */
+"hard";
+
+/**  The data that the undo of a reset needs. */
+export type ResetReceipt = {
+	mode: ResetMode,
+	/**  The commit of `HEAD` before the reset. */
+	previous: string,
+	/**  The stash entry with the uncommitted changes from before a hard reset. */
+	backup: string | null,
+};
+
+/**  How to resolve the conflicts of one file. */
+export type Resolution = 
+/**  One choice for each conflict of the file, in the order of the file. */
+{ kind: "blocks"; choices: ConflictChoice[] } | 
+/**  The full file of one side. When that side deleted the file, the file is deleted. */
+{ kind: "file"; side: ConflictSide };
+
+/**  The state of a sign-in for the user interface. The token stays in the backend. */
+export type SignInStep = { kind: "pending" } | 
+/**  Poll more slowly: add 5 seconds to the interval. */
+{ kind: "slowDown" } | { kind: "expired" } | { kind: "denied" } | { kind: "done"; account: Account };
+
+/**  One entry of the stash. */
+export type StashEntry = {
+	/**  The position in the list, as in `stash@{0}`. The newest entry is 0. */
+	index: number,
+	/**  The hash of the stash commit. Each stash command takes this value. */
+	hash: string,
+	/**  The message, for example `On main: try a new layout`. */
+	message: string,
+	/**  The time when the entry was made, in Unix seconds. */
+	time: number,
+};
+
+/**  The network operation that a `SyncProgress` event belongs to. */
+export type SyncOperation = "fetch" | "pull" | 
+/**  A push, also the push that publishes a branch. */
+"push" | "clone";
+
+/**  A network operation made progress, or it ended. */
+export type SyncProgress = {
+	/**  The path of the repository. For a clone, the path of the new working tree. */
+	path: string,
+	operation: SyncOperation,
+	/**  The current step. `None` when the operation ended. */
+	step: Progress | null,
+};
+
+/**
+ *  The changes that are not committed.
+ * 
+ *  A file that is staged and then changed again is in both lists.
+ */
+export type WorkingTree = {
+	/**  The index against `HEAD`. */
+	staged: FileDelta[],
+	/**  The working tree against the index. Conflicts are in this list. */
+	unstaged: FileDelta[],
 };
 
 /* Tauri Specta runtime */
@@ -41,11 +576,94 @@ async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; dat
     }
 }
 
+type EventEmit<T> = [T] extends [null] ? () => Promise<void> : (payload: T) => Promise<void>;
+
+type EventEmitTo<T> = [T] extends [null] ? (target: __TAURI_EVENT.EventTarget | string) => Promise<void> : (target: __TAURI_EVENT.EventTarget | string, payload: T) => Promise<void>;
+
+function makeEvent<TListen, TEmit = TListen>(name: string, serialize?: (payload: TEmit) => unknown, deserialize?: (payload: any) => TListen) {
+    const mapEvent = (cb: __TAURI_EVENT.EventCallback<TListen>) => (event: __TAURI_EVENT.Event<any>) => cb({ ...event, payload: deserialize ? deserialize(event.payload) : event.payload });
+    const mapPayload = (payload: TEmit) => serialize ? serialize(payload) : payload;
+
+    const base = {
+        listen: (cb: __TAURI_EVENT.EventCallback<TListen>) => __TAURI_EVENT.listen(name, mapEvent(cb)),
+        once: (cb: __TAURI_EVENT.EventCallback<TListen>) => __TAURI_EVENT.once(name, mapEvent(cb)),
+        emit: ((payload: TEmit) => __TAURI_EVENT.emit(name, mapPayload(payload)) as unknown) as EventEmit<TEmit>,
+        emitTo: ((to: __TAURI_EVENT.EventTarget | string, payload: TEmit) => __TAURI_EVENT.emitTo(to, name, mapPayload(payload)) as unknown) as EventEmitTo<TEmit>
+    };
+
+    const fn = (target: import("@tauri-apps/api/webview").Webview | import("@tauri-apps/api/window").Window) => ({
+        listen: (cb: __TAURI_EVENT.EventCallback<TListen>) => target.listen(name, mapEvent(cb)),
+        once: (cb: __TAURI_EVENT.EventCallback<TListen>) => target.once(name, mapEvent(cb)),
+        emit: ((payload: TEmit) => target.emit(name, mapPayload(payload)) as unknown) as EventEmit<TEmit>,
+        emitTo: ((to: __TAURI_EVENT.EventTarget | string, payload: TEmit) => target.emitTo(to, name, mapPayload(payload)) as unknown) as EventEmitTo<TEmit>
+    });
+
+    return Object.assign(fn, base);
+}
+
 /* Tauri Specta mocks */
 
 /** A handler for each generated command, keyed by its `commands` accessor. */
 export type MockCommandHandlers = {
     detectGit: () => GitVersion | Promise<GitVersion>,
+    pickFolder: (args: { title: string }) => string | null | Promise<string | null>,
+    openRepository: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
+    recentRepositories: () => RecentRepo[] | Promise<RecentRepo[]>,
+    repoSummary: (args: { path: string }) => RepoSummary | Promise<RepoSummary>,
+    repoActivity: (args: { path: string; days: number }) => number[] | Promise<number[]>,
+    repoLog: (args: { path: string; skip: number; limit: number }) => LogPage | Promise<LogPage>,
+    commitDetail: (args: { path: string; hash: string }) => CommitDetail | Promise<CommitDetail>,
+    repoStatus: (args: { path: string }) => WorkingTree | Promise<WorkingTree>,
+    fileDiff: (args: { path: string; target: DiffTarget }) => FileDiff | Promise<FileDiff>,
+    stageFiles: (args: { path: string; files: string[] }) => null | Promise<null>,
+    unstageFiles: (args: { path: string; files: string[] }) => null | Promise<null>,
+    stageHunk: (args: { path: string; hunk: HunkTarget }) => null | Promise<null>,
+    unstageHunk: (args: { path: string; hunk: HunkTarget }) => null | Promise<null>,
+    discardChanges: (args: { path: string; files: string[] }) => string | Promise<string>,
+    restoreDiscarded: (args: { path: string; hash: string }) => null | Promise<null>,
+    commitChanges: (args: { path: string; message: string; amend: boolean }) => string | Promise<string>,
+    repoBranches: (args: { path: string }) => Branch[] | Promise<Branch[]>,
+    createBranch: (args: { path: string; name: string; start: string | null }) => null | Promise<null>,
+    restoreBranch: (args: { path: string; name: string; hash: string }) => null | Promise<null>,
+    switchBranch: (args: { path: string; name: string }) => null | Promise<null>,
+    renameBranch: (args: { path: string; name: string; newName: string }) => null | Promise<null>,
+    deleteBranch: (args: { path: string; name: string }) => string | Promise<string>,
+    repoStashes: (args: { path: string }) => StashEntry[] | Promise<StashEntry[]>,
+    stashChanges: (args: { path: string; message: string }) => string | Promise<string>,
+    applyStash: (args: { path: string; hash: string }) => null | Promise<null>,
+    popStash: (args: { path: string; hash: string }) => null | Promise<null>,
+    dropStash: (args: { path: string; hash: string }) => null | Promise<null>,
+    restoreStash: (args: { path: string; hash: string; message: string }) => null | Promise<null>,
+    mergeBranch: (args: { path: string; target: string }) => OperationResult | Promise<OperationResult>,
+    rebaseBranch: (args: { path: string; onto: string }) => OperationResult | Promise<OperationResult>,
+    cherryPick: (args: { path: string; hash: string }) => OperationResult | Promise<OperationResult>,
+    revertCommit: (args: { path: string; hash: string }) => OperationResult | Promise<OperationResult>,
+    continueOperation: (args: { path: string }) => OperationResult | Promise<OperationResult>,
+    skipOperation: (args: { path: string }) => OperationResult | Promise<OperationResult>,
+    abortOperation: (args: { path: string }) => null | Promise<null>,
+    resetBranch: (args: { path: string; hash: string; mode: ResetMode }) => ResetReceipt | Promise<ResetReceipt>,
+    undoReset: (args: { path: string; receipt: ResetReceipt }) => null | Promise<null>,
+    restoreHead: (args: { path: string; hash: string }) => null | Promise<null>,
+    conflictFile: (args: { path: string; file: string }) => ConflictFile | Promise<ConflictFile>,
+    resolveConflict: (args: { path: string; file: string; resolution: Resolution }) => null | Promise<null>,
+    restoreConflict: (args: { path: string; file: string }) => null | Promise<null>,
+    repoRemotes: (args: { path: string }) => Remote[] | Promise<Remote[]>,
+    addRemote: (args: { path: string; name: string; url: string }) => null | Promise<null>,
+    fetchRemotes: (args: { path: string }) => null | Promise<null>,
+    pullBranch: (args: { path: string }) => null | Promise<null>,
+    pushBranch: (args: { path: string }) => null | Promise<null>,
+    publishBranch: (args: { path: string }) => string | Promise<string>,
+    forcePushBranch: (args: { path: string }) => string | Promise<string>,
+    undoForcePush: (args: { path: string; previous: string }) => null | Promise<null>,
+    cloneRepository: (args: { url: string; parent: string }) => string | Promise<string>,
+    githubAccount: () => Account | null | Promise<Account | null>,
+    githubStartSignIn: () => DeviceCode | Promise<DeviceCode>,
+    githubPollSignIn: (args: { deviceCode: string }) => SignInStep | Promise<SignInStep>,
+    githubSignOut: () => null | Promise<null>,
+    githubRepositories: () => HubRepository[] | Promise<HubRepository[]>,
+    githubPullRequests: (args: { path: string }) => PullList | null | Promise<PullList | null>,
+    githubCreatePullRequest: (args: { path: string; title: string; base: string }) => CreatedPull | Promise<CreatedPull>,
+    openGithubPage: (args: { url: string }) => null | Promise<null>,
 };
 
 /**
@@ -73,6 +691,64 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
     return __TAURI_MOCK_IPC((cmd, args) => {
         switch (cmd) {
             case "detect_git": return mockCommandHandler(mockHandlers.detectGit, "detect_git", args);
+            case "pick_folder": return mockCommandHandler(mockHandlers.pickFolder, "pick_folder", args);
+            case "open_repository": return mockCommandHandler(mockHandlers.openRepository, "open_repository", args);
+            case "recent_repositories": return mockCommandHandler(mockHandlers.recentRepositories, "recent_repositories", args);
+            case "repo_summary": return mockCommandHandler(mockHandlers.repoSummary, "repo_summary", args);
+            case "repo_activity": return mockCommandHandler(mockHandlers.repoActivity, "repo_activity", args);
+            case "repo_log": return mockCommandHandler(mockHandlers.repoLog, "repo_log", args);
+            case "commit_detail": return mockCommandHandler(mockHandlers.commitDetail, "commit_detail", args);
+            case "repo_status": return mockCommandHandler(mockHandlers.repoStatus, "repo_status", args);
+            case "file_diff": return mockCommandHandler(mockHandlers.fileDiff, "file_diff", args);
+            case "stage_files": return mockCommandHandler(mockHandlers.stageFiles, "stage_files", args);
+            case "unstage_files": return mockCommandHandler(mockHandlers.unstageFiles, "unstage_files", args);
+            case "stage_hunk": return mockCommandHandler(mockHandlers.stageHunk, "stage_hunk", args);
+            case "unstage_hunk": return mockCommandHandler(mockHandlers.unstageHunk, "unstage_hunk", args);
+            case "discard_changes": return mockCommandHandler(mockHandlers.discardChanges, "discard_changes", args);
+            case "restore_discarded": return mockCommandHandler(mockHandlers.restoreDiscarded, "restore_discarded", args);
+            case "commit_changes": return mockCommandHandler(mockHandlers.commitChanges, "commit_changes", args);
+            case "repo_branches": return mockCommandHandler(mockHandlers.repoBranches, "repo_branches", args);
+            case "create_branch": return mockCommandHandler(mockHandlers.createBranch, "create_branch", args);
+            case "restore_branch": return mockCommandHandler(mockHandlers.restoreBranch, "restore_branch", args);
+            case "switch_branch": return mockCommandHandler(mockHandlers.switchBranch, "switch_branch", args);
+            case "rename_branch": return mockCommandHandler(mockHandlers.renameBranch, "rename_branch", args);
+            case "delete_branch": return mockCommandHandler(mockHandlers.deleteBranch, "delete_branch", args);
+            case "repo_stashes": return mockCommandHandler(mockHandlers.repoStashes, "repo_stashes", args);
+            case "stash_changes": return mockCommandHandler(mockHandlers.stashChanges, "stash_changes", args);
+            case "apply_stash": return mockCommandHandler(mockHandlers.applyStash, "apply_stash", args);
+            case "pop_stash": return mockCommandHandler(mockHandlers.popStash, "pop_stash", args);
+            case "drop_stash": return mockCommandHandler(mockHandlers.dropStash, "drop_stash", args);
+            case "restore_stash": return mockCommandHandler(mockHandlers.restoreStash, "restore_stash", args);
+            case "merge_branch": return mockCommandHandler(mockHandlers.mergeBranch, "merge_branch", args);
+            case "rebase_branch": return mockCommandHandler(mockHandlers.rebaseBranch, "rebase_branch", args);
+            case "cherry_pick": return mockCommandHandler(mockHandlers.cherryPick, "cherry_pick", args);
+            case "revert_commit": return mockCommandHandler(mockHandlers.revertCommit, "revert_commit", args);
+            case "continue_operation": return mockCommandHandler(mockHandlers.continueOperation, "continue_operation", args);
+            case "skip_operation": return mockCommandHandler(mockHandlers.skipOperation, "skip_operation", args);
+            case "abort_operation": return mockCommandHandler(mockHandlers.abortOperation, "abort_operation", args);
+            case "reset_branch": return mockCommandHandler(mockHandlers.resetBranch, "reset_branch", args);
+            case "undo_reset": return mockCommandHandler(mockHandlers.undoReset, "undo_reset", args);
+            case "restore_head": return mockCommandHandler(mockHandlers.restoreHead, "restore_head", args);
+            case "conflict_file": return mockCommandHandler(mockHandlers.conflictFile, "conflict_file", args);
+            case "resolve_conflict": return mockCommandHandler(mockHandlers.resolveConflict, "resolve_conflict", args);
+            case "restore_conflict": return mockCommandHandler(mockHandlers.restoreConflict, "restore_conflict", args);
+            case "repo_remotes": return mockCommandHandler(mockHandlers.repoRemotes, "repo_remotes", args);
+            case "add_remote": return mockCommandHandler(mockHandlers.addRemote, "add_remote", args);
+            case "fetch_remotes": return mockCommandHandler(mockHandlers.fetchRemotes, "fetch_remotes", args);
+            case "pull_branch": return mockCommandHandler(mockHandlers.pullBranch, "pull_branch", args);
+            case "push_branch": return mockCommandHandler(mockHandlers.pushBranch, "push_branch", args);
+            case "publish_branch": return mockCommandHandler(mockHandlers.publishBranch, "publish_branch", args);
+            case "force_push_branch": return mockCommandHandler(mockHandlers.forcePushBranch, "force_push_branch", args);
+            case "undo_force_push": return mockCommandHandler(mockHandlers.undoForcePush, "undo_force_push", args);
+            case "clone_repository": return mockCommandHandler(mockHandlers.cloneRepository, "clone_repository", args);
+            case "github_account": return mockCommandHandler(mockHandlers.githubAccount, "github_account", args);
+            case "github_start_sign_in": return mockCommandHandler(mockHandlers.githubStartSignIn, "github_start_sign_in", args);
+            case "github_poll_sign_in": return mockCommandHandler(mockHandlers.githubPollSignIn, "github_poll_sign_in", args);
+            case "github_sign_out": return mockCommandHandler(mockHandlers.githubSignOut, "github_sign_out", args);
+            case "github_repositories": return mockCommandHandler(mockHandlers.githubRepositories, "github_repositories", args);
+            case "github_pull_requests": return mockCommandHandler(mockHandlers.githubPullRequests, "github_pull_requests", args);
+            case "github_create_pull_request": return mockCommandHandler(mockHandlers.githubCreatePullRequest, "github_create_pull_request", args);
+            case "open_github_page": return mockCommandHandler(mockHandlers.openGithubPage, "open_github_page", args);
             default: throw new Error(`No mock handler registered for command '${cmd}'`);
         }
     }, { shouldMockEvents: true });
