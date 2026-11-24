@@ -148,6 +148,7 @@ Done when a signed 1.0 release runs on macOS, Windows, and Linux.
 - [x] Performance pass and accessibility pass
 - [x] Installers for macOS, Windows, and Linux from a release workflow
 - [x] Automatic updates with signed update files
+- [x] Install script for macOS and Linux, with a check of the release signature
 - [x] Code signing in the release workflow, when the certificates are in the secrets
 - [x] Landing page on GitHub Pages
 - [x] Web demo on GitHub Pages, with the demo backend

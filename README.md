@@ -23,9 +23,6 @@ _An open-source desktop Git client that looks like a futuristic control panel_
 
 gitoverlord is an open-source desktop Git client. It is an alternative to GitHub Desktop. It has a Rust core, a Tauri shell, and a React user interface that looks like a futuristic control panel.
 
-> [!NOTE]
-> gitoverlord is in development. Phase 7, showpieces and 1.0, is in progress. The release workflow builds the installers for macOS, Windows, and Linux. The rest of Phase 7 is the signed 1.0 release. Until that release, [build the application from the source](#get-started). The [roadmap](docs/ROADMAP.md) gives the plan for each phase.
-
 ## Features
 
 - **Commit timeline**: The timeline shows the commits of each branch. Select a commit to see its details, its files, and their diffs.
@@ -43,8 +40,6 @@ gitoverlord is an open-source desktop Git client. It is an alternative to GitHub
 The application asks before a destructive action. The panels refresh when the repository changes on the disk.
 
 ## Screenshots
-
-The screenshots show the sample repository of the [demo backend](#demo-backend).
 
 |                                            Changes and diff                                             |                                                     Conflict resolver                                                      |
 | :-----------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: |
@@ -67,14 +62,64 @@ The screenshots show the sample repository of the [demo backend](#demo-backend).
 
 ## Get started
 
-### Prerequisites
+> [!TIP]
+> To see the user interface without an installation, open the [web demo](https://nikodem-wrona.github.io/gitoverlord/demo/) in a browser. The demo shows a sample repository.
+
+### Install a release
+
+The [releases page](https://github.com/nikodem-wrona/gitoverlord/releases/latest) has the installers of the newest release.
+
+| System  | Installers                                                  |
+| ------- | ----------------------------------------------------------- |
+| macOS   | The install script, or the `.dmg` file                      |
+| Linux   | The install script, or the AppImage, `.deb`, or `.rpm` file |
+| Windows | The `-setup.exe` file                                       |
+
+If macOS stops the first start of a copy from the `.dmg` file, open **System Settings**, then **Privacy & Security**. Then permit gitoverlord.
+
+#### Install script for macOS and Linux
+
+The script needs `curl` and [minisign](https://jedisct1.github.io/minisign/). minisign does a check of the release signature. On macOS:
+
+```bash
+brew install minisign
+```
+
+On Debian or Ubuntu:
+
+```bash
+sudo apt install minisign
+```
+
+Then install gitoverlord:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nikodem-wrona/gitoverlord/master/install.sh | sh
+```
+
+The script downloads the newest release from GitHub. It installs the download only when the signature matches the public key of the updater.
+
+- On macOS, the script puts `gitoverlord.app` in `/Applications`. If you cannot write to that folder, the script uses `~/Applications`.
+- On Linux, the script puts the AppImage in `~/.local/bin/gitoverlord` and adds gitoverlord to the application menu. The AppImage needs an x86_64 processor.
+
+To use a different folder, set `GITOVERLORD_INSTALL_DIR` for `sh`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nikodem-wrona/gitoverlord/master/install.sh | GITOVERLORD_INSTALL_DIR="$HOME/Applications" sh
+```
+
+After the installation, the application [updates itself](#updates).
+
+### Build from the source
+
+You must have these tools:
 
 - [Rust](https://rustup.rs). rustup installs the version that `rust-toolchain.toml` gives.
 - Node.js 26 and pnpm 10.
 - Git 2.26 or later.
 - The [Tauri system dependencies](https://tauri.app/start/prerequisites/) for your operating system.
 
-### Build and start
+Then build and start the application:
 
 ```bash
 git clone https://github.com/nikodem-wrona/gitoverlord.git
@@ -84,11 +129,6 @@ pnpm tauri dev
 ```
 
 `pnpm tauri dev` starts the application in development mode. `pnpm tauri build` builds the release bundle.
-
-> [!TIP]
-> To see the user interface without a build, open the [web demo](https://nikodem-wrona.github.io/gitoverlord/demo/) in a browser. The [demo backend](#demo-backend) shows a sample repository.
->
-> To start the same demo from the source, run `pnpm dev`. Then open `http://localhost:1420` in a browser.
 
 ## User guide
 
@@ -182,25 +222,6 @@ If the remote refuses the sign-in, the notification tells you which part to set 
 
 ### GitHub
 
-#### Use your own OAuth app
-
-The GitHub sign-in needs a GitHub OAuth app. gitoverlord has the client ID of its OAuth app, so the sign-in needs no setup.
-
-A fork can use its own OAuth app:
-
-1. On GitHub, open **Settings**, then **Developer settings**, then **OAuth Apps**.
-2. Select **New OAuth App**, and type a name and a homepage URL. The sign-in does not use the redirect URI. If GitHub asks for one, type `http://127.0.0.1`.
-3. Select **Enable Device Flow**.
-4. Clear **Expire user access tokens**. gitoverlord does not refresh a token.
-5. Register the app.
-6. Set `GITOVERLORD_GITHUB_CLIENT_ID` to the client ID when you build or start the application.
-
-```bash
-GITOVERLORD_GITHUB_CLIENT_ID=<client ID> pnpm tauri dev
-```
-
-The variable replaces the built-in client ID.
-
 #### Sign in
 
 1. Select **Sign in** in the top bar.
@@ -264,7 +285,7 @@ The tests check each screen with the WCAG 2.1 AA rules of [axe](https://github.c
 
 The application looks for a new release when it starts, and then one time each six hours. The status bar shows the version. When a new version is available, the status bar shows **Update to** and the version. Select it to download the update, install it, and start the new version. Your repositories and your changes stay as they are.
 
-To look for a new release now, select **Check for updates** in the command palette. A development build does not update.
+You can also update from the command palette. Select **Check for updates** to look for a new release now. If there is a new version, the application then asks to install it. When the application knows about a new version, the command palette also has **Update gitoverlord to** and the version. A development build does not update.
 
 The updater installs an update only when its signature matches the public key in the application. [RELEASING.md](docs/RELEASING.md) tells you how to make a release.
 
@@ -288,6 +309,7 @@ The updater installs an update only when its signature matches the public key in
 | `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
 | `pnpm test`                   | Run the frontend tests                                                                     |
 | `cargo test --workspace`      | Run the Rust tests                                                                         |
+| `pnpm test:install`           | Do a test of the install script with a temporary key. This needs minisign.                 |
 | `pnpm bench`                  | Measure the read operations on a repository with 50 000 commits                            |
 | `pnpm format`                 | Format TypeScript, CSS, JSON, and Markdown                                                 |
 | `cargo fmt --all`             | Format Rust                                                                                |
@@ -296,13 +318,9 @@ The updater installs an update only when its signature matches the public key in
 | `pnpm tauri build`            | Build the release bundle                                                                   |
 | `gh workflow run release.yml` | Build the installers on GitHub, without a release                                          |
 
-### Demo backend
-
-`pnpm dev` starts the frontend in a browser, where there is no Rust core. The demo backend in `src/demo` then answers each command with a sample repository, and the status bar shows "Demo data". The write commands change the sample repository until the page loads again. A merge or a rebase of `spike/radar` stops at a conflict, so that you can try the conflict resolver. The demo backend always offers one update. The release bundle does not contain the demo backend.
-
 ### Web demo
 
-The web demo is the frontend with the demo backend, in a build for a browser. The Pages workflow publishes it at <https://nikodem-wrona.github.io/gitoverlord/demo/> after each push to `master` that changes the frontend.
+The web demo is the frontend in a build for a browser, where there is no Rust core. The demo backend in `src/demo` answers each command with a sample repository. The Pages workflow publishes the web demo at <https://nikodem-wrona.github.io/gitoverlord/demo/> after each push to `master` that changes the frontend.
 
 `pnpm build:demo` builds the web demo into `dist-site/demo/`, with relative URLs. The build of the landing page empties `dist-site/`, so `pnpm build:pages` builds the landing page first, then the web demo. `pnpm preview:pages` then serves `dist-site/` at `http://localhost:1431/gitoverlord/`, the path of GitHub Pages.
 
@@ -335,6 +353,7 @@ src/test/          helpers for frontend tests
 site/              landing page, which GitHub Pages serves
 assets/            source image of the logo
 scripts/           maintenance scripts, and the release scripts in scripts/release/
+install.sh         install script for macOS and Linux
 docs/ROADMAP.md    stack, phases, practices, risks
 docs/RELEASING.md  release workflow, signing secrets, updater key
 docs/images/       screenshots for this file and for the landing page
