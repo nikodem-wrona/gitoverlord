@@ -40,6 +40,14 @@ describe("the landing page", () => {
     await expectAccessible();
   });
 
+  it("links to the web demo with a relative address", () => {
+    for (const place of [".hero-actions", "#get-started"]) {
+      expect(select(`${place} a[href='./demo/']`)).toHaveTextContent(
+        "Try the demo",
+      );
+    }
+  });
+
   it("shows the controls that need a script only after the scripts start", () => {
     expect(select("#calm-mode").closest("label")).not.toBeVisible();
     startPage();

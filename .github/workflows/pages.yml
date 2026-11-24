@@ -1,17 +1,18 @@
 name: Pages
 
-# A push to master that changes the landing page builds it and publishes it on GitHub Pages.
-# A manual run publishes the page again from master.
+# A push to master that changes the landing page or the web demo builds them and publishes them on GitHub Pages.
+# The web demo is the frontend of the application with the demo backend, so each change in `src/` publishes it again.
+# A manual run publishes them again from master.
 on:
   push:
     branches: [master]
     paths:
       - site/**
+      - src/**
+      - index.html
       - docs/images/**
-      - src/hud/tokens.css
-      - src/hud/themes.css
-      - src/assets/**
       - src-tauri/icons/**
+      - vite.config.ts
       - vite.site.config.ts
       - package.json
       - pnpm-lock.yaml
@@ -28,7 +29,7 @@ permissions:
 
 jobs:
   build:
-    name: Build the landing page
+    name: Build the landing page and the web demo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -43,8 +44,9 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build the landing page
-        run: pnpm build:site
+      # The landing page goes into `dist-site/`, then the web demo goes into `dist-site/demo/`.
+      - name: Build the landing page and the web demo
+        run: pnpm build:pages
 
       - uses: actions/upload-pages-artifact@v5
         with:

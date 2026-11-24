@@ -15,7 +15,7 @@ _An open-source desktop Git client that looks like a futuristic control panel_
 
 ⭐ If you like this project, star it on GitHub!
 
-[Website](https://nikodem-wrona.github.io/gitoverlord/) • [Features](#features) • [Screenshots](#screenshots) • [Get started](#get-started) • [User guide](#user-guide) • [Development](#development)
+[Website](https://nikodem-wrona.github.io/gitoverlord/) • [Demo](https://nikodem-wrona.github.io/gitoverlord/demo/) • [Features](#features) • [Screenshots](#screenshots) • [Get started](#get-started) • [User guide](#user-guide) • [Development](#development)
 
 ![The History tab of gitoverlord, with the commit timeline, the commit log, and the commit details](docs/images/history.png)
 
@@ -61,6 +61,9 @@ The application asks before a destructive action. The panels refresh when the re
 </details>
 
 ## Get started
+
+> [!TIP]
+> To see the user interface without an installation, open the [web demo](https://nikodem-wrona.github.io/gitoverlord/demo/) in a browser. The demo shows a sample repository.
 
 ### Install a release
 
@@ -298,6 +301,9 @@ The updater installs an update only when its signature matches the public key in
 | `pnpm dev`                    | Start only the frontend at `http://localhost:1420`, with a sample repository               |
 | `pnpm dev:site`               | Start the landing page at `http://localhost:1430`                                          |
 | `pnpm build:site`             | Build the landing page into `dist-site/`                                                   |
+| `pnpm build:demo`             | Build the web demo into `dist-site/demo/`                                                  |
+| `pnpm build:pages`            | Build the landing page, then the web demo, as the Pages workflow does                      |
+| `pnpm preview:pages`          | Serve `dist-site/` at `http://localhost:1431/gitoverlord/`, the path of GitHub Pages       |
 | `pnpm check`                  | Run each check for TypeScript and Rust                                                     |
 | `pnpm check:ui`               | Run the Prettier check, oxlint, the type check, and the frontend tests                     |
 | `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
@@ -312,6 +318,14 @@ The updater installs an update only when its signature matches the public key in
 | `pnpm tauri build`            | Build the release bundle                                                                   |
 | `gh workflow run release.yml` | Build the installers on GitHub, without a release                                          |
 
+### Web demo
+
+The web demo is the frontend in a build for a browser, where there is no Rust core. The demo backend in `src/demo` answers each command with a sample repository. The Pages workflow publishes the web demo at <https://nikodem-wrona.github.io/gitoverlord/demo/> after each push to `master` that changes the frontend.
+
+`pnpm build:demo` builds the web demo into `dist-site/demo/`, with relative URLs. The build of the landing page empties `dist-site/`, so `pnpm build:pages` builds the landing page first, then the web demo. `pnpm preview:pages` then serves `dist-site/` at `http://localhost:1431/gitoverlord/`, the path of GitHub Pages.
+
+The web demo sends no request to GitHub or to a remote, and it does not read the files of the visitor. The sign-in, the network operations, the clone, and the update are simulations. The pull requests are sample data, so their pages on GitHub do not exist. A browser keeps some shortcuts for its own commands, for example ⌘1, which shows the first tab of the browser. The buttons and the command palette start each action.
+
 ### Component gallery
 
 The gallery shows each HUD component with its variants. Start the frontend with `pnpm dev`, then open `http://localhost:1420/gallery.html` in a browser. The gallery is not part of the release bundle.
@@ -320,7 +334,7 @@ The gallery shows each HUD component with its variants. Start the frontend with 
 
 The landing page is in `site/`. It uses the fonts, the tokens, and the themes of the application, and it shows the screenshots in `docs/images/`. Start it with `pnpm dev:site`, then open `http://localhost:1430` in a browser.
 
-The Pages workflow publishes the page at <https://nikodem-wrona.github.io/gitoverlord/> after each push to `master` that changes it.
+The Pages workflow publishes the page at <https://nikodem-wrona.github.io/gitoverlord/> after each push to `master` that changes it. The page links to the [web demo](#web-demo) with the relative address `./demo/`. The link works in the build, not with `pnpm dev:site`.
 
 ### Structure
 

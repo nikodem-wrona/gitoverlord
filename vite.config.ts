@@ -9,7 +9,14 @@ const { version } = JSON.parse(readFileSync(packageFile, "utf8")) as {
   version: string;
 };
 
-export default defineConfig({
+/**
+ * `vite build --mode demo` builds the web demo: the application with the demo backend.
+ * GitHub Pages serves it from `dist-site/demo/`, below the landing page, so its URLs are relative.
+ */
+const demoBuild = { base: "./", build: { outDir: "dist-site/demo" } };
+
+export default defineConfig(({ mode }) => ({
+  ...(mode === "demo" ? demoBuild : {}),
   plugins: [react()],
   // The status bar shows the version. The release workflow checks that it is the version of the tag.
   define: { "import.meta.env.APP_VERSION": JSON.stringify(version) },
@@ -30,4 +37,4 @@ export default defineConfig({
     // A `?raw` import of a CSS file gives its text. The theme contrast test reads the tokens.
     css: { include: [/\.css\?raw$/] },
   },
-});
+}));

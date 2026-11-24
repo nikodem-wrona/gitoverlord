@@ -5,9 +5,11 @@ import { createRoot } from "react-dom/client";
 import { App } from "@/app/App";
 import "@/hud/global.css";
 
-// `pnpm dev` in a browser has no Rust core. The sample repository replaces it.
+// A browser has no Rust core. The sample repository replaces it in `pnpm dev`
+// and in the web demo, which `pnpm build:demo` builds.
 // The release bundle does not contain this code.
-if (import.meta.env.DEV && !isTauri()) {
+const demoBuild = import.meta.env.DEV || import.meta.env.MODE === "demo";
+if (demoBuild && !isTauri()) {
   const { installDemoBackend } = await import("@/demo");
   installDemoBackend();
 }
