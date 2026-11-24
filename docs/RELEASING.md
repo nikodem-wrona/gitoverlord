@@ -41,7 +41,7 @@ If you lose the private key, the installed copies cannot verify a new release. T
 
 ### The GitHub sign-in
 
-Add the client ID of the GitHub OAuth app as the variable `GITOVERLORD_GITHUB_CLIENT_ID`. It is not a secret. Without it, the sign-in of the release tells the user that the client ID is missing. The [README](../README.md#give-the-application-a-client-id) tells you how to make the OAuth app.
+The application has the client ID of the gitoverlord OAuth app, so a release needs no variable for the sign-in. To use a different OAuth app in a release, add its client ID as the variable `GITOVERLORD_GITHUB_CLIENT_ID`. It is not a secret. The [README](../README.md#use-your-own-oauth-app) tells you how to make the OAuth app.
 
 ### macOS signing and notarization
 

@@ -8,7 +8,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 
 - `pnpm install`: install the frontend dependencies.
 - `pnpm tauri dev`: start the application.
-- `GITOVERLORD_GITHUB_CLIENT_ID=<id> pnpm tauri dev`: start the application with the GitHub sign-in. The ID is the client ID of a GitHub OAuth app with the device flow.
+- `GITOVERLORD_GITHUB_CLIENT_ID=<id> pnpm tauri dev`: start the application with a different GitHub OAuth app. The ID is the client ID of an OAuth app with the device flow. Without the variable, the sign-in uses the built-in client ID.
 - `pnpm dev`: start only the frontend at `http://localhost:1420`. There is no Rust core in this mode. The demo backend in `src/demo` answers each command with a sample repository, and the status bar shows "Demo data". The component gallery is at `http://localhost:1420/gallery.html`.
 - `pnpm check`: run each check for TypeScript and Rust. Run it before you report that work is complete.
 - `pnpm check:ui`: run the Prettier check, oxlint, `tsc -b`, and Vitest.
@@ -39,7 +39,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
   - `client.rs`: `GitHub`, the HTTP client. A 401 answer gives `GitError::SignInExpired`. Tests send the requests to `test_server.rs`.
   - `device.rs`: the sign-in with the OAuth device flow. `account.rs`, `pulls.rs`: the account, the repositories, and the pull requests. One GraphQL query reads the pull requests with their checks.
   - `keychain.rs`: the token in the keychain, with `keyring`. `repo_links.rs`: finds the GitHub remote of a repository and makes the `HostToken` for `git`.
-  - `client_id()` reads `GITOVERLORD_GITHUB_CLIENT_ID` at run time, else at build time.
+  - `client_id()` reads `GITOVERLORD_GITHUB_CLIENT_ID` at run time, else at build time, else it gives the built-in client ID of the gitoverlord OAuth app. The application does not refresh a token, so that app must not expire its tokens.
 - `src-tauri/`: a thin shell. `src/ipc.rs` registers the commands and the events. Each file in `src/commands/` holds one command group. A command calls `git-core` through `run_blocking` or `with_repo` and returns `Result<T, GitError>`. `session.rs` holds the recent repositories and the watcher of the open repository. `events.rs` holds the `RepoChanged` and `SyncProgress` events. `commands/sync.rs` runs one network operation at a time and sends a `SyncProgress` event for each step and one at the end. `commands/github.rs` holds the GitHub commands. `Session` keeps the GitHub token, and the sync commands give it to `git` as a `HostToken`. `commands/update.rs` checks for a new version and installs it with `tauri-plugin-updater`. A development build does not update. `tauri.release.conf.json` adds the signed updater files to a release build.
 - `src/ipc/`: `tauri-specta` generates `bindings.ts`. Do not edit it. `unwrap` changes a command result into data or a thrown `CommandError`. `errorMessage` changes a failure into a sentence for the user.
 - `src/actions/`: the action factory. `defineAction` makes an `Action`. `ActionButton`, the command palette, and the shortcuts run each action through one runner in `ActionProvider`.

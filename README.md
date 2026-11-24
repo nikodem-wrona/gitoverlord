@@ -125,20 +125,24 @@ If the remote refuses the sign-in, the notification tells you which part to set 
 
 ## GitHub
 
-### Give the application a client ID
+### Use your own OAuth app
 
-The GitHub sign-in needs a GitHub OAuth app. Each build of gitoverlord needs the client ID of one.
+The GitHub sign-in needs a GitHub OAuth app. gitoverlord has the client ID of its OAuth app, so the sign-in needs no setup.
+
+A fork can use its own OAuth app:
 
 1. On GitHub, open **Settings**, then **Developer settings**, then **OAuth Apps**.
-2. Select **New OAuth App**, and type a name and a homepage URL. The sign-in does not use the callback URL, but GitHub needs one.
-3. Select **Enable Device Flow**, then register the app.
-4. Set `GITOVERLORD_GITHUB_CLIENT_ID` to the client ID when you build or start the application.
+2. Select **New OAuth App**, and type a name and a homepage URL. The sign-in does not use the redirect URI. If GitHub asks for one, type `http://127.0.0.1`.
+3. Select **Enable Device Flow**.
+4. Clear **Expire user access tokens**. gitoverlord does not refresh a token.
+5. Register the app.
+6. Set `GITOVERLORD_GITHUB_CLIENT_ID` to the client ID when you build or start the application.
 
 ```bash
 GITOVERLORD_GITHUB_CLIENT_ID=<client ID> pnpm tauri dev
 ```
 
-Without a client ID, the sign-in dialog tells you that the client ID is missing.
+The variable replaces the built-in client ID.
 
 ### Sign in
 

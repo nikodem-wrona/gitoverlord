@@ -42,13 +42,13 @@ describe("SignInDialog", () => {
     mockRepository({
       githubStartSignIn: rejectWith({
         kind: "rejected",
-        message: "This build has no GitHub client ID.",
+        message: "Device Flow must be enabled",
       }),
     });
     const dialog = await startSignIn();
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-      "This build has no GitHub client ID.",
+      "Device Flow must be enabled",
     );
   });
 

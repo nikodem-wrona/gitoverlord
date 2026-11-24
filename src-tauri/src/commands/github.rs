@@ -14,8 +14,6 @@ use tauri_plugin_opener::OpenerExt;
 use crate::blocking::run_blocking;
 use crate::session::Session;
 
-const NO_CLIENT_ID: &str = "This build has no GitHub client ID. Set GITOVERLORD_GITHUB_CLIENT_ID \
-    to the client ID of a GitHub OAuth app that has the device flow.";
 const PAGE_PREFIX: &str = "https://github.com/";
 
 /// The account of the saved token. `None` when the user did not sign in, or when
@@ -40,7 +38,7 @@ pub async fn github_account(app: AppHandle) -> Result<Option<Account>, GitError>
 #[tauri::command]
 #[specta::specta]
 pub async fn github_start_sign_in() -> Result<DeviceCode, GitError> {
-    run_blocking(|| GitHub::new(None).start_sign_in(&client_id()?)).await
+    run_blocking(|| GitHub::new(None).start_sign_in(&github::client_id())).await
 }
 
 /// Asks GitHub one time if the user typed the code. When the sign-in is done,
@@ -52,7 +50,7 @@ pub async fn github_poll_sign_in(
     device_code: String,
 ) -> Result<SignInStep, GitError> {
     run_blocking(move || {
-        let poll = GitHub::new(None).poll_sign_in(&client_id()?, &device_code)?;
+        let poll = GitHub::new(None).poll_sign_in(&github::client_id(), &device_code)?;
         Ok(match poll {
             Poll::Pending => SignInStep::Pending,
             Poll::SlowDown => SignInStep::SlowDown,
@@ -155,8 +153,4 @@ fn with_github<T>(
 
 fn hub_remote(repo: &dyn GitBackend) -> Result<Option<(String, RepoId)>, GitError> {
     Ok(github::github_remote(&repo.remotes()?))
-}
-
-fn client_id() -> Result<String, GitError> {
-    github::client_id().ok_or_else(|| GitError::Rejected(NO_CLIENT_ID.to_owned()))
 }
