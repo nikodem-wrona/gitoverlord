@@ -42,9 +42,12 @@ platform() {
   esac
 }
 
-# Downloads the URL $1 into the file $2.
+# Downloads the URL $1 into the file $2. latest.json gives GitHub API links for
+# the downloads. Such a link gives the file only for the octet-stream type, and
+# else it gives a JSON description. The header has no effect on other links.
 fetch() {
-  curl --fail --silent --show-error --location --output "$2" "$1"
+  curl --fail --silent --show-error --location \
+    --header "Accept: application/octet-stream" --output "$2" "$1"
 }
 
 # Prints the text field $2 of the JSON object $1. The object is on standard input.
