@@ -18,3 +18,11 @@ export function filterActions(
     (a, b) => ACTION_GROUPS.indexOf(a.group) - ACTION_GROUPS.indexOf(b.group),
   );
 }
+
+/** Finds the texts that contain each word of `query`, in their order. */
+export function filterTexts(texts: readonly string[], query: string): string[] {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  return texts.filter((text) =>
+    words.every((word) => text.toLowerCase().includes(word)),
+  );
+}

@@ -46,7 +46,7 @@ export function useActionRunner() {
       if (running.current) return;
       if (action.blocked) {
         toast.info(action.label, action.blocked);
-      } else if (action.prompt || action.confirm) {
+      } else if (action.prompt || action.confirm || action.choose) {
         setAsking(action);
       } else {
         void execute(action, "").then(follow(start));

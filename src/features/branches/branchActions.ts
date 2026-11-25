@@ -38,14 +38,39 @@ export function switchBranchAction(repo: RepoWriter, branch?: Branch): Action {
       : branch.current
         ? "This is the current branch."
         : undefined,
-    run: async () => {
-      await repo.write(commands.switchBranch(repo.path, name));
-      return {
-        title: "Branch switched",
-        message: `${name} is the current branch.`,
-      };
-    },
+    run: () => switchTo(repo, name),
   });
+}
+
+/** Asks for one of the other branches, then switches to it. */
+export function pickBranchAction(
+  repo: RepoWriter,
+  branches: readonly Branch[] = [],
+): Action {
+  const others = branches.filter((branch) => !branch.current);
+  return defineAction({
+    id: "branches.switch",
+    label: "Switch branch…",
+    group: "Branches",
+    shortcut: "Mod+Shift+B",
+    blocked: others.length === 0 ? "There is no other branch." : undefined,
+    choose: {
+      title: "Switch branch",
+      label: "Search the branches",
+      placeholder: "Type a branch name",
+      options: others.map((branch) => branch.name),
+      empty: "No branch has this name.",
+    },
+    run: (name) => switchTo(repo, name),
+  });
+}
+
+async function switchTo(repo: RepoWriter, name: string) {
+  await repo.write(commands.switchBranch(repo.path, name));
+  return {
+    title: "Branch switched",
+    message: `${name} is the current branch.`,
+  };
 }
 
 export function renameBranchAction(repo: RepoWriter, branch?: Branch): Action {
@@ -105,10 +130,9 @@ export function branchActions(
   branches: readonly Branch[] = [],
 ): Action[] {
   const current = branches.find((branch) => branch.current);
-  const others = branches.filter((branch) => !branch.current);
   return [
     newBranchAction(repo),
     ...(current ? [renameBranchAction(repo, current)] : []),
-    ...others.map((branch) => switchBranchAction(repo, branch)),
+    pickBranchAction(repo, branches),
   ];
 }

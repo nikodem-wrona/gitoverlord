@@ -244,6 +244,8 @@ To create a pull request, publish the current branch. Then select **Create…** 
 
 Press ⌘K to open the command palette. Type a part of the name of a command, then press Enter.
 
+To switch the branch, select **Switch branch…** or press ⇧⌘B. A second list then shows the other branches. Type a part of the name of a branch, then press Enter.
+
 > [!NOTE]
 > On Windows and Linux, use Ctrl in place of ⌘.
 
@@ -255,6 +257,7 @@ Press ⌘K to open the command palette. Type a part of the name of a command, th
 | ⇧⌘A      | Stage all changes                                                         |
 | ⇧⌘U      | Unstage all changes                                                       |
 | ⇧⌘N      | Create a branch                                                           |
+| ⇧⌘B      | Switch to a different branch                                              |
 | ⇧⌘S      | Stash all changes                                                         |
 | ⇧⌘T      | Fetch the remotes                                                         |
 | ⇧⌘P      | Pull the current branch                                                   |

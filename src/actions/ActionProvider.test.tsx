@@ -115,6 +115,27 @@ describe("actions", () => {
     await waitFor(() => expect(run).toHaveBeenCalledWith("voyager"));
   });
 
+  it("asks for one option, finds it by its name, and gives it to the action", async () => {
+    const run = vi.fn<(text: string) => void>();
+    const choose = {
+      title: "Pick a probe",
+      label: "Search the probes",
+      options: ["voyager", "pioneer", "cassini"],
+      empty: "No probe has this name.",
+    };
+    renderWithProviders(<Harness choose={choose} run={run} />);
+
+    fireEvent.click(button());
+    const search = screen.getByRole("textbox", { name: "Search the probes" });
+    expect(screen.getAllByRole("option")).toHaveLength(3);
+    fireEvent.change(search, { target: { value: "IONEER" } });
+    expect(screen.getAllByRole("option")).toHaveLength(1);
+    fireEvent.keyDown(search, { key: "Enter" });
+
+    await waitFor(() => expect(run).toHaveBeenCalledWith("pioneer"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
   it("shows a failure as a notification", async () => {
     const error: GitError = { kind: "rejected", message: "The probe is lost." };
     const run = () => unwrap<void>(Promise.resolve({ status: "error", error }));

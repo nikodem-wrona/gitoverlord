@@ -46,9 +46,17 @@ describe("AppShell actions", () => {
     await screen.findAllByText("feat/hud-kit");
 
     const search = openPalette();
-    fireEvent.change(search, { target: { value: "switch main" } });
-    await screen.findByRole("option", { name: /Switch to main/ });
+    fireEvent.change(search, { target: { value: "switch" } });
+    // The palette has one entry for all the branches, not one for each branch.
+    expect(screen.getAllByRole("option")).toHaveLength(1);
     fireEvent.keyDown(search, { key: "Enter" });
+
+    const branchSearch = await screen.findByRole("textbox", {
+      name: "Search the branches",
+    });
+    fireEvent.change(branchSearch, { target: { value: "main" } });
+    await screen.findByRole("option", { name: "main" });
+    fireEvent.keyDown(branchSearch, { key: "Enter" });
 
     const notifications = screen.getByRole("region", { name: "Notifications" });
     expect(
