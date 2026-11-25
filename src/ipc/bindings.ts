@@ -111,6 +111,13 @@ export const commands = {
 	 *  GitHub refuses the token. A refused token is removed.
 	 */
 	githubAccount: (options?: InvokeOptions) => typedError<Account | null, GitError>(__TAURI_INVOKE("github_account", undefined, options)),
+	/**  The GitHub app of the sign-in, and where its client ID comes from. */
+	githubApp: (options?: InvokeOptions) => typedError<GitHubApp, GitError>(__TAURI_INVOKE("github_app", undefined, options)),
+	/**
+	 *  Saves the client ID of the GitHub app of the user. `None` or an empty text
+	 *  gives the built-in app again. The next sign-in uses the app.
+	 */
+	setGithubClientId: (clientId: string | null, options?: InvokeOptions) => typedError<GitHubApp, GitError>(__TAURI_INVOKE("set_github_client_id", { clientId }, options)),
 	/**  Starts a sign-in. The user types the code of the answer on GitHub. */
 	githubStartSignIn: (options?: InvokeOptions) => typedError<DeviceCode, GitError>(__TAURI_INVOKE("github_start_sign_in", undefined, options)),
 	/**
@@ -185,6 +192,17 @@ export type ChangeKind = "added" | "modified" | "deleted" | "renamed" | "typeCha
 export type Checks = "passing" | "failing" | "pending" | 
 /**  The commit has no checks. */
 "none";
+
+/**  Where the client ID of the sign-in comes from. */
+export type ClientIdSource = 
+/**  `GITOVERLORD_GITHUB_CLIENT_ID` at run time. It replaces the saved client ID. */
+"environment" | 
+/**  The client ID that the user saved in the options. */
+"saved" | 
+/**  `GITOVERLORD_GITHUB_CLIENT_ID` at build time. */
+"build" | 
+/**  The gitoverlord OAuth app. */
+"builtIn";
 
 /**  One commit in the history. */
 export type Commit = {
@@ -349,6 +367,15 @@ export type GitError =
 { kind: "service"; message: string } | 
 /**  A file of the application could not be read or written. */
 { kind: "io"; message: string };
+
+/**  The GitHub app of the sign-in. */
+export type GitHubApp = {
+	/**  The client ID that the sign-in uses. */
+	clientId: string,
+	source: ClientIdSource,
+	/**  The client ID that the user saved. `None` when the user saved none. */
+	saved: string | null,
+};
 
 /**  The version of a `git` executable. */
 export type GitVersion = {
@@ -671,6 +698,8 @@ export type MockCommandHandlers = {
     undoForcePush: (args: { path: string; previous: string }) => null | Promise<null>,
     cloneRepository: (args: { url: string; parent: string }) => string | Promise<string>,
     githubAccount: () => Account | null | Promise<Account | null>,
+    githubApp: () => GitHubApp | Promise<GitHubApp>,
+    setGithubClientId: (args: { clientId: string | null }) => GitHubApp | Promise<GitHubApp>,
     githubStartSignIn: () => DeviceCode | Promise<DeviceCode>,
     githubPollSignIn: (args: { deviceCode: string }) => SignInStep | Promise<SignInStep>,
     githubSignOut: () => null | Promise<null>,
@@ -758,6 +787,8 @@ export function mockCommands(handlers: Partial<MockCommandHandlers> = {}): void 
             case "undo_force_push": return mockCommandHandler(mockHandlers.undoForcePush, "undo_force_push", args);
             case "clone_repository": return mockCommandHandler(mockHandlers.cloneRepository, "clone_repository", args);
             case "github_account": return mockCommandHandler(mockHandlers.githubAccount, "github_account", args);
+            case "github_app": return mockCommandHandler(mockHandlers.githubApp, "github_app", args);
+            case "set_github_client_id": return mockCommandHandler(mockHandlers.setGithubClientId, "set_github_client_id", args);
             case "github_start_sign_in": return mockCommandHandler(mockHandlers.githubStartSignIn, "github_start_sign_in", args);
             case "github_poll_sign_in": return mockCommandHandler(mockHandlers.githubPollSignIn, "github_poll_sign_in", args);
             case "github_sign_out": return mockCommandHandler(mockHandlers.githubSignOut, "github_sign_out", args);

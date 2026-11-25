@@ -1,16 +1,18 @@
-//! The state of the application: the recent repositories, the file watcher, and
-//! the GitHub token.
+//! The state of the application: the recent repositories, the file watcher, the
+//! GitHub token, and the GitHub app of the sign-in.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, PoisonError};
 
 use git_core::{GitError, HostToken, RecentRepo, RecentStore, RepoSummary, RepoWatcher, open_repo};
+use github::ClientIdStore;
 use tauri::{AppHandle, Manager};
 use tauri_specta::Event;
 
 use crate::events::RepoChanged;
 
 const RECENT_FILE: &str = "recent.json";
+const GITHUB_APP_FILE: &str = "github.json";
 
 pub struct Session {
     recents: RecentStore,
@@ -18,6 +20,8 @@ pub struct Session {
     watcher: Mutex<Option<RepoWatcher>>,
     /// The GitHub token. The outer `None` means that the keychain was not read yet.
     github: Mutex<Option<Option<String>>>,
+    /// The client ID of the GitHub app that the user saved.
+    client_ids: ClientIdStore,
 }
 
 impl Session {
@@ -26,7 +30,12 @@ impl Session {
             recents: RecentStore::new(config_folder.join(RECENT_FILE)),
             watcher: Mutex::new(None),
             github: Mutex::new(None),
+            client_ids: ClientIdStore::new(config_folder.join(GITHUB_APP_FILE)),
         }
+    }
+
+    pub fn client_ids(&self) -> &ClientIdStore {
+        &self.client_ids
     }
 
     pub fn recent(&self) -> Vec<RecentRepo> {

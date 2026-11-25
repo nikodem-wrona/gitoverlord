@@ -21,6 +21,7 @@ export {
   type FileDelta,
   type FileDiff,
   type GitError,
+  type GitHubApp,
   type GitVersion,
   type Head,
   type HubRepository,

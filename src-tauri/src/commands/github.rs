@@ -6,7 +6,8 @@ use std::path::Path;
 
 use git_core::{GitBackend, GitError, open_repo};
 use github::{
-    Account, CreatedPull, DeviceCode, GitHub, HubRepository, Poll, PullList, RepoId, SignInStep,
+    Account, CreatedPull, DeviceCode, GitHub, GitHubApp, HubRepository, Poll, PullList, RepoId,
+    SignInStep,
 };
 use tauri::{AppHandle, Manager};
 use tauri_plugin_opener::OpenerExt;
@@ -34,11 +35,33 @@ pub async fn github_account(app: AppHandle) -> Result<Option<Account>, GitError>
     .await
 }
 
+/// The GitHub app of the sign-in, and where its client ID comes from.
+#[tauri::command]
+#[specta::specta]
+pub async fn github_app(app: AppHandle) -> Result<GitHubApp, GitError> {
+    run_blocking(move || Ok(app.state::<Session>().client_ids().app())).await
+}
+
+/// Saves the client ID of the GitHub app of the user. `None` or an empty text
+/// gives the built-in app again. The next sign-in uses the app.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_github_client_id(
+    app: AppHandle,
+    client_id: Option<String>,
+) -> Result<GitHubApp, GitError> {
+    run_blocking(move || {
+        let store = app.state::<Session>();
+        store.client_ids().save(client_id.as_deref())
+    })
+    .await
+}
+
 /// Starts a sign-in. The user types the code of the answer on GitHub.
 #[tauri::command]
 #[specta::specta]
-pub async fn github_start_sign_in() -> Result<DeviceCode, GitError> {
-    run_blocking(|| GitHub::new(None).start_sign_in(&github::client_id())).await
+pub async fn github_start_sign_in(app: AppHandle) -> Result<DeviceCode, GitError> {
+    run_blocking(move || GitHub::new(None).start_sign_in(&client_id(&app))).await
 }
 
 /// Asks GitHub one time if the user typed the code. When the sign-in is done,
@@ -50,7 +73,7 @@ pub async fn github_poll_sign_in(
     device_code: String,
 ) -> Result<SignInStep, GitError> {
     run_blocking(move || {
-        let poll = GitHub::new(None).poll_sign_in(&github::client_id(), &device_code)?;
+        let poll = GitHub::new(None).poll_sign_in(&client_id(&app), &device_code)?;
         Ok(match poll {
             Poll::Pending => SignInStep::Pending,
             Poll::SlowDown => SignInStep::SlowDown,
@@ -149,6 +172,10 @@ fn with_github<T>(
         session.set_github_token(None)?;
     }
     result
+}
+
+fn client_id(app: &AppHandle) -> String {
+    app.state::<Session>().client_ids().app().client_id
 }
 
 fn hub_remote(repo: &dyn GitBackend) -> Result<Option<(String, RepoId)>, GitError> {

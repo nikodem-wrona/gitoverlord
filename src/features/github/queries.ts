@@ -13,6 +13,7 @@ const PULLS_STALE_TIME = 60_000;
 export const githubKeys = {
   all: ["github"],
   account: ["github", "account"],
+  app: ["github", "app"],
   repositories: ["github", "repositories"],
   allPulls: ["github", "pulls"],
   pulls: (path: string) => ["github", "pulls", path],
@@ -23,6 +24,14 @@ export function useGitHubAccount() {
   return useQuery({
     queryKey: githubKeys.account,
     queryFn: () => unwrap(commands.githubAccount()),
+  });
+}
+
+/** The GitHub app of the sign-in. */
+export function useGitHubApp() {
+  return useQuery({
+    queryKey: githubKeys.app,
+    queryFn: () => unwrap(commands.githubApp()),
   });
 }
 

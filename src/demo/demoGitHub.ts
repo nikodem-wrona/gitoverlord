@@ -2,6 +2,7 @@ import type {
   Account,
   CreatedPull,
   DeviceCode,
+  GitHubApp,
   HubRepository,
   PullList,
   PullRequest,
@@ -14,12 +15,18 @@ const DEMO_ACCOUNT: Account = { login: "overlord", name: "Demo Overlord" };
 const PAGE = "https://github.com/gitoverlord/gitoverlord";
 /** The demo sign-in finishes at this poll. */
 const DONE_AT_POLL = 3;
+const BUILT_IN_APP: GitHubApp = {
+  clientId: "Ov23liOLVhEKbxsuo0TU",
+  source: "builtIn",
+  saved: null,
+};
 
 /** The GitHub state of the demo. The user starts signed out. */
 export interface DemoGitHub {
   account: Account | null;
   polls: number;
   pulls: PullRequest[];
+  app: GitHubApp;
 }
 
 function pull(
@@ -46,6 +53,7 @@ export function createDemoGitHub(): DemoGitHub {
   return {
     account: null,
     polls: 0,
+    app: BUILT_IN_APP,
     pulls: [
       pull(42, "feat: add the HUD kit", "feat/hud-kit", {}),
       pull(41, "spike: sweep the radar", "spike/radar", {
@@ -90,6 +98,15 @@ export const DEMO_HUB_REPOSITORIES: HubRepository[] = [
     description: null,
   },
 ];
+
+/** Saves the client ID. The demo checks only that the text is not empty. */
+export function saveClientId(hub: DemoGitHub, text: string | null): GitHubApp {
+  const clientId = text?.trim() || null;
+  hub.app = clientId
+    ? { clientId, source: "saved", saved: clientId }
+    : BUILT_IN_APP;
+  return structuredClone(hub.app);
+}
 
 /** Finishes the sign-in at the third poll, like a user who types the code. */
 export function pollSignIn(hub: DemoGitHub): SignInStep {

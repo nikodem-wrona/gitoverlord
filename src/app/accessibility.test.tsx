@@ -48,6 +48,15 @@ describe("accessibility", () => {
     await expectAccessible();
   });
 
+  it("has no axe violations in the options", async () => {
+    await renderOpenShell();
+
+    fireEvent.click(screen.getByRole("button", { name: "Options" }));
+    await screen.findByRole("textbox", { name: "Client ID" });
+
+    await expectAccessible();
+  });
+
   it("has no axe violations in the diff viewer and a confirmation", async () => {
     await renderOpenShell();
     await openTab("Changes");
