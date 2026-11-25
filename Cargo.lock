@@ -1490,7 +1490,7 @@ dependencies = [
 
 [[package]]
 name = "git-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "git2",
  "notify-debouncer-mini",
@@ -1515,7 +1515,7 @@ dependencies = [
 
 [[package]]
 name = "github"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "git-core",
  "keyring",
@@ -1528,7 +1528,7 @@ dependencies = [
 
 [[package]]
 name = "gitoverlord"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "git-core",
  "github",
