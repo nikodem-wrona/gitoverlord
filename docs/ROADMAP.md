@@ -129,6 +129,7 @@ Done when a pull request opens from the application.
 - [x] Clone from the account
 - [x] Pull request list with check status
 - [x] Create a pull request
+- [x] Options screen with the client ID of an own GitHub app
 
 ### Phase 6: History surgery
 
@@ -203,7 +204,7 @@ Tools enforce these rules. CI fails when a rule fails.
 - **Conflict markers:** the resolver reads markers of seven characters, the default size. A file with a `conflict-marker-size` attribute shows no markers. Resolve such a file in an editor.
 - **Restored conflicts:** the undo of a resolution writes the conflict again from the index. The markers then have the labels `ours` and `theirs`, not the branch names.
 - **SSH host keys:** `ssh` runs in batch mode, so it cannot ask to accept a new host key. The user connects one time in a terminal first.
-- **GitHub client ID:** the sign-in uses the gitoverlord OAuth app, which has the device flow. Its client ID is in `crates/github`. `GITOVERLORD_GITHUB_CLIENT_ID` replaces it at build time or at run time. The application does not refresh a token, so the OAuth app must not expire its tokens.
+- **GitHub client ID:** the sign-in uses the gitoverlord OAuth app, which has the device flow. Its client ID is in `crates/github`. The user can save the client ID of an own OAuth app or GitHub App in **Options**. `GITOVERLORD_GITHUB_CLIENT_ID` replaces it at build time or at run time; at run time it also replaces the saved client ID. The application does not refresh a token, so the OAuth app must not expire its tokens.
 - **GitHub token for git:** after a sign-in, the token replaces the credential helpers of the user for github.com in the `git` processes of gitoverlord. A user with a second GitHub account must sign in with the account that has the access.
 - **Large working trees:** the status scans the full working tree, also when it counts no lines. The scan time grows with the number of files that are not ignored. Add the generated folders to `.gitignore`.
 - **Accessibility tests:** jsdom has no layout, so axe does not check the colors of the components. The contrast test checks the tokens only.

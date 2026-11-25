@@ -1,5 +1,6 @@
 import { formatShortcut, isMac, PALETTE_SHORTCUT, useActions } from "@/actions";
 import { AccountButton } from "@/features/github";
+import { OptionsButton } from "@/features/options";
 import { shortHash, useRepoSummary } from "@/features/repository";
 import { SyncButtons } from "@/features/sync";
 import { Button, CalmToggle, DecodeText, LogoMark, Readout } from "@/hud";
@@ -42,6 +43,7 @@ export function TopBar({ repoPath, onShowRepositories }: TopBarProps) {
         </Button>
         <AccountButton />
         {repoPath !== null && <SyncButtons repoPath={repoPath} />}
+        <OptionsButton />
         <CalmToggle />
       </div>
     </header>

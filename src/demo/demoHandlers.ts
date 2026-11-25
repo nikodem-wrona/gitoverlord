@@ -66,6 +66,8 @@ export function createDemoHandlers(): MockCommandHandlers {
 type GitHubHandlers = Pick<
   MockCommandHandlers,
   | "githubAccount"
+  | "githubApp"
+  | "setGithubClientId"
   | "githubStartSignIn"
   | "githubPollSignIn"
   | "githubSignOut"
@@ -80,6 +82,8 @@ function gitHubHandlers(repo: DemoRepository): GitHubHandlers {
   const state = hub.createDemoGitHub();
   return {
     githubAccount: () => structuredClone(state.account),
+    githubApp: () => structuredClone(state.app),
+    setGithubClientId: ({ clientId }) => hub.saveClientId(state, clientId),
     githubStartSignIn: () => hub.DEMO_DEVICE_CODE,
     githubPollSignIn: () => hub.pollSignIn(state),
     githubSignOut: () => {

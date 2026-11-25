@@ -78,6 +78,8 @@ fn commands() -> Commands<tauri::Wry> {
         sync::undo_force_push,
         sync::clone_repository,
         github::github_account,
+        github::github_app,
+        github::set_github_client_id,
         github::github_start_sign_in,
         github::github_poll_sign_in,
         github::github_sign_out,

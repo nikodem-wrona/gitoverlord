@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useRegisterActions } from "@/actions";
 import { CloneFromGitHubButton, GitHubProvider } from "@/features/github";
+import { OptionsProvider } from "@/features/options";
 import { RepoDock, useRepoSession } from "@/features/repository";
 import { CloneControl } from "@/features/sync";
 import { useUpdateActions } from "@/features/update";
@@ -37,37 +38,39 @@ export function AppShell() {
 
   return (
     <GitHubProvider onCloned={session.open}>
-      <div className={styles.shell}>
-        <TopBar repoPath={session.path} onShowRepositories={session.close} />
-        {session.path !== null && (
-          // The tabs control the panels of an open repository.
-          <nav className={styles.modules} aria-label="Modules">
-            <Tabs
-              label="Modules"
-              idPrefix={MODULE_TABS_ID}
-              tabs={MODULE_LIST}
-              activeId={moduleId}
-              onChange={(id) => isModuleId(id) && setModuleId(id)}
+      <OptionsProvider>
+        <div className={styles.shell}>
+          <TopBar repoPath={session.path} onShowRepositories={session.close} />
+          {session.path !== null && (
+            // The tabs control the panels of an open repository.
+            <nav className={styles.modules} aria-label="Modules">
+              <Tabs
+                label="Modules"
+                idPrefix={MODULE_TABS_ID}
+                tabs={MODULE_LIST}
+                activeId={moduleId}
+                onChange={(id) => isModuleId(id) && setModuleId(id)}
+              />
+            </nav>
+          )}
+          {session.path === null ? (
+            <main className={styles.dock}>
+              <RepoDock session={session}>
+                <CloneControl onCloned={session.open} />
+                <CloneFromGitHubButton />
+              </RepoDock>
+            </main>
+          ) : (
+            // A new repository starts with a new selection.
+            <RepoDeck
+              key={session.path}
+              repoPath={session.path}
+              moduleId={moduleId}
             />
-          </nav>
-        )}
-        {session.path === null ? (
-          <main className={styles.dock}>
-            <RepoDock session={session}>
-              <CloneControl onCloned={session.open} />
-              <CloneFromGitHubButton />
-            </RepoDock>
-          </main>
-        ) : (
-          // A new repository starts with a new selection.
-          <RepoDeck
-            key={session.path}
-            repoPath={session.path}
-            moduleId={moduleId}
-          />
-        )}
-        <StatusBar />
-      </div>
+          )}
+          <StatusBar />
+        </div>
+      </OptionsProvider>
     </GitHubProvider>
   );
 }

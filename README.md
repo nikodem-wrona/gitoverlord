@@ -232,6 +232,17 @@ The dialog closes when GitHub accepts the code. The token goes to the keychain o
 
 To sign out, select your user name in the top bar.
 
+#### Use your own GitHub app
+
+The sign-in uses the gitoverlord OAuth app. Your organization can refuse third-party apps. Then you can sign in with your own OAuth app or GitHub App:
+
+1. On GitHub, create an OAuth app or a GitHub App. In its settings, turn on the device flow. For a GitHub App, also turn off the expiry of user tokens, because gitoverlord does not refresh a token.
+2. In gitoverlord, select **Options** in the top bar, or press ⌘,.
+3. Paste the client ID of the app in **Client ID**, then select **Save**.
+4. If you are signed in, sign out and sign in again.
+
+To use the built-in app again, select **Use the built-in app**. The variable `GITOVERLORD_GITHUB_CLIENT_ID` replaces the saved client ID.
+
 #### Clone and pull requests
 
 Select **Clone from GitHub** on the start screen to see your repositories. Type a part of a name to filter the list, then select a repository and a folder.
@@ -263,6 +274,7 @@ To switch the branch, select **Switch branch…** or press ⇧⌘B. A second lis
 | ⇧⌘P      | Pull the current branch                                                   |
 | ⌘P       | Push or publish the current branch                                        |
 | ⌘O       | Open a repository                                                         |
+| ⌘,       | Open the options                                                          |
 | ⇧⌘O      | Clone a repository                                                        |
 | ← and →  | Select an older or a newer commit, on the timeline                        |
 | ⇧F10     | Show the commands of the selected commit, on the timeline                 |
