@@ -37,6 +37,17 @@ export interface Prompt {
   optional?: boolean;
 }
 
+/** A list that the user searches, then picks one item from, for example a branch. */
+export interface Choice {
+  title: string;
+  /** The name of the search field for a screen reader. */
+  label: string;
+  placeholder?: string;
+  options: readonly string[];
+  /** The text when no option agrees with the search. */
+  empty: string;
+}
+
 /** The result that the notification shows. `undo` adds an Undo button. */
 export interface Outcome {
   title: string;
@@ -62,8 +73,10 @@ export interface ActionSpec {
   confirm?: Confirmation;
   /** Asks for a text before the action runs. */
   prompt?: Prompt;
+  /** Asks the user to pick one option before the action runs. */
+  choose?: Choice;
   /**
-   * Does the work. `text` is the answer to the prompt, or an empty string.
+   * Does the work. `text` is the answer to the prompt, the picked option, or an empty string.
    *
    * Return an `Outcome` to show a notification. A thrown error shows a failure.
    */

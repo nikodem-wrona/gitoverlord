@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { Button, Dialog, TextField } from "@/hud";
 
-import type { Action, Confirmation, Prompt } from "./types";
+import styles from "./CommandPalette.module.css";
+import { filterTexts } from "./paletteFilter";
+import { PickList } from "./PickList";
+import type { Action, Choice, Confirmation, Prompt } from "./types";
 
 interface ActionDialogProps {
   action: Action;
-  /** Runs the action. `text` is the answer to the prompt, or an empty string. */
+  /** Runs the action. `text` is the answer, or an empty string. */
   onAnswer(text: string): void;
   onCancel(): void;
 }
 
-/** Asks the question of an action: a confirmation, or a text. */
+/** Asks the question of an action: a confirmation, a text, or a choice. */
 export function ActionDialog({
   action,
   onAnswer,
@@ -22,6 +25,15 @@ export function ActionDialog({
       <PromptDialog
         prompt={action.prompt}
         onSubmit={onAnswer}
+        onCancel={onCancel}
+      />
+    );
+  }
+  if (action.choose) {
+    return (
+      <ChoiceDialog
+        choice={action.choose}
+        onPick={onAnswer}
         onCancel={onCancel}
       />
     );
@@ -101,6 +113,33 @@ function PromptDialog({ prompt, onSubmit, onCancel }: PromptDialogProps) {
           placeholder={prompt.placeholder}
         />
       </form>
+    </Dialog>
+  );
+}
+
+interface ChoiceDialogProps {
+  choice: Choice;
+  onPick(option: string): void;
+  onCancel(): void;
+}
+
+function ChoiceDialog({ choice, onPick, onCancel }: ChoiceDialogProps) {
+  const filter = useCallback(
+    (query: string) => filterTexts(choice.options, query),
+    [choice.options],
+  );
+  return (
+    <Dialog title={choice.title} onClose={onCancel}>
+      <PickList
+        label={choice.label}
+        placeholder={choice.placeholder ?? ""}
+        listLabel={choice.title}
+        empty={choice.empty}
+        filter={filter}
+        keyOf={(option) => option}
+        onPick={onPick}
+        render={(option) => <span className={styles.label}>{option}</span>}
+      />
     </Dialog>
   );
 }

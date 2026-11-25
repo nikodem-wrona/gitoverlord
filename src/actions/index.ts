@@ -14,6 +14,7 @@ export type {
   Action,
   ActionGroup,
   ActionSpec,
+  Choice,
   Confirmation,
   Outcome,
   Prompt,
