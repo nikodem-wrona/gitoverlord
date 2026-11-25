@@ -32,11 +32,16 @@ jobs:
         id: create
         env:
           GH_TOKEN: ${{ github.token }}
+        # The list of releases does not show a new draft at once, so read the id
+        # from the answer of the create request.
         run: |
-          gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
-            --title "gitoverlord $GITHUB_REF_NAME" --generate-notes
-          id="$(gh api "repos/$GITHUB_REPOSITORY/releases" \
-            --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")"
+          id="$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
+            -f tag_name="$GITHUB_REF_NAME" -f name="gitoverlord $GITHUB_REF_NAME" \
+            -F draft=true -F generate_release_notes=true --jq .id)"
+          if [ -z "$id" ]; then
+            echo "::error::GitHub gave no id for the draft release."
+            exit 1
+          fi
           echo "id=$id" >> "$GITHUB_OUTPUT"
 
   build:
