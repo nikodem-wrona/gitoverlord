@@ -22,3 +22,6 @@ src-tauri/gen/schemas
 
 # The release workflow writes this file to sign the Windows installers.
 src-tauri/tauri.windows.conf.json
+
+# Git worktrees of Claude Code sessions. Each one holds a copy of the repository.
+.claude/worktrees/
