@@ -26,6 +26,7 @@ gitoverlord is an open-source desktop Git client. It has a Rust core, a Tauri 2 
 - `pnpm format` and `cargo fmt --all`: format the code.
 - `gh workflow run release.yml`: build the installers on GitHub without a release. `docs/RELEASING.md` tells you how to make a release and which secrets it needs.
 - `pnpm icons`: build the icons in `src-tauri/icons/` again from `assets/logo-source.png`. Run it only when the logo changes. It needs ImageMagick 7.
+- `pnpm social-preview`: render `assets/social-preview.html` to `assets/social-preview.png`. Run it when the logo or the tagline changes, then upload the image in the repository settings, under Social preview. It needs Google Chrome or Chromium.
 
 ## Architecture
 
