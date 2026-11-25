@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 const packageFile = new URL("./package.json", import.meta.url);
 const { version } = JSON.parse(readFileSync(packageFile, "utf8")) as {
@@ -34,6 +34,8 @@ export default defineConfig(({ mode }) => ({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    // The worktrees of Claude Code sessions hold other copies of the tests.
+    exclude: [...configDefaults.exclude, ".claude/worktrees/**"],
     // A `?raw` import of a CSS file gives its text. The theme contrast test reads the tokens.
     css: { include: [/\.css\?raw$/] },
   },

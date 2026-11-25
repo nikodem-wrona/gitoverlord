@@ -295,28 +295,29 @@ The updater installs an update only when its signature matches the public key in
 
 ### Commands
 
-| Command                       | Function                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `pnpm tauri dev`              | Start the application in development mode                                                  |
-| `pnpm dev`                    | Start only the frontend at `http://localhost:1420`, with a sample repository               |
-| `pnpm dev:site`               | Start the landing page at `http://localhost:1430`                                          |
-| `pnpm build:site`             | Build the landing page into `dist-site/`                                                   |
-| `pnpm build:demo`             | Build the web demo into `dist-site/demo/`                                                  |
-| `pnpm build:pages`            | Build the landing page, then the web demo, as the Pages workflow does                      |
-| `pnpm preview:pages`          | Serve `dist-site/` at `http://localhost:1431/gitoverlord/`, the path of GitHub Pages       |
-| `pnpm check`                  | Run each check for TypeScript and Rust                                                     |
-| `pnpm check:ui`               | Run the Prettier check, oxlint, the type check, and the frontend tests                     |
-| `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                          |
-| `pnpm test`                   | Run the frontend tests                                                                     |
-| `cargo test --workspace`      | Run the Rust tests                                                                         |
-| `pnpm test:install`           | Do a test of the install script with a temporary key. This needs minisign.                 |
-| `pnpm bench`                  | Measure the read operations on a repository with 50 000 commits                            |
-| `pnpm format`                 | Format TypeScript, CSS, JSON, and Markdown                                                 |
-| `cargo fmt --all`             | Format Rust                                                                                |
-| `pnpm bindings`               | Write `src/ipc/bindings.ts` again from the Rust commands                                   |
-| `pnpm icons`                  | Build the application icons again from `assets/logo-source.png`. This needs ImageMagick 7. |
-| `pnpm tauri build`            | Build the release bundle                                                                   |
-| `gh workflow run release.yml` | Build the installers on GitHub, without a release                                          |
+| Command                       | Function                                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| `pnpm tauri dev`              | Start the application in development mode                                                      |
+| `pnpm dev`                    | Start only the frontend at `http://localhost:1420`, with a sample repository                   |
+| `pnpm dev:site`               | Start the landing page at `http://localhost:1430`                                              |
+| `pnpm build:site`             | Build the landing page into `dist-site/`                                                       |
+| `pnpm build:demo`             | Build the web demo into `dist-site/demo/`                                                      |
+| `pnpm build:pages`            | Build the landing page, then the web demo, as the Pages workflow does                          |
+| `pnpm preview:pages`          | Serve `dist-site/` at `http://localhost:1431/gitoverlord/`, the path of GitHub Pages           |
+| `pnpm check`                  | Run each check for TypeScript and Rust                                                         |
+| `pnpm check:ui`               | Run the Prettier check, oxlint, the type check, and the frontend tests                         |
+| `pnpm check:rust`             | Run the rustfmt check, Clippy, and the Rust tests                                              |
+| `pnpm test`                   | Run the frontend tests                                                                         |
+| `cargo test --workspace`      | Run the Rust tests                                                                             |
+| `pnpm test:install`           | Do a test of the install script with a temporary key. This needs minisign.                     |
+| `pnpm bench`                  | Measure the read operations on a repository with 50 000 commits                                |
+| `pnpm format`                 | Format TypeScript, CSS, JSON, and Markdown                                                     |
+| `cargo fmt --all`             | Format Rust                                                                                    |
+| `pnpm bindings`               | Write `src/ipc/bindings.ts` again from the Rust commands                                       |
+| `pnpm icons`                  | Build the application icons again from `assets/logo-source.png`. This needs ImageMagick 7.     |
+| `pnpm social-preview`         | Render the social preview of the repository to `assets/social-preview.png`. This needs Chrome. |
+| `pnpm tauri build`            | Build the release bundle                                                                       |
+| `gh workflow run release.yml` | Build the installers on GitHub, without a release                                              |
 
 ### Web demo
 

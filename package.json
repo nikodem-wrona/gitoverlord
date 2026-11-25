@@ -23,6 +23,7 @@
     "bindings": "cargo test -p gitoverlord export_bindings",
     "bench": "cargo test -p git-core --release large_repository -- --ignored --nocapture",
     "icons": "bash scripts/make-icons.sh",
+    "social-preview": "bash scripts/make-social-preview.sh",
     "check": "pnpm check:ui && pnpm check:rust",
     "check:ui": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "check:rust": "cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace"
